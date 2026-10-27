@@ -13,8 +13,8 @@ export type Photo = {
   alt: string
   width: number
   height: number
-  /** `name`: what it is (sofa, lamp…); `shop`: the partner selling it */
-  hotspots: { name: string; shop: string; href: string; x: number; y: number }[]
+  /** `name`: what it is (sofa, lamp…); `shop`: the partner selling it; no `href` when no partner is picked yet */
+  hotspots: { name: string; shop: string; href?: string; x: number; y: number }[]
 }
 
 type PhotoRow = NonNullable<Project['gallery']>[number]
@@ -43,12 +43,14 @@ export function toPhotos(rows: PhotoRow[] | null | undefined, fallbackAlt: strin
         alt: altOr(m.alt, fallbackAlt),
         width: m.width ?? 1600,
         height: m.height ?? 1000,
-        // Products still being filled in (no partner or position yet) stay off the page
-        hotspots: (row.hotspots ?? []).flatMap((h) =>
-          isObj(h.partner) && typeof h.x === 'number' && typeof h.y === 'number'
-            ? [{ name: h.label?.trim() || h.partner.name || '', shop: h.label?.trim() ? h.partner.name || '' : '', href: partnerPath(h.partner), x: h.x, y: h.y }]
-            : [],
-        ),
+        hotspots: (row.hotspots ?? []).flatMap((h) => {
+          // A product needs a place on the photo and something to say: its name, its partner or both.
+          // Without a partner it shows as a name only, with no shop link (Ewan, 2026-10-27)
+          const partner = isObj(h.partner) ? h.partner : undefined
+          const name = h.label?.trim() || partner?.name || ''
+          if (typeof h.x !== 'number' || typeof h.y !== 'number' || !name) return []
+          return [{ name, shop: h.label?.trim() ? partner?.name || '' : '', href: partner && partnerPath(partner), x: h.x, y: h.y }]
+        }),
       },
     ]
   })

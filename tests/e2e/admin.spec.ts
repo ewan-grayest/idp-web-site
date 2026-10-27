@@ -100,17 +100,29 @@ test('The login page has the interface language switch, and the dashboard explai
   await expect(guide).toContainText('Язык контента')
 })
 
-test('A project saves with an unfinished product on a photo, which the site leaves out', async ({ page, request }, testInfo) => {
+test('A project saves with unfinished products; a product without a partner shows its name only', async ({ page, request }, testInfo) => {
+  test.setTimeout(90_000)
   await request.post('/api/v1/users/login', { data: { email: accountFor(testInfo.project.name), password } })
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
   const upload = await request.post('/api/v1/media', {
     multipart: { file: { name: 'hotspot.png', mimeType: 'image/png', buffer: png }, _payload: JSON.stringify({}) },
   })
   const media = (await upload.json()).doc
+  const partner = (await (await request.get('/api/v1/partners?limit=1&depth=0')).json()).docs[0]
   const slug = `e2e-hotspot-${Date.now()}`
-  // Ewan's project 12: an empty product row, and one with only a name
+  // Ewan's project 12: an empty product row, one with only a name, then two placed ones: with and without a partner
   const created = await request.post('/api/v1/projects', {
-    data: { title: 'Проверка товаров', slug, kind: 'residential', gallery: [{ image: media.id, hotspots: [{}, { label: 'Диван' }] }] },
+    data: {
+      title: 'Проверка товаров',
+      slug,
+      kind: 'residential',
+      gallery: [
+        {
+          image: media.id,
+          hotspots: [{}, { label: 'Диван' }, { label: 'Кресло', partner: partner.id, x: 70, y: 70 }, { label: 'Зеркало', x: 30, y: 30 }],
+        },
+      ],
+    },
   })
   expect(created.status(), await created.text()).toBe(201)
   const project = (await created.json()).doc
@@ -118,8 +130,26 @@ test('A project saves with an unfinished product on a photo, which the site leav
     await page.goto(`/projects/residential/${slug}`)
     await page.locator('[data-spec="5.1"] img').first().click()
     await expect(page.locator('[data-spec="5.1.4"]')).toBeVisible()
-    await expect(page.locator('[data-spec="5.1.3"]')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Показать или скрыть товары' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Показать или скрыть товары' }).click()
+    const spots = page.locator('[data-spec="5.1.3"]')
+    await expect(spots).toHaveCount(2)
+    await expect(page.locator('a[data-spec="5.1.3"]')).toContainText('Кресло')
+    await expect(page.locator('a[data-spec="5.1.3"]')).toContainText(partner.name)
+    await expect(page.locator('[data-spec="5.1.3"][data-no-shop]')).toHaveText('Зеркало')
+    await expect(page.locator('a[data-spec="5.1.3"]', { hasText: 'Зеркало' })).toHaveCount(0)
+
+    // The admin marks the product without a partner (desktop: the admin on phones is checked elsewhere)
+    if (testInfo.project.name !== 'phone') {
+      await page.goto('/admin/login')
+      await page.locator('#field-email').fill(accountFor(testInfo.project.name))
+      await page.locator('#field-password').fill(password)
+      await page.locator('button[type=submit]').click()
+      await expect(page).toHaveURL(/\/admin$/)
+      await page.goto(`/admin/collections/projects/${project.id}`)
+      await page.waitForLoadState('networkidle')
+      await page.locator('.tabs-field__tab-button').nth(1).click()
+      await expect(page.locator('[data-hotspot-no-partner]').first()).toBeVisible({ timeout: 20_000 })
+    }
   } finally {
     await request.delete(`/api/v1/projects/${project.id}`)
     await request.delete(`/api/v1/media/${media.id}`)

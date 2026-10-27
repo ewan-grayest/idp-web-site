@@ -11,3 +11,5 @@
 }
 .dot:focus-visible { outline: 2px solid var(--theme-success-500, #2f80ed); outline-offset: 2px; }
 .dot[data-dragging] { cursor: grabbing; transform: scale(1.15); }
+.dot[data-no-partner] { background: #fff; border: 2px dashed #e0a100; }
+.warn { margin: 0; font-size: 13px; color: var(--theme-warning-600, #b07a00); }

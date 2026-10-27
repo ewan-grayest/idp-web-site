@@ -24,6 +24,7 @@ export const HotspotPicker: UIFieldClientComponent = ({ path }) => {
       x: fields[`${list}.${k}.x`]?.value as number | null | undefined,
       y: fields[`${list}.${k}.y`]?.value as number | null | undefined,
       name: (fields[`${list}.${k}.label`]?.value as string | undefined) ?? '',
+      partner: !!fields[`${list}.${k}.partner`]?.value,
     }))
   })
 
@@ -85,6 +86,7 @@ export const HotspotPicker: UIFieldClientComponent = ({ path }) => {
               type="button"
               className={styles.dot}
               data-dragging={dragging === k || undefined}
+              data-no-partner={!s.partner || undefined}
               style={{ left: `${s.x}%`, top: `${s.y}%` }}
               title={`${k + 1}${s.name ? ` · ${s.name}` : ''} · X ${s.x}% · Y ${s.y}%`}
               aria-label={`${label('hotspotsMove')} ${k + 1}`}
@@ -120,6 +122,11 @@ export const HotspotPicker: UIFieldClientComponent = ({ path }) => {
       </div>
       {spots.some((s) => typeof s.x !== 'number' || typeof s.y !== 'number') && (
         <p className={styles.note}>{label('hotspotsUnplaced')}</p>
+      )}
+      {spots.some((s) => !s.partner) && (
+        <p className={styles.warn} data-hotspot-no-partner>
+          {label('hotspotsNoPartner')}
+        </p>
       )}
     </div>
   )

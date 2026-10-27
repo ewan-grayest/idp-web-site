@@ -48,6 +48,7 @@
 .hotspot[data-edge='top'] .label { top: 0; transform: none; }
 .hotspot[data-edge='bottom'] .label { top: auto; bottom: 0; transform: none; }
 .hotspot:hover .dot, .hotspot:focus-visible .dot { background: var(--c-green); }
+.hotspot[data-no-shop] { cursor: default; }
 @keyframes label-in { from { opacity: 0; } }
 .name { font: 500 17px/22px var(--font); color: var(--c-light); }
 .shop { font: 400 12px/16px var(--font); letter-spacing: 0.04em; color: var(--c-muted); }

@@ -70,26 +70,37 @@ export function Viewer({ photos, start, onClose }: { photos: Photo[]; start: num
         <div className={styles.frame} style={{ aspectRatio: `${photo.width} / ${photo.height}`, width: `min(100vw, calc(100vh * ${photo.width / photo.height}))` }}>
           <Image src={photo.url} alt={photo.alt} fill sizes="100vw" className={styles.img} priority />
           {tags &&
-            photo.hotspots.map((h, k) => (
-              <Link
-                key={k}
-                href={h.href}
-                className={styles.hotspot}
-                style={{ '--x': h.x, '--y': h.y } as React.CSSProperties}
-                data-side={h.x > 55 ? 'left' : 'right'}
-                data-edge={h.y < 15 ? 'top' : h.y > 85 ? 'bottom' : undefined}
-                data-spec="5.1.3"
-              >
-                <span className={styles.dot}>
-                  <TagIcon />
+            photo.hotspots.map((h, k) => {
+              const spot = {
+                className: styles.hotspot,
+                style: { '--x': h.x, '--y': h.y } as React.CSSProperties,
+                'data-side': h.x > 55 ? 'left' : 'right',
+                'data-edge': h.y < 15 ? 'top' : h.y > 85 ? 'bottom' : undefined,
+                'data-spec': '5.1.3',
+              }
+              const inner = (
+                <>
+                  <span className={styles.dot}>
+                    <TagIcon />
+                  </span>
+                  {/* The product first and larger, the shop under it (Ewan, 2026-10-26) */}
+                  <span className={styles.label}>
+                    <span className={styles.name}>{h.name}</span>
+                    {h.shop && <span className={styles.shop}>{h.shop}</span>}
+                  </span>
+                </>
+              )
+              // No partner picked yet: the name only, not a link
+              return h.href ? (
+                <Link key={k} href={h.href} {...spot}>
+                  {inner}
+                </Link>
+              ) : (
+                <span key={k} tabIndex={0} {...spot} data-no-shop>
+                  {inner}
                 </span>
-                {/* The product first and larger, the shop under it (Ewan, 2026-10-26) */}
-                <span className={styles.label}>
-                  <span className={styles.name}>{h.name}</span>
-                  {h.shop && <span className={styles.shop}>{h.shop}</span>}
-                </span>
-              </Link>
-            ))}
+              )
+            })}
         </div>
       </div>
 

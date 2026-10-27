@@ -17,7 +17,7 @@ services:
       # Inside the container uploads always live here; MEDIA_DIR in .env picks where that is on this computer
       MEDIA_DIR: /app/media
     ports:
-      - '127.0.0.1:3000:3000' # only this computer can open the site
+      - '0.0.0.0:3000:3000' # other devices on this network can open the site; '127.0.0.1:3000:3000' = this computer only
     volumes:
       # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR in .env
       - ${MEDIA_DIR:-media}:/app/media

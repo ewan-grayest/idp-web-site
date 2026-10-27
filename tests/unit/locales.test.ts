@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { dictionaries } from '@/i18n/dictionaries'
-import { localePath, locales, splitLocale } from '@/i18n/locales'
+import { browserLocale, localePath, locales, splitLocale } from '@/i18n/locales'
 
 describe('language addresses', () => {
   it('keeps Russian unprefixed and prefixes the others', () => {
@@ -33,5 +33,24 @@ describe('language addresses', () => {
       Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? keys(v, `${prefix}${k}.`) : [`${prefix}${k}`]))
     const ru = keys(dictionaries.ru).sort()
     for (const l of locales) expect(keys(dictionaries[l]).sort(), l).toEqual(ru)
+  })
+})
+
+describe('browserLocale', () => {
+  it('follows the browser: Russian, Chinese, otherwise English', () => {
+    expect(browserLocale('ru-RU,ru;q=0.9,en;q=0.8')).toBe('ru')
+    expect(browserLocale('zh-CN,zh;q=0.9')).toBe('zh')
+    expect(browserLocale('zh-TW')).toBe('zh')
+    expect(browserLocale('en-GB,en;q=0.9')).toBe('en')
+    expect(browserLocale('de-DE,fr;q=0.8')).toBe('en')
+  })
+  it('takes the most preferred site language in the visitor order', () => {
+    expect(browserLocale('de-DE,ru;q=0.8,en;q=0.5')).toBe('ru')
+    expect(browserLocale('en;q=0.5,zh;q=0.9')).toBe('zh')
+    expect(browserLocale('ru;q=0,en')).toBe('en')
+  })
+  it('keeps Russian when the browser says nothing (search engines, scripts)', () => {
+    expect(browserLocale(null)).toBe('ru')
+    expect(browserLocale('')).toBe('ru')
   })
 })

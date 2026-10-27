@@ -5,15 +5,6 @@ import { expect, test, type Page } from '@playwright/test'
 const chip = (page: Page, name: string) => page.locator('[data-spec="7.1.2"]', { hasText: name })
 const cardLinks = (page: Page) => page.locator('[data-spec="7.2.2"]')
 
-test('Header title follows 7.1 and 7.2', async ({ page }) => {
-  await page.goto('/projects/residential')
-  await page.waitForLoadState('networkidle')
-  const title = page.locator('[data-spec="0.1.2"]')
-  await expect(title).toHaveText('Выбери до 5 тэгов')
-  await page.locator('[data-spec="7.2"]').evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + 100))
-  await expect(title).toHaveText('Больше дизайна и интерьеров')
-})
-
 test('Picked tags turn green; «Выбрать» keeps only projects with all of them', async ({ page }) => {
   await page.goto('/projects/residential')
   await page.waitForLoadState('networkidle')
@@ -98,4 +89,14 @@ test('English page keeps its language when filtering', async ({ page }) => {
   await page.getByRole('button', { name: 'Apply' }).click()
   await expect(page).toHaveURL(/\/en\/projects\/residential\?tags=oak$/)
   await expect(cardLinks(page).first()).toHaveAttribute('href', /^\/en\/projects\/residential\//)
+})
+
+test('The header keeps the page name while the tag prompt scrolls under it', async ({ page }) => {
+  await page.goto('/projects/residential')
+  await page.waitForLoadState('networkidle')
+  for (const y of [300, 900, 1600]) {
+    await page.mouse.wheel(0, y)
+    await page.waitForTimeout(200)
+    await expect(page.locator('[data-spec="0.1.2"]')).toHaveText('Жилые интерьеры')
+  }
 })

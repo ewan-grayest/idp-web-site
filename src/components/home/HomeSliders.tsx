@@ -111,7 +111,7 @@ export function HomeSliders({ left, right }: { left: Slide[]; right: Slide[] }) 
       <Link ref={logo} href="/studio" className={styles.logo} aria-label={t.home.logo} data-spec="1.1">
         ID
       </Link>
-      <LanguageLinks className={styles.langs} itemClassName={styles.lang} short />
+      <LanguageLinks className={styles.langs} pill />
     </div>
   )
 }

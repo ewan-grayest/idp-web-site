@@ -34,13 +34,46 @@ test('Language links keep the page and section', async ({ page }) => {
   await expect(page.locator('[data-spec="3.2.1"]')).toHaveText('Наша команда')
 })
 
-test('Header language list on desktop', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'Phones list the languages in the footer')
+test('No language button in the header; the foot of the page has the RU · EN · 中 bar', async ({ page }) => {
   await page.goto('/studio')
-  await page.locator('[data-language-switch]').click()
-  await page.locator('header [data-language-links] a[hreflang="en"]').click()
+  await expect(page.locator('header [data-language-links]')).toHaveCount(0)
+  const bar = page.locator('footer [data-language-links]')
+  await expect(bar.locator('a')).toHaveText(['RU', 'EN', '中'])
+  await expect(bar.locator('a[aria-current="true"]')).toHaveText('RU')
+  await page.waitForLoadState('networkidle')
+  await bar.locator('a[hreflang="en"]').click()
   await expect(page).toHaveURL(/\/en\/studio$/)
-  await expect(page.locator('[data-language-switch]')).toHaveText('EN')
+  await expect(page.locator('footer [data-language-links] a[aria-current="true"]')).toHaveText('EN')
+})
+
+// The browser's language reaches the site as Accept-Language; the mixed cases are in tests/unit/locales.test.ts
+for (const [locale, where] of [
+  ['en-US', '/en/studio'],
+  ['zh-CN', '/zh/studio'],
+  ['de-DE', '/en/studio'],
+  ['ru-RU', '/studio'],
+] as const) {
+  test(`A first visit follows the browser language: ${locale} → ${where}`, async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL, locale })
+    const page = await context.newPage()
+    await page.goto('/studio')
+    await expect(page).toHaveURL(new RegExp(`${where.replace(/\//g, '\\/')}$`))
+    await context.close()
+  })
+}
+
+test('A language the visitor picked beats the browser language', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, locale: 'en-US' })
+  const page = await context.newPage()
+  await page.goto('/studio')
+  await expect(page).toHaveURL(/\/en\/studio$/)
+  await page.waitForLoadState('networkidle')
+  await page.locator('footer [data-language-links] a[hreflang="ru"]').click()
+  await expect(page).toHaveURL(/\/studio$/)
+  await page.goto('/partners')
+  await expect(page).toHaveURL(/\/partners$/)
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ru')
+  await context.close()
 })
 
 test('Home has its own language links', async ({ page, context, baseURL }) => {

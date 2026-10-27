@@ -5,18 +5,17 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 import { useI18n } from '@/i18n/client'
 import { Link } from '@/i18n/Link'
-import { defaultLocale, localeCodes } from '@/i18n/locales'
+import { defaultLocale } from '@/i18n/locales'
 import { ENQUIRE_EVENT, type EnquireDetail } from '@/lib/enquire'
 import { checkLead, readConsent, rememberConsent, sendLead } from '@/lib/leads'
 import { personPath, projectKinds, projectPath, type ProjectKind } from '@/lib/routes'
 import { applyTheme, currentTheme, THEME_EVENT, type Theme } from '@/lib/theme'
-import { MailIcon, MoonIcon, PhoneIcon, SearchIcon, SunIcon } from './Icons'
-import { LanguageLinks } from './LanguageLinks'
+import { MailIcon, MoonIcon, PhoneIcon, SearchIcon, SendIcon, SunIcon } from './Icons'
 import { SiteMenu } from './SiteMenu'
 import styles from './Header.module.css'
 
-/** Header states from the design: a = phone, b = enquiry, c = search; plus the language list. */
-type Mode = null | 'phone' | 'mail' | 'search' | 'lang'
+/** Header states from the design: a = phone, b = enquiry, c = search. Languages are at the foot of the page. */
+type Mode = null | 'phone' | 'mail' | 'search'
 
 type Hit = { key: string; title: string; text: string; href: string }
 type ProjectDoc = { id: number; title: string; slug: string; kind: ProjectKind }
@@ -211,23 +210,6 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
             {phone}
           </a>
         )}
-        {mode === 'mail' && (
-          <label className={styles.mailField}>
-            <span className="visually-hidden">{t.header.emailLabel}</span>
-            <input
-              ref={mailRef}
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="@mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && onMail()}
-              className={styles.input}
-              data-spec="0.1.7"
-            />
-          </label>
-        )}
 
         <button
           type="button"
@@ -239,17 +221,37 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
         >
           <PhoneIcon />
         </button>
-        <button
-          type="button"
-          className={styles.iconBtn}
-          aria-pressed={mode === 'mail'}
-          aria-label={mode === 'mail' ? t.header.send : t.header.write}
-          onClick={onMail}
-          disabled={sending}
-          data-spec="0.1.4"
-        >
-          <MailIcon />
-        </button>
+        {/* 0.1.7 and 0.1.4 as one rounded field: the mail button turns into its send button */}
+        <div className={styles.mailBar} data-open={mode === 'mail' || undefined}>
+          {mode === 'mail' && (
+            <label className={styles.mailField}>
+              <span className="visually-hidden">{t.header.emailLabel}</span>
+              <input
+                ref={mailRef}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="@mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && onMail()}
+                className={styles.mailInput}
+                data-spec="0.1.7"
+              />
+            </label>
+          )}
+          <button
+            type="button"
+            className={`${styles.iconBtn} ${styles.mailBtn}`}
+            aria-pressed={mode === 'mail'}
+            aria-label={mode === 'mail' ? t.header.send : t.header.write}
+            onClick={onMail}
+            disabled={sending}
+            data-spec="0.1.4"
+          >
+            {mode === 'mail' ? <SendIcon /> : <MailIcon />}
+          </button>
+        </div>
         <button
           type="button"
           className={styles.iconBtn}
@@ -269,20 +271,8 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
-        <button
-          type="button"
-          className={`${styles.iconBtn} ${styles.langBtn}`}
-          aria-pressed={mode === 'lang'}
-          aria-label={t.header.language}
-          onClick={() => toggle('lang')}
-          data-language-switch
-        >
-          {localeCodes[locale]}
-        </button>
         <span className="spec-id">0.1.3–5</span>
       </div>
-
-      {mode === 'lang' && <LanguageLinks className={styles.langs} itemClassName={styles.lang} />}
 
       {mode === 'mail' && (
         <div className={styles.consent} data-spec="0.1.8">

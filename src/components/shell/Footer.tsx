@@ -43,7 +43,7 @@ export function Footer({ social }: { social: Contacts['social'] }) {
             </Link>
           ))}
           <span className="spec-id">0.3.6–0.3.8</span>
-          <LanguageLinks className={styles.langs} itemClassName={styles.lang} />
+          <LanguageLinks className={styles.langs} pill />
           <span className={styles.copy}>© ID project, {new Date().getFullYear()}</span>
         </div>
       </div>

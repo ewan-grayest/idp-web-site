@@ -36,5 +36,27 @@ export function splitLocale(pathname: string): { locale: Locale; path: string } 
   return { locale: seg, path: pathname.slice(seg.length + 1) || '/' }
 }
 
+/** Cookie with the language the visitor picked themselves; it beats the browser's languages. */
+export const CHOICE_COOKIE = 'idp-locale'
+
+/**
+ * The site language for a browser's Accept-Language (Ewan, 2026-10-26): the visitor's most preferred of
+ * Russian, Chinese and English, in their own order; English when none of them is listed.
+ * No header (search engines, scripts) keeps the default, Russian.
+ */
+export function browserLocale(acceptLanguage: string | null | undefined): Locale {
+  if (!acceptLanguage?.trim()) return defaultLocale
+  const ranked = acceptLanguage
+    .split(',')
+    .map((part, i) => {
+      const [tag, ...params] = part.trim().toLowerCase().split(';')
+      const q = params.map((x) => x.trim()).find((x) => x.startsWith('q='))
+      return { lang: tag.split('-')[0], q: q ? Number(q.slice(2)) || 0 : 1, i }
+    })
+    .filter((x) => x.lang && x.q > 0)
+    .sort((a, b) => b.q - a.q || a.i - b.i)
+  return ranked.map((x) => x.lang).find(isLocale) ?? 'en'
+}
+
 /** Request header set by src/proxy.ts: the page address without its language prefix. */
 export const PATH_HEADER = 'x-idp-path'

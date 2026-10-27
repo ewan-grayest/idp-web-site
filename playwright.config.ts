@@ -6,6 +6,8 @@ export default defineConfig({
   globalSetup: './tests/e2e/global-setup.ts',
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    // A Russian browser, so Russian addresses are not sent on to /en (src/proxy.ts follows Accept-Language)
+    locale: 'ru-RU',
     // Optional: point at an already installed Chromium instead of `npx playwright install`
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },

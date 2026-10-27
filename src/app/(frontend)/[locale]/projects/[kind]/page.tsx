@@ -27,7 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /**
  * Pages 7 (residential), 9 (public) and 17 (archive) list all projects of their kind: one template.
- * Section IDs follow page 7 of the spec; 7.1–7.3 rise as the visitor scrolls. 7.1 names itself in the header 0.1.2.
+ * Section IDs follow page 7 of the spec; 7.1–7.3 rise as the visitor scrolls. The header 0.1.2 keeps the page name
+ * («Жилые интерьеры»), not the tag prompt (Ewan, 2026-10-26).
  */
 export default async function CollectionPage({ params, searchParams }: Props) {
   const { kind } = await params
@@ -41,7 +42,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
   return (
     <article className={base.page} data-spec={String(pageId)}>
       <Rise>
-        <section className={`${base.sec} ${base.pad}`} data-header-title={p.pickTags} data-spec="7.1">
+        <section className={`${base.sec} ${base.pad}`} data-header-title={t.pages[pageId]} data-spec="7.1">
           <div className={styles.head}>
             <h1 className={base.lab}>{t.pages[pageId]}</h1>
             <h2 id="pick-tags" className={base.h2} data-spec="7.1.1">
@@ -55,7 +56,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
           )}
         </section>
 
-        <section className={`${base.sec} ${base.pad}`} data-header-title={p.more} data-spec="7.2">
+        <section className={`${base.sec} ${base.pad}`} data-spec="7.2">
           <div className={styles.gridHead}>
             <h2 className={base.h2} data-spec="7.2.1">
               {p.more}

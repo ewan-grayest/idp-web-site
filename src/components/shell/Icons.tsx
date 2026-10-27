@@ -23,6 +23,12 @@ export const MailIcon = () => (
   </svg>
 )
 
+export const SendIcon = () => (
+  <svg {...base}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+)
+
 export const SearchIcon = () => (
   <svg {...base}>
     <circle cx="11" cy="11" r="6" />

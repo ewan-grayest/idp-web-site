@@ -1,0 +1,135 @@
+/* Page 3 · Studio and team. Section shell (.sec, .pad, .h2, .lab) comes from Project.module.css. */
+.cover { object-fit: cover; }
+
+/* 3.1 mission and vision */
+.mission { padding: 72px 10%; display: flex; gap: 64px; }
+.missionHead { flex: none; width: 340px; display: flex; flex-direction: column; gap: 12px; }
+.missionHead h1 { margin: 0; font: var(--t-h1); }
+.missionText { flex: 1; display: flex; flex-direction: column; gap: 18px; }
+.missionText p { margin: 0; }
+.lead { font: var(--t-quote); font-style: normal; color: var(--c-text); }
+.vision { font: var(--t-lead); color: var(--c-text-2); }
+
+/* 3.2 team: strip on the left, the open card 3.2-a takes the right half */
+.teamSec { padding: 56px 0 0; display: flex; flex-direction: column; gap: 24px; }
+.teamHead { padding: 0 10%; display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px 24px; }
+.filter { display: inline-flex; align-items: center; gap: 16px; font: var(--t-small); color: var(--c-muted); }
+.team { display: flex; height: 520px; }
+.people {
+  flex: 1; min-width: 0; list-style: none; margin: 0; padding: 24px 10% 0;
+  display: flex; gap: 40px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; scroll-padding-inline: 10%;
+}
+.people::-webkit-scrollbar { display: none; }
+.people li { flex: none; scroll-snap-align: start; }
+.person {
+  display: flex; flex-direction: column; align-items: center; gap: 16px; width: 200px;
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--c-action); text-align: center;
+}
+.circle {
+  position: relative; display: block; width: 200px; height: 200px; border-radius: 50%; overflow: hidden;
+  background: var(--c-photo-ph); color: var(--c-text); box-shadow: 0 0 0 3px transparent; transition: box-shadow var(--d-hover), width var(--d-expand) var(--ease-out), height var(--d-expand) var(--ease-out);
+}
+.team[data-open] .person { width: 150px; }
+.team[data-open] .circle { width: 150px; height: 150px; }
+.person:hover .circle, .person[aria-pressed='true'] .circle { box-shadow: 0 0 0 3px var(--c-accent); }
+.who { display: flex; flex-direction: column; gap: 2px; }
+.pname { font: 500 15px/20px var(--font); border-bottom: 2px solid transparent; transition: color var(--d-hover), border-color var(--d-hover); }
+.prole { font: var(--t-small); color: var(--c-muted); }
+.person:hover .pname, .person[aria-pressed='true'] .pname { color: var(--c-text); border-bottom-color: var(--c-accent); }
+
+.card { position: relative; flex: none; width: 50%; background: var(--c-photo-ph); color: var(--c-text); }
+.cardPhoto { position: absolute; inset: 0; display: block; }
+.close {
+  position: absolute; top: 16px; right: 16px; z-index: 1; width: 48px; height: 48px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  border: 1.5px solid #f5f2ec; background: rgba(21, 20, 18, 0.45); color: #f5f2ec; transition: color var(--d-hover), border-color var(--d-hover);
+}
+.close:hover { color: var(--c-accent); border-color: var(--c-accent); }
+.close svg { width: 22px; height: 22px; }
+.cardText {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 32px; display: flex; flex-direction: column; gap: 10px;
+  background: color-mix(in srgb, var(--c-bg) 90%, transparent);
+}
+.thought { margin: 0; font: var(--t-quote); font-size: 21px; line-height: 29px; color: var(--c-text); }
+.cardName {
+  align-self: flex-start; font: 500 16px/22px var(--font); color: var(--c-action);
+  border-bottom: 2px solid transparent; transition: color var(--d-hover), border-color var(--d-hover);
+}
+.cardName:hover { color: var(--c-text); border-bottom-color: var(--c-accent); }
+/* 3.2-a: the way to the person's achievements 4.2 */
+.cardMore { align-self: flex-start; font: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-muted); padding: 4px 0; border-bottom: 2px solid transparent; }
+.cardMore:hover { color: var(--c-text); border-bottom-color: var(--c-accent); }
+
+/* 3.4 journal covers */
+.journalSec { padding: 56px 0 56px 10%; display: flex; flex-direction: column; gap: 28px; }
+.issues { list-style: none; margin: 0; padding: 0 10% 0 0; display: flex; gap: 28px; overflow-x: auto; scrollbar-width: none; }
+.issues::-webkit-scrollbar { display: none; }
+.issues li { flex: none; }
+.issue { display: flex; flex-direction: column; width: 260px; border: 0; padding: 0; background: none; cursor: pointer; text-align: left; color: inherit; }
+.issueCover { position: relative; display: block; height: 340px; background: var(--c-photo-ph); }
+.issueBlank { position: absolute; left: 18px; right: 18px; bottom: 18px; font: var(--t-h2); color: var(--c-text); }
+.issueNo {
+  padding: 12px 16px; font: 500 14px/20px var(--font); background: var(--c-tag-bg); color: var(--c-tag-text);
+  transition: background var(--d-hover), color var(--d-hover);
+}
+.issue:hover .issueNo, .issue:focus-visible .issueNo { background: var(--c-accent); color: var(--c-on-accent); }
+/* «Получить экземпляр» under a cover that opens the magazine online (text action) */
+.issueCopy {
+  display: block; margin-top: 6px; padding: 6px 0; border: 0; border-bottom: 2px solid transparent; background: none; cursor: pointer;
+  font: 500 13px/20px var(--font); letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-mid);
+  transition: color var(--d-hover), border-color var(--d-hover);
+}
+.issueCopy:hover { color: var(--c-light); border-bottom-color: var(--c-green); }
+
+/* 3.5 map and address */
+.findSec { padding: 56px 0 40px; display: flex; flex-direction: column; gap: 28px; }
+.inset { padding: 0 10%; }
+.map { display: block; width: 100%; height: 480px; border: 0; background: var(--c-photo-ph); }
+.contacts { padding: 0 10%; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; font: var(--t-body); }
+.contacts address { font-style: normal; }
+.contacts a { border-bottom: 1px solid var(--c-line); }
+
+/* 3.7 partner logo tiles */
+.partners { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.plogo {
+  position: relative; height: 96px; padding: 16px; display: flex; align-items: center; justify-content: center; text-align: center;
+  background: var(--c-tag-bg); color: var(--c-tag-text); font: 500 14px/18px var(--font); letter-spacing: 0.04em;
+  transition: background var(--d-hover), color var(--d-hover);
+}
+.plogo:hover { background: var(--c-accent); color: var(--c-on-accent); }
+.plogo img { object-fit: contain; padding: 20px; }
+
+@media (max-width: 1279px) {
+  .mission { flex-direction: column; gap: 24px; }
+  .missionHead { width: auto; }
+  .partners { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Phone: the open card drops below the strip instead of beside it */
+@media (max-width: 767px) {
+  .mission { padding: 32px 16px; gap: 14px; }
+  .teamSec { padding-top: 28px; gap: 16px; }
+  .teamHead { padding: 0 16px; }
+  .team { height: auto; flex-direction: column; gap: 16px; }
+  .people { padding: 0 16px; gap: 12px; scroll-padding-inline: 16px; }
+  .person, .team[data-open] .person { width: 104px; gap: 8px; }
+  .circle, .team[data-open] .circle { width: 96px; height: 96px; }
+  .pname { font-size: 13px; line-height: 18px; }
+  .prole { display: none; }
+  .card { width: auto; height: 380px; margin: 0 16px; }
+  .cardText { padding: 14px 16px; }
+  .thought { font-size: 17px; line-height: 23px; }
+  .close { width: 44px; height: 44px; top: 10px; right: 10px; }
+  .journalSec { padding: 28px 0 28px 16px; gap: 16px; }
+  .issues { gap: 12px; padding-right: 16px; }
+  .issue { width: 180px; }
+  .issueCover { height: 240px; }
+  .issueNo { padding: 10px 12px; font-size: 13px; }
+  .findSec { padding: 28px 0; gap: 16px; }
+  .inset { padding: 0 16px; }
+  .map { height: 260px; }
+  .contacts { padding: 0 16px; flex-direction: column; align-items: flex-start; }
+  .partners { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .plogo { height: 72px; padding: 8px; font-size: 11px; line-height: 14px; }
+  .plogo img { padding: 12px; }
+}

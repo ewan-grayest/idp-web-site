@@ -1,0 +1,55 @@
+/* Pages 7, 9 and 17: all projects of one kind (sections and cards come from Project.module.css) */
+.head { display: flex; flex-direction: column; gap: 8px; }
+.head h1 { margin: 0; }
+.note { margin: 0; color: var(--c-muted); }
+.hint { margin: -12px 0 0; font: var(--t-small); color: var(--c-muted); }
+.count { font: var(--t-small); color: var(--c-muted); }
+
+/* 7.1.2 tag buttons: grey at rest, green when picked */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip {
+  min-height: 40px; padding: 0 16px; border: 0; border-radius: var(--radius); cursor: pointer; user-select: none;
+  font: 500 14px/16px var(--font); background: var(--c-tag-bg); color: var(--c-tag-text);
+  box-shadow: inset 0 0 0 1.5px transparent; transition: background var(--d-hover), color var(--d-hover), box-shadow var(--d-hover);
+}
+.chip:hover { box-shadow: inset 0 0 0 1.5px var(--c-green); }
+.chip[aria-pressed='true'] { background: var(--c-green); color: var(--c-on-green); }
+.chip[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/* 7.1.3 and reset */
+.actions { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.actions [aria-busy='true'] { opacity: 0.6; }
+
+/* 7.2 grid */
+.gridHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; }
+.grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.card { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; background: var(--c-raised); }
+.card img { transition: transform 0.6s ease; }
+.card:hover img { transform: scale(1.03); }
+.noImage { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 28px; font: 400 20px/26px var(--font); color: var(--c-light); }
+/* 7.2.3 hover: green veil with the name 7.2.4; on touch screens the name sits on a dark fade instead */
+.overlay {
+  position: absolute; inset: 0; z-index: 2; background: rgba(141, 198, 63, 0.88); opacity: 0; transition: opacity 0.25s;
+  display: flex; align-items: flex-end; padding: 28px; color: var(--c-on-green); font: 400 20px/26px var(--font);
+}
+.card:hover .overlay, .card:focus-visible .overlay { opacity: 1; }
+@media (hover: none) {
+  .overlay { opacity: 1; background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.45) 65%, rgba(0, 0, 0, 0.85)); color: #f5f2ec; text-shadow: var(--on-photo-shadow); }
+  .noImage { display: none; }
+}
+.none { display: flex; flex-direction: column; gap: 12px; }
+
+@media (max-width: 1023px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+
+@media (max-width: 767px) {
+  .hint { margin-top: -6px; }
+  .actions { gap: 20px; }
+  .grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .noImage, .overlay { padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card img { transition: none; }
+}

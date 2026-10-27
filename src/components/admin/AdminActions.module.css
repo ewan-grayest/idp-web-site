@@ -1,0 +1,41 @@
+/* The header gives its actions 600px, 300px up to 1024px wide and 150px on phones (Payload's AppHeader) */
+.actions { display: flex; gap: calc(var(--base) / 2); align-items: center; }
+.switch { display: flex; gap: 6px; align-items: center; }
+.caption { font-size: 12px; color: var(--theme-elevation-500); white-space: nowrap; }
+.languages { display: flex; }
+.select {
+  display: none;
+  height: calc(var(--base) * 1.2);
+  padding: 0 4px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s);
+  background: var(--theme-elevation-50);
+  color: var(--theme-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+/* Login page: the switch sits above the form, centred */
+.switch:not(.compact) { justify-content: center; margin-bottom: var(--base); }
+.switch:not(.compact) .select { display: none; }
+.switch:not(.compact) .languages { display: flex; }
+
+/* Dashboard note on the two language switches */
+.guide {
+  margin-bottom: calc(var(--base) * 1.5);
+  padding: var(--base) calc(var(--base) * 1.2);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-m);
+  background: var(--theme-elevation-50);
+}
+.guide h2 { margin: 0 0 calc(var(--base) / 2); font-size: 18px; }
+.guide p { margin: 0 0 calc(var(--base) / 3); max-width: 80ch; color: var(--theme-elevation-800); }
+.guide p:last-child { margin-bottom: 0; }
+
+@media (max-width: 1024px) {
+  .compact .languages { display: none; }
+  .compact .select { display: block; }
+}
+@media (max-width: 768px) {
+  .site, .compact .caption { display: none; }
+}

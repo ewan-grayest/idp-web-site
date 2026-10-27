@@ -1,0 +1,157 @@
+/* Page 5 project template (also 8 and 16) */
+.page { overflow-x: clip; }
+
+/* Each section overlaps the one above with a soft shadow (section rise) */
+.sec {
+  position: relative;
+  background: var(--c-ground);
+  box-shadow: var(--sec-shadow);
+}
+.pad { padding: 56px 10%; display: flex; flex-direction: column; gap: 28px; }
+
+.lab { font: 500 12px/16px var(--font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-accent-text); }
+.h2 { margin: 0; font: var(--t-h2); color: var(--c-light); }
+.cover { object-fit: cover; }
+
+/* 5.1 strip: 7 frames on screen */
+.strip { height: min(560px, calc(100vh - var(--header-h))); }
+.stripHead {
+  position: absolute; left: 40px; top: 28px; z-index: 2; pointer-events: none;
+  display: flex; flex-direction: column; gap: 6px;
+  text-shadow: var(--on-photo-shadow);
+}
+.title { margin: 0; font: var(--t-h1); }
+.stripTrack { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.stripTrack::-webkit-scrollbar { display: none; }
+.frame {
+  /* 7 on screen; fewer photos stretch to fill the width */
+  position: relative; flex: 1 0 calc(100% / 7); height: 100%;
+  border: 0; padding: 0; margin: 0; background: var(--c-raised); cursor: zoom-in;
+  scroll-snap-align: start; transition: filter 0.25s, flex-basis 0.45s var(--ease-out, ease-out);
+}
+.frame:hover { filter: brightness(1.25); }
+.num { position: absolute; left: 14px; bottom: 14px; font: 500 12px var(--font); color: #f5f2ec; text-shadow: var(--on-photo-shadow); }
+.empty { margin: auto; color: var(--c-muted); font: var(--t-small); }
+
+/* 5.2 author */
+.author { height: 640px; display: flex; }
+.portrait { position: absolute; inset: 0; display: block; background: #24272a; }
+.authorPanel {
+  position: absolute; right: 0; top: 0; bottom: 0; width: min(640px, 50%);
+  background: color-mix(in srgb, var(--c-bg) 88%, transparent); padding: 72px 64px;
+  display: flex; flex-direction: column; gap: 24px; overflow-y: auto;
+}
+.name { align-self: flex-start; font: var(--t-h1); color: var(--c-light); border-bottom: 2px solid transparent; transition: border-color var(--d-hover); }
+.name:hover { color: var(--c-light); border-bottom-color: var(--c-green); }
+.about { display: flex; flex-direction: column; gap: 8px; }
+.about p { margin: 0; }
+.quote { margin: 0; padding-left: 20px; border-left: 3px solid var(--c-green); font: var(--t-quote); }
+
+/* 5.3 tags */
+.tags { display: flex; flex-wrap: wrap; gap: 10px; }
+.tag {
+  display: inline-flex; align-items: center; min-height: 40px; border-radius: var(--radius); padding: 0 16px;
+  font: 500 14px/16px var(--font); background: var(--c-tag-bg); color: var(--c-tag-text); transition: background var(--d-hover);
+}
+.tag:hover { background: var(--c-green); color: var(--c-on-green); }
+.textLink {
+  align-self: flex-start; padding: 6px 0; font: 500 14px/20px var(--font); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--c-mid); border-bottom: 2px solid transparent; transition: color var(--d-hover), border-color var(--d-hover);
+}
+.textLink:hover { color: var(--c-light); border-bottom-color: var(--c-green); }
+
+/* 5.4–5.6 stages: gallery and text side by side, alternating */
+.stage { padding: 56px 0 64px; display: flex; flex-direction: column; gap: 28px; }
+.stage .h2 { padding: 0 10%; }
+.stageBody { display: flex; min-height: 452px; }
+.stageBody[data-flip] { flex-direction: row-reverse; }
+.stageTrack { width: 50%; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; }
+.stageTrack::-webkit-scrollbar { display: none; }
+.stagePhoto { position: relative; flex: none; width: min(560px, 90%); border: 0; padding: 0; background: var(--c-raised); cursor: zoom-in; scroll-snap-align: start; }
+.stageText {
+  width: 50%; padding: 32px 10% 32px 64px; background: var(--c-surface);
+  display: flex; flex-direction: column; justify-content: center; gap: 16px;
+}
+.stageBody[data-flip] .stageText { padding: 32px 64px 32px 10%; }
+.stageText p { margin: 0; }
+
+/* 5.7 sharing and price enquiry */
+.shareRow { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.shareRow .lab { margin-right: 16px; }
+.shr {
+  display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 22px;
+  border: 1.5px solid var(--c-mid); background: none; color: var(--c-light);
+  font: 500 14px var(--font); letter-spacing: 0.06em; cursor: pointer; transition: border-color var(--d-hover), color var(--d-hover);
+}
+.shr:hover { border-color: var(--c-green); color: var(--c-accent-text); }
+.shortField { display: flex; align-items: center; gap: 10px; }
+.shortField input {
+  height: 48px; width: 260px; background: var(--c-raised); border: 1.5px solid var(--c-green); color: var(--c-light);
+  padding: 0 14px; font: 400 15px var(--font); outline: none;
+}
+.copied { font: var(--t-small); color: var(--c-accent-text); }
+.priceRow { border-top: 1px solid var(--c-hairline); padding-top: 24px; display: flex; }
+
+/* 5.10 */
+.ctaRow { min-height: 140px; padding: 0 10%; display: flex; align-items: center; border-top: 1px solid var(--c-raised); }
+
+/* 5.11 recommendations */
+.recs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.card { position: relative; display: block; height: 420px; overflow: hidden; background: var(--c-raised); }
+.cardBadge { position: absolute; left: 24px; top: 24px; z-index: 1; font: 500 12px/16px var(--font); letter-spacing: 0.14em; text-transform: uppercase; color: #f5f2ec; text-shadow: var(--on-photo-shadow); }
+/* Dark fade under the badge */
+.card::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 120px; z-index: 1; pointer-events: none; background: var(--scrim-top); }
+.cardOverlay {
+  position: absolute; inset: 0; z-index: 2; background: rgba(141, 198, 63, 0.88); opacity: 0; transition: opacity 0.25s;
+  display: flex; align-items: flex-end; padding: 28px; color: var(--c-on-green); font: 400 20px/26px var(--font);
+}
+.card:hover .cardOverlay, .card:focus-visible .cardOverlay { opacity: 1; }
+@media (hover: none) {
+  .cardOverlay { opacity: 1; background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.45) 65%, rgba(0, 0, 0, 0.85)); color: #f5f2ec; text-shadow: var(--on-photo-shadow); }
+}
+
+@media (max-width: 1279px) {
+  .frame { flex-basis: calc(100% / 4.5); }
+  .authorPanel { padding: 48px 40px; }
+}
+
+/* Phone: text below photos, not over them; galleries swipe */
+@media (max-width: 767px) {
+  .pad { padding: 24px 16px; gap: 16px; }
+  .strip { height: auto; display: flex; flex-direction: column; }
+  .stripHead { position: static; padding: 20px 16px; text-shadow: none; gap: 4px; }
+  .title { font: var(--t-h2); }
+  .stripTrack { height: 344px; gap: 4px; }
+  .frame { flex: 0 0 40%; }
+  .author { height: auto; flex-direction: column; }
+  .portrait { position: relative; height: 260px; }
+  .authorPanel { position: static; width: 100%; padding: 24px 16px; background: var(--c-ground); gap: 14px; }
+  .quote { padding-left: 14px; }
+  .stage { padding: 32px 0; gap: 16px; }
+  .stage .h2 { padding: 0 16px; }
+  .stageBody, .stageBody[data-flip] { flex-direction: column; min-height: 0; gap: 16px; }
+  .stageTrack { width: 100%; height: 240px; gap: 6px; padding-left: 16px; }
+  .stagePhoto { width: 300px; }
+  .stageText, .stageBody[data-flip] .stageText { width: 100%; padding: 0 16px; background: none; }
+  .shr { height: 44px; padding: 0 16px; }
+  .shortField input { width: 100%; }
+  .ctaRow { min-height: 96px; padding: 0 16px; }
+  .recs { display: flex; overflow-x: auto; gap: 10px; margin-right: -16px; scrollbar-width: none; }
+  .card { flex: none; width: 300px; height: 300px; }
+}
+
+/* The strip title sits on photos on wider screens: keep it light in both themes */
+@media (min-width: 768px) {
+  .stripHead { color: #f5f2ec; }
+  .stripHead .lab { color: var(--c-accent); }
+  /* Dark fade behind the title, over the photos (Ewan, 2026-10-26: names were hard to read on bright photos) */
+  .strip::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 240px; z-index: 1; pointer-events: none; background: var(--scrim-top); }
+}
+
+/* 5.1 strip: the photo under the pointer widens to show more of itself (Ewan, 2026-10-25); the others make room */
+@media (hover: hover) and (min-width: 768px) {
+  .frame:hover, .frame:focus-visible { flex-basis: calc(100% / 7 * 2.6); }
+}
+@media (hover: hover) and (min-width: 768px) and (max-width: 1279px) {
+  .frame:hover, .frame:focus-visible { flex-basis: calc(100% / 4.5 * 2); }
+}

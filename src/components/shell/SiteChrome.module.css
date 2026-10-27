@@ -1,0 +1,5 @@
+/* Header 0.1 is fixed, so content starts below it */
+.main {
+  padding-top: var(--header-h);
+  min-height: 100vh;
+}

@@ -1,0 +1,7 @@
+# SITE_DOMAIN is the site address, e.g. idproject.ru, or <ip>.sslip.io before a domain exists
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	# Preview: keep search engines out until launch. Delete this line to go public.
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy app:3000
+}

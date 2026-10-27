@@ -1,0 +1,10 @@
+node_modules
+.next
+.env
+media
+deploy/.env
+deploy/backups
+backups
+backup.env
+deploy/backup.env
+**/.env.before-restore

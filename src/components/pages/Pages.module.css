@@ -1,0 +1,141 @@
+/* Pages 6 and 10–15. Sections and headings come from Project.module.css (.sec, .pad, .lab, .h2). */
+.head { display: flex; flex-direction: column; gap: 8px; }
+.head h1 { margin: 0; font: var(--t-h1); color: var(--c-light); }
+.cover { object-fit: cover; }
+.note { margin: 0; font: var(--t-small); color: var(--c-muted); }
+.stack { display: flex; flex-direction: column; gap: 20px; }
+.anchor { scroll-margin-top: var(--header-h); }
+
+/* 11, 13, 14: vertical timeline on the left, the picked entry on the right */
+.entries { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 56px; align-items: start; }
+.list {
+  position: sticky; top: calc(var(--header-h) + 24px);
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - var(--header-h) - 48px); overflow-y: auto; scrollbar-width: thin;
+  border-left: 1px solid var(--c-hairline);
+}
+.point {
+  position: relative; display: flex; flex-direction: column; gap: 2px; text-align: left;
+  padding: 12px 0 12px 24px; border: 0; background: none; color: var(--c-soft); cursor: pointer;
+  font: 400 15px/21px var(--font);
+}
+.dot {
+  position: absolute; left: -7px; top: 16px; width: 13px; height: 13px; border-radius: 50%;
+  border: 2px solid var(--c-accent); background: var(--c-ground); transition: background var(--d-hover);
+}
+.point:hover .dot { background: var(--c-accent); }
+.point:hover .pointTitle { color: var(--c-light); }
+.point[aria-selected='true'] .dot { background: var(--c-photo-ph); }
+.point[aria-selected='true'] .pointTitle { color: var(--c-light); font-weight: 600; }
+.pointWhen { font: var(--t-small); color: var(--c-muted); }
+.pointTitle { transition: color var(--d-hover); }
+
+.panels { scroll-margin-top: calc(var(--header-h) + 16px); min-width: 0; }
+.panel { display: flex; flex-direction: column; gap: 20px; }
+.panel[hidden] { display: none; }
+.entryTitle { margin: 0; font: var(--t-h2); color: var(--c-light); }
+.when { margin: -12px 0 0; font: var(--t-small); color: var(--c-muted); }
+.photos { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--photo-gap); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.photo { position: relative; flex: none; width: 480px; height: 320px; background: var(--c-photo-ph); scroll-snap-align: start; }
+
+/* Legal 14: company details as a list of label and value */
+.details { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 32px; max-width: 760px; }
+.details dt { font: var(--t-small); color: var(--c-muted); padding-top: 3px; }
+.details dd { margin: 0; color: var(--c-light); white-space: pre-line; }
+
+/* 10: sideways slider of wide photos; the source and date 10.4 rise on hover, a click opens the article */
+.press { list-style: none; margin: 0; padding: 0; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.press li { flex: none; width: min(640px, 80vw); scroll-snap-align: start; }
+.article { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; background: var(--c-photo-ph); color: #f5f2ec; }
+.article img { transition: transform 0.6s ease; }
+.article:hover img { transform: scale(1.03); }
+.article:hover { color: #f5f2ec; }
+.articleText {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 64px 28px 24px;
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--scrim-bottom); text-shadow: var(--on-photo-shadow);
+}
+.articleSource { font: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-accent); }
+.articleTitle { font: 400 22px/28px var(--font-serif); }
+.articleBar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 14px 28px;
+  display: flex; justify-content: space-between; gap: 16px;
+  background: rgba(141, 198, 63, 0.92); color: var(--c-on-green); font: 500 14px/20px var(--font); text-shadow: none;
+  transform: translateY(100%); transition: transform 0.25s var(--ease-out);
+}
+.article:hover .articleBar, .article:focus-visible .articleBar { transform: none; }
+.noPhoto { position: absolute; inset: 0; background: var(--c-raised); }
+
+/* 6.2: partner logo buttons, grey at rest and green on hover */
+.logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.logoBtn {
+  position: relative; height: 104px; padding: 16px; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background: var(--c-tag-bg); color: var(--c-tag-text); font: 500 15px/20px var(--font);
+  box-shadow: inset 0 0 0 2px transparent; transition: background var(--d-hover), box-shadow var(--d-hover);
+}
+.logoBtn img { object-fit: contain; padding: 18px; }
+.logoBtn:hover { background: var(--c-accent); color: var(--c-on-green); }
+.logoBtn[aria-selected='true'] { box-shadow: inset 0 0 0 2px var(--c-accent); }
+
+/* 6.3 partner block: logo, text and actions beside a wide photo; discount under it */
+.partner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 40px; align-items: start; }
+.partnerText { display: flex; flex-direction: column; gap: 20px; }
+.partnerLogo { position: relative; width: 160px; height: 80px; }
+.partnerLogo img { object-fit: contain; object-position: left center; }
+.partnerPhoto { position: relative; aspect-ratio: 16 / 9; background: var(--c-photo-ph); }
+.discount { margin: 0; padding: 14px 18px; border-left: 3px solid var(--c-accent); background: var(--c-raised); color: var(--c-light); }
+.discount span { display: block; font: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-muted); margin-bottom: 4px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+.link { font: 500 14px/20px var(--font); letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-mid); border-bottom: 2px solid transparent; padding: 6px 0; }
+.link:hover { color: var(--c-light); border-bottom-color: var(--c-green); }
+
+/* 6.3: the way up to the Get-Together scheme 6.1, hard to miss */
+.gtLink {
+  display: flex; flex-direction: column; gap: 4px; padding: 16px 20px;
+  background: var(--c-accent); color: var(--c-on-green); transition: filter var(--d-hover);
+}
+.gtLink:hover { color: var(--c-on-green); filter: brightness(1.06); }
+.gtTitle { font: 600 16px/22px var(--font); }
+.gtNote { font: 400 14px/20px var(--font); }
+.gtNote::after { content: ' ↑'; }
+
+/* 6.4 projects: a grid of photos with the kind and name under each, tags under them */
+.projects { margin-top: 48px; }
+.projectGrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 20px; }
+.projectCard { display: flex; flex-direction: column; gap: 6px; color: var(--c-light); }
+.projectPhoto { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--c-photo-ph); margin-bottom: 8px; }
+.projectPhoto img { transition: transform 0.6s ease; }
+.projectCard:hover .projectPhoto img { transform: scale(1.03); }
+.projectKind { font: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-muted); }
+.projectName { font: 400 20px/26px var(--font-serif); border-bottom: 2px solid transparent; align-self: flex-start; transition: border-color var(--d-hover); }
+.projectCard:hover .projectName { border-bottom-color: var(--c-green); }
+.tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.tag { padding: 8px 14px; background: var(--c-tag-bg); color: var(--c-tag-text); font: 500 14px/16px var(--font); }
+
+@media (max-width: 1023px) {
+  .entries { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  /* The timeline becomes a sideways row of entries above the text */
+  .list { position: static; flex-direction: row; max-height: none; overflow-x: auto; border-left: 0; border-top: 1px solid var(--c-hairline); }
+  .point { flex: none; max-width: 240px; padding: 22px 12px 8px 0; }
+  .dot { left: 0; top: -7px; }
+  .partner { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .projectGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .photo { width: 80vw; height: 220px; }
+  .details { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .details dd { margin-bottom: 12px; }
+  .articleText { padding: 48px 18px 18px; }
+  .articleTitle { font-size: 19px; line-height: 25px; }
+  /* No hover on phones: the source and date stay in the text instead of the bar */
+  .articleBar { display: none; }
+  .logos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .logoBtn { height: 84px; }
+  .projectGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article img, .articleBar, .projectPhoto img { transition: none; }
+}

@@ -5,7 +5,7 @@
 set -e
 if [ "$(id -u)" = 0 ]; then
   # Only files that are not the app user's yet, so a big folder is not rewritten on every start
-  find /app/media /app/.next/cache ! -user app -exec chown app:app {} + 2>/dev/null || true
+  find /app/media /app/.next/cache /app/backups ! -user app -exec chown app:app {} + 2>/dev/null || true
   if ! su-exec app test -w /app/media; then
     echo "The upload folder (MEDIA_DIR) is not writable by the app user (uid 100). Give it to that user, e.g. sudo chown -R 100:101 <folder>" >&2
   fi

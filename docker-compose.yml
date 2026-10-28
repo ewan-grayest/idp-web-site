@@ -16,11 +16,16 @@ services:
       DATABASE_URI: postgres://idp:idp@db:5432/idp
       # Inside the container uploads always live here; MEDIA_DIR in .env picks where that is on this computer
       MEDIA_DIR: /app/media
+      # Backups made from the admin («Резервные копии»), in the same folder and format as scripts/backup.sh
+      BACKUPS_DIR: /app/backups
+      BACKUP_MODE: local
     ports:
       - '0.0.0.0:3000:3000' # other devices on this network can open the site; '127.0.0.1:3000:3000' = this computer only
     volumes:
       # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR in .env
       - ${MEDIA_DIR:-media}:/app/media
+      # Backups: the "backups" folder beside this file (the scripts use it too)
+      - ./backups:/app/backups
       - nextcache:/app/.next/cache
     depends_on:
       db:

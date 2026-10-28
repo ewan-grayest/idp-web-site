@@ -14,9 +14,14 @@ services:
       DATABASE_URI: postgres://idp:${POSTGRES_PASSWORD}@db:5432/idp
       # Inside the container uploads always live here; MEDIA_DIR in deploy/.env picks where that is on the server
       MEDIA_DIR: /app/media
+      # Backups made from the admin («Резервные копии»), in the same folder and format as scripts/backup.sh
+      BACKUPS_DIR: /app/backups
+      BACKUP_MODE: prod
     volumes:
       # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR in deploy/.env
       - ${MEDIA_DIR:-media}:/app/media
+      # Backups: deploy/backups on the server (the scripts use it too)
+      - ./backups:/app/backups
       - nextcache:/app/.next/cache
     depends_on:
       db:

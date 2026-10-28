@@ -1,0 +1,46 @@
+/* «Резервные копии» admin page, in the admin's own theme colours (light and dark) */
+.page { padding-block: calc(var(--base) * 1.5) calc(var(--base) * 3); display: grid; gap: var(--base); }
+.page h1 { margin: 0; }
+.intro { display: grid; gap: calc(var(--base) / 3); }
+.intro p { margin: 0; max-width: 80ch; color: var(--theme-elevation-800); }
+.toolbar, .actions { display: flex; flex-wrap: wrap; gap: calc(var(--base) / 2); align-items: center; }
+.error { margin: 0; color: var(--theme-error-500); white-space: pre-wrap; }
+.notice { margin: 0; color: var(--theme-success-500); }
+.empty { color: var(--theme-elevation-500); }
+.muted, .file { color: var(--theme-elevation-500); font-size: 12px; }
+.file { overflow-wrap: anywhere; }
+.good { color: var(--theme-success-500); font-size: 12px; }
+.bad { color: var(--theme-error-500); font-size: 12px; }
+
+.job {
+  padding: var(--base) calc(var(--base) * 1.2);
+  border: 1px solid var(--theme-elevation-150);
+  border-left: 4px solid var(--theme-elevation-400);
+  border-radius: var(--style-radius-m);
+  background: var(--theme-elevation-50);
+}
+.job h2 { margin: 0 0 calc(var(--base) / 2); font-size: 16px; }
+.job ol { margin: 0; padding-left: 1.4em; display: grid; gap: 2px; }
+.running, .restarting { border-left-color: var(--theme-warning-500); }
+.done { border-left-color: var(--theme-success-500); }
+.failed { border-left-color: var(--theme-error-500); }
+
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { text-align: left; vertical-align: top; padding: calc(var(--base) / 2); border-bottom: 1px solid var(--theme-elevation-100); }
+.table th { color: var(--theme-elevation-500); font-weight: 500; white-space: nowrap; }
+.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.confirmRow td { background: var(--theme-elevation-50); }
+.confirm { display: grid; gap: calc(var(--base) / 2); max-width: 80ch; }
+.confirm h3, .confirm p { margin: 0; }
+.check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.restart { font-size: 16px; }
+
+/* Phones: each backup as a card (date, kind, contents and size, then the buttons) instead of a wide table */
+@media (max-width: 768px) {
+  .table thead { display: none; }
+  .table tr { display: grid; gap: 4px; padding: calc(var(--base) / 2) 0; border-bottom: 1px solid var(--theme-elevation-100); }
+  .table td { display: block; padding: 0; border: 0; }
+  .confirmRow td { padding: calc(var(--base) / 2); }
+}

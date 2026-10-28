@@ -83,6 +83,10 @@ EOF
 (cd "$WORK" && tar -cf "../$name.tar.part" manifest.txt SHA256SUMS db.dump db-counts.txt media.tar $( [ -d env ] && echo env ))
 mv "$BACKUP_DIR/$name.tar.part" "$BACKUP_DIR/$name.tar"
 printf '%s  %s\n' "$(sha256_of "$BACKUP_DIR/$name.tar")" "$name.tar" > "$BACKUP_DIR/$name.tar.sha256"
+# Give the files to the folder's owner: on a server that is the site's app user, which lists and restores
+# backups from the admin page (run as root, e.g. with sudo; elsewhere this quietly does nothing)
+owner=$(stat -c '%u:%g' "$BACKUP_DIR" 2>/dev/null || stat -f '%u:%g' "$BACKUP_DIR" 2>/dev/null || true)
+[ -n "$owner" ] && chown "$owner" "$BACKUP_DIR/$name.tar" "$BACKUP_DIR/$name.tar.sha256" 2>/dev/null || true
 log "Done: $BACKUP_DIR/$name.tar ($(wc -c < "$BACKUP_DIR/$name.tar" | tr -d ' ') bytes)"
 
 # 4. Optional off-site copy (Russian-payable or your own storage, e.g. Yandex Object Storage, Selectel, a home NAS)

@@ -1,9 +1,51 @@
 # Backup and restore
 
-One command saves the whole site: the PostgreSQL database (projects, people, texts, enquiries, admin accounts)
-and every uploaded photo and video with its resized copies. Another command puts it all back.
+A backup saves the whole site: the PostgreSQL database (projects, people, texts, enquiries, admin accounts)
+and every uploaded photo and video with its resized copies. Restoring one puts it all back.
+
+There are two ways to do it, and they share one folder and one file format, so a backup made either way
+restores either way:
+
+- **In the admin**: «Резервные копии» in the side menu (`/admin/backups`). No Terminal needed.
+- **With scripts** in Terminal, from the site folder (below). They also run the nightly backup.
+
+## In the admin
+
+Open `/admin/backups` (side menu → Обслуживание → Резервные копии). Every signed-in admin user can:
+
+| Button | What happens |
+|---|---|
+| Сделать копию сейчас | Saves the database and all media into a new backup. Takes seconds for a small site; the site keeps running. Old backups are rotated as below. |
+| Загрузить копию с компьютера | Uploads a backup `.tar` (for example one downloaded from the other site). A file that is not a site backup is refused. |
+| Скачать | Downloads the backup file, to keep a copy on another disk. |
+| Проверить | Checks every checksum and test-loads the database into a temporary copy, comparing every table's rows. The site is not touched. |
+| Восстановить… | Asks for confirmation, then restores (below). |
+| Удалить | Deletes the file, after a second click. |
+
+A restore from the admin:
+
+1. Checks the backup and that the site code is new enough for it.
+2. Saves the current state as a «До восстановления» (`…-pre-restore-…`) backup.
+3. Loads the backup into a new database beside the live one and checks every table's rows,
+   and unpacks the media beside the live files. The live site is untouched until both are ready.
+4. Switches the site to the restored database and files within a second.
+5. Restarts the site (Docker starts it again by itself; about half a minute). The page waits and then
+   opens the sign-in page: sign in with an account from the backup.
+
+The backups the admin makes live in the same folder as the scripts' (`backups/`, or `deploy/backups/` in production),
+mounted into the app container at `/app/backups`. The app's database tools are PostgreSQL 16, copied into the image from
+`postgres:16-alpine` (see `Dockerfile`). In `npm run dev` the page works too when `pg_dump`, `pg_restore` and `psql` 16
+are installed on the computer (on the PATH, or set `PG_BIN_DIR` to their folder), but after a restore restart the dev server by hand.
+
+Only one backup or restore runs at a time: the admin and the scripts share a lock (`backups/.lock`).
+If a task was cut off by a crash, the next one from the admin clears the leftover lock itself.
+
+## With scripts
+
 The same scripts work for the local dev site (`docker-compose.yml`) and for production
 (`deploy/docker-compose.prod.yml`, add `--prod`). Run them from the site folder. Docker must be running.
+On a Linux server, run them with `sudo` so the admin page can read the backups they make
+(the files are handed to the app's user, uid 100).
 
 | Task | Local dev site | Production |
 |---|---|---|

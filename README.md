@@ -77,7 +77,8 @@ docker run --rm -v site_pgdata:/from -v "/Users/<you>/IDP data/postgres":/to --e
 ## Backups
 
 Full backup (database and uploaded media) and restore, for the local dev site and production: see [BACKUP.md](BACKUP.md).
-Quick: `scripts/backup.sh`, `scripts/restore.sh backups/<file>.tar`; nightly: `scripts/schedule-backup.sh on` (add `--prod` on the server).
+In the admin: «Резервные копии» (`/admin/backups`) makes, checks, downloads, uploads, restores and deletes backups.
+In Terminal: `scripts/backup.sh`, `scripts/restore.sh backups/<file>.tar`; nightly: `scripts/schedule-backup.sh on` (add `--prod` on the server).
 
 ## Develop with live reload
 

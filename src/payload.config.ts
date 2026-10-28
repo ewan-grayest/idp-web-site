@@ -23,6 +23,7 @@ import { PageTexts } from './globals/PageTexts'
 import { defaultLocale, locales } from './i18n/locales'
 import { tr } from './collections/labels'
 import { migrations } from './migrations'
+import { backupEndpoints } from './endpoints/backups'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -49,11 +50,18 @@ export default buildConfig({
       // Interface language switch on the login page, and a note on the two language switches on the dashboard
       beforeLogin: ['/components/admin/LanguageSwitch#LoginLanguages'],
       beforeDashboard: ['/components/admin/AdminGuide#AdminGuide'],
+      // «Резервные копии»: make, download, upload, check and restore full backups (database and media)
+      afterNavLinks: ['/components/admin/backups/BackupsNavLink#BackupsNavLink'],
+      views: {
+        backups: { Component: '/components/admin/backups/BackupsView#BackupsView', path: '/backups', exact: true },
+      },
     },
   },
   // Admin side menu order: projects and team, then each page's section, then enquiries, files and users
   collections: [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, Leads, Media, Users],
   globals: [Studio, PageTexts],
+  // /api/v1/backups: see src/endpoints/backups.ts
+  endpoints: backupEndpoints,
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

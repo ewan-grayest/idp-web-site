@@ -81,7 +81,8 @@ export async function getProject(kind: ProjectKind, slug: string): Promise<Proje
 /** 7.1.2: a visitor picks at most five tags. */
 export const maxTags = 5
 
-export type CollectionCard = { key: number; title: string; href: string; image?: string; alt: string }
+/** `ratio`: the cover's height to width, so the salon grid (7.2) gives an upright photo an upright frame */
+export type CollectionCard = { key: number; title: string; href: string; image?: string; alt: string; ratio?: number }
 
 /** A project's cover, else its first gallery photo. */
 export const coverOf = (p: Project) => (isObj(p.cover) ? p.cover : p.gallery?.find((row) => isObj(row.image))?.image)
@@ -96,6 +97,7 @@ export function toCard(p: Project): CollectionCard {
     image: mediaUrl(image),
     // The card shows the name already (7.2.4): an empty description keeps screen readers from repeating it
     alt: (isObj(image) && image.alt?.trim()) || '',
+    ratio: isObj(image) && image.width && image.height ? image.height / image.width : undefined,
   }
 }
 

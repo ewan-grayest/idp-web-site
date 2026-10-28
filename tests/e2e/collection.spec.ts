@@ -100,3 +100,22 @@ test('The header keeps the page name while the tag prompt scrolls under it', asy
     await expect(page.locator('[data-spec="0.1.2"]')).toHaveText('Жилые интерьеры')
   }
 })
+
+test('Projects hang close together like a salon wall: the first card is large, the next ones beside it', async ({ page }) => {
+  await page.goto('/projects/residential')
+  await page.waitForLoadState('networkidle')
+  const boxes = await cardLinks(page).evaluateAll((els) => els.map((a) => a.getBoundingClientRect().toJSON() as DOMRect))
+  expect(boxes.length).toBeGreaterThan(2)
+  const [big, next] = boxes
+  // Large card: twice as wide as a normal one (plus the gap) on a computer, the full width on a phone
+  expect(big.width).toBeGreaterThan(next.width * 1.9)
+  expect(big.height).toBeGreaterThan(next.height * 1.9)
+  // No card overlaps another
+  for (let i = 0; i < boxes.length; i++)
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i]
+      const b = boxes[j]
+      const overlap = a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+      expect(overlap, `cards ${i + 1} and ${j + 1} overlap`).toBe(false)
+    }
+})

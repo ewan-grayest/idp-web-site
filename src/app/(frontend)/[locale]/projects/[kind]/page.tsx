@@ -64,22 +64,25 @@ export default async function CollectionPage({ params, searchParams }: Props) {
             {total > 0 && <span className={styles.count}>{picked.length ? p.found(cards.length) : p.all(total)}</span>}
           </div>
           {cards.length > 0 ? (
-            <ul className={styles.grid}>
-              {cards.map((c) => (
-                <li key={c.key}>
-                  <Link href={c.href} className={styles.card} data-spec="7.2.2">
-                    {c.image ? (
-                      <Image src={c.image} alt={c.alt} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className={base.cover} />
-                    ) : (
-                      <span className={styles.noImage}>{c.title}</span>
-                    )}
-                    <span className={styles.overlay} data-spec="7.2.3">
-                      <span data-spec="7.2.4">{c.title}</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.salon}>
+              {/* 7.2 as a salon hang («шпалерная раскладка», Ewan, 2026-10-28): see Collection.module.css */}
+              <ul className={styles.grid} data-salon>
+                {cards.map((c) => (
+                  <li key={c.key} data-shape={c.ratio && c.ratio >= 1.05 ? 'tall' : undefined}>
+                    <Link href={c.href} className={styles.card} data-spec="7.2.2">
+                      {c.image ? (
+                        <Image src={c.image} alt={c.alt} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className={base.cover} />
+                      ) : (
+                        <span className={styles.noImage}>{c.title}</span>
+                      )}
+                      <span className={styles.overlay} data-spec="7.2.3">
+                        <span data-spec="7.2.4">{c.title}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : total > 0 ? (
             <div className={styles.none}>
               <p className={styles.note}>{p.none}</p>

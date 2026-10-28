@@ -16,18 +16,32 @@ let introShown = false
 /**
  * Page 2 · Promo: 2.1 Close, 2.2 play/pause, 2.3 "Our team". Clicking the video toggles playback;
  * a double click or double tap closes it (Ewan, 2026-10-26), as do Close and Escape.
- * It starts with sound. Browsers allow that only once the visitor has clicked or tapped on the site, so on a first
- * visit it starts muted with a hint, and the first click, tap or key press anywhere turns the sound on.
+ * `autoplay` and `sound` come from the admin (Studio → Promo video, both on by default). With autoplay off it waits on
+ * its first frame with the play button. With sound on it starts with sound; browsers allow that only once the visitor
+ * has clicked or tapped on the site, so on a first visit it starts muted with a hint, and the first click, tap or key
+ * press anywhere turns the sound on. With sound off it plays muted and the sound button turns it on.
  * `intro`: the same video over Home on a visitor's first visit; closing it, Escape or the end of the video shows Home.
  */
-export function PromoVideo({ sources, placeholder, intro }: { sources: VideoSource[]; placeholder?: boolean; intro?: boolean }) {
+export function PromoVideo({
+  sources,
+  placeholder,
+  intro,
+  autoplay = true,
+  sound = true,
+}: {
+  sources: VideoSource[]
+  placeholder?: boolean
+  intro?: boolean
+  autoplay?: boolean
+  sound?: boolean
+}) {
   const { t, href } = useI18n()
   const router = useRouter()
   const video = useRef<HTMLVideoElement>(null)
   const [open, setOpen] = useState(() => !(intro && introShown))
   const [closing, setClosing] = useState(false)
-  const [playing, setPlaying] = useState(true)
-  const [muted, setMuted] = useState(false)
+  const [playing, setPlaying] = useState(autoplay)
+  const [muted, setMuted] = useState(!sound)
   const [progress, setProgress] = useState(0)
   // Muted by the browser, not by the visitor: the next click, tap or key turns the sound on
   const [blocked, setBlocked] = useState(false)
@@ -90,6 +104,11 @@ export function PromoVideo({ sources, placeholder, intro }: { sources: VideoSour
     if (intro && window.matchMedia('(prefers-reduced-motion: reduce)').matches) setPlaying(false)
   }, [intro])
 
+  // Sound switched off in the admin: muted from the start (and a muted video may always start by itself)
+  useEffect(() => {
+    if (!sound && video.current) video.current.muted = true
+  }, [sound])
+
   useEffect(() => {
     const v = video.current
     if (!v) return
@@ -122,6 +141,8 @@ export function PromoVideo({ sources, placeholder, intro }: { sources: VideoSour
         <video
           ref={video}
           className={styles.video}
+          data-autoplay={autoplay}
+          data-sound={sound}
           playsInline
           preload="auto"
           onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))}

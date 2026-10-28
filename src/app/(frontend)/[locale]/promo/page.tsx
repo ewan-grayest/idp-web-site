@@ -12,5 +12,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** Page 2 · Promo: full-screen studio video (the upload in Студия → Промо-видео). Home also plays it on the first visit. */
 export default async function PromoPage() {
-  return <PromoVideo {...await getPromoVideo()} />
+  const { sources, placeholder, autoplay, sound } = await getPromoVideo()
+  return <PromoVideo sources={sources} placeholder={placeholder} autoplay={autoplay} sound={sound} />
 }

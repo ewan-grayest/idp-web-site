@@ -100,7 +100,7 @@ Tick «Показывать в слайдере на главной» on project
 ```bash
 npm run lint        # TypeScript
 npm test            # unit tests (Vitest)
-npx playwright install chromium && npm run test:e2e   # browser tests, desktop + phone
+npx playwright install chromium && npm run test:e2e   # browser tests, desktop + phone; the intro video settings tests run last, on their own
 npm run build
 ```
 
@@ -131,7 +131,7 @@ Not in use: the site runs locally for now. `deploy/` holds a ready setup for one
 - Navigation: the spec has no menu, only the footer. The site menu lists the main sections in large type (Studio, Team, residential and public projects, Partners) and the rest smaller. Archive projects (16/17) are left out of the menu and footer (Ewan, 2026-10-26); `/projects/archive` still opens. On phones the theme switch moved from the header into the menu.
 - Home sliders (Ewan found them vague, 2026-10-25): each slide shows its project's name and «Смотреть проект» and opens it; ‹ › and one segment per project sit beside the time indicator 1.2.1/1.3.1, «Пауза» shows while a half is pointed at, and the other side's name waits at the far edge of an open half. Autoplay moves toward the logo as the spec says; ‹ › and swipes move like any carousel (next comes in from the right). Reduced motion turns autoplay off.
 - Media descriptions (alt) are optional (Ewan, 2026-10-25); an empty one falls back to the project's name.
-- Logo 1.1 opens the Team page instead of the promo video (Ewan, 2026-10-25). The video plays by itself over Home once per browser session, so again on every new visit (session cookie `idp-intro-session`, Ewan 2026-10-25); it starts muted when the browser allows no sound before a click, with a sound button; closing it, Escape or its end shows Home. Visitors whose system asks for less motion get the play button instead. Afterwards the video stays at `/promo`.
+- Logo 1.1 opens the Team page instead of the promo video (Ewan, 2026-10-25). The video plays by itself over Home once per browser session, so again on every new visit (session cookie `idp-intro-session`, Ewan 2026-10-25); it starts muted when the browser allows no sound before a click, with a sound button; closing it, Escape or its end shows Home. Visitors whose system asks for less motion get the play button instead. Afterwards the video stays at `/promo`. Since 2026-10-28 three admin switches in Студия → Промо-видео 2 (all on by default, Ewan) turn off the Home intro (`/?intro` still shows it), make the video wait for a click on the play button, or play it muted; the last two also apply at `/promo`.
 - Footer link targets (`src/lib/site.ts`) are our reading of the spec; Instagram, VK, the phone and e-mail are the studio's real ones (from its Taplink and VK pages); Houzz points to the studio's Flatica profile (houzz.ru now redirects to Flatica); Facebook and the ID Lab address are still placeholders.
 - Consent box is unticked by default, remembered in the browser once ticked, forgotten if unticked.
 - 5.1 "up to 7" read as 7 frames visible at once; any number of frames scroll sideways.

@@ -75,15 +75,33 @@ const placeholderVideo: VideoSource[] = [
 ]
 
 /** Page 2 video: the upload in Студия → Промо-видео, else the build-time URL, else the placeholder clip. */
-export async function getPromoVideo(): Promise<{ sources: VideoSource[]; placeholder: boolean }> {
+export type PromoVideoData = {
+  sources: VideoSource[]
+  placeholder: boolean
+  /** Studio → Promo video switches (Ewan, 2026-10-28); a setting never saved counts as on */
+  firstVisit: boolean
+  autoplay: boolean
+  sound: boolean
+}
+
+export async function getPromoVideo(): Promise<PromoVideoData> {
   const payload = await getPayload({ config })
-  const studio = await payload.findGlobal({ slug: 'studio', depth: 1, select: { promoVideo: true } })
+  const studio = await payload.findGlobal({
+    slug: 'studio',
+    depth: 1,
+    select: { promoVideo: true, introOnFirstVisit: true, promoAutoplay: true, promoSound: true },
+  })
+  const options = {
+    firstVisit: studio.introOnFirstVisit !== false,
+    autoplay: studio.promoAutoplay !== false,
+    sound: studio.promoSound !== false,
+  }
   const file = studio.promoVideo
   if (file && typeof file === 'object' && file.url) {
-    return { sources: [{ src: file.url, type: file.mimeType ?? undefined }], placeholder: false }
+    return { sources: [{ src: file.url, type: file.mimeType ?? undefined }], placeholder: false, ...options }
   }
   const url = process.env.NEXT_PUBLIC_PROMO_VIDEO_URL
-  return url ? { sources: [{ src: url }], placeholder: false } : { sources: placeholderVideo, placeholder: true }
+  return url ? { sources: [{ src: url }], placeholder: false, ...options } : { sources: placeholderVideo, placeholder: true, ...options }
 }
 
 /** Everything else on page 3: mission 3.1, history 3.3, journal 3.4, contacts 3.5, partners 3.7. */

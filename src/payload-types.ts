@@ -1068,9 +1068,18 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Studio {
   id: number;
   /**
-   * Plays by itself on a visitor's first visit to Home, then at /promo. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.
+   * Shows over Home on a visitor's first visit and at /promo; the switches below set how. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.
    */
   promoVideo?: (number | null) | Media;
+  /**
+   * Off: Home opens straight away and the video stays at /promo. /?intro shows it anyway, to check it.
+   */
+  introOnFirstVisit?: boolean | null;
+  promoAutoplay?: boolean | null;
+  /**
+   * Browsers do not let a video start with sound by itself until the visitor has clicked or tapped: it then plays muted with a hint, and the first click or tap turns the sound on. Off: the video plays muted and the sound button turns it on.
+   */
+  promoSound?: boolean | null;
   mission?: string | null;
   vision?: string | null;
   history?:
@@ -1169,6 +1178,9 @@ export interface PageText {
  */
 export interface StudioSelect<T extends boolean = true> {
   promoVideo?: T;
+  introOnFirstVisit?: T;
+  promoAutoplay?: T;
+  promoSound?: T;
   mission?: T;
   vision?: T;
   history?:

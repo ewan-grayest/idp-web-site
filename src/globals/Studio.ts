@@ -7,7 +7,8 @@ import { groups, tr } from '../collections/labels'
 import { previewTeamPage } from '../collections/preview'
 
 /**
- * Studio content that is not people, issues or partners: the promo video (page 2, also the first-visit intro on Home)
+ * Studio content that is not people, issues or partners: the promo video and how it plays (page 2, also the first-visit
+ * intro on Home)
  * and page 3: mission 3.1, history 3.3, address and map 3.5; the contacts and social links in the header, menu and footer;
  * the company details on the Legal page 14. Empty contacts fall back to the ones in src/lib/site.ts.
  */
@@ -36,9 +37,42 @@ export const Studio: GlobalConfig = {
               filterOptions: { mimeType: { contains: 'video' } },
               admin: {
                 description: tr(
-                  'Играет сама при первом визите на главную, дальше открывается по адресу /promo. MP4 (H.264) работает во всех браузерах. Пока файла нет, показывается заглушка.',
-                  'Plays by itself on a visitor\'s first visit to Home, then at /promo. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.',
-                  '访客首次打开首页时自动播放，之后可在 /promo 观看。MP4 (H.264) 适用于所有浏览器。未上传文件时播放占位视频。',
+                  'Показывается на главной при первом визите и по адресу /promo; как именно, задают переключатели ниже. MP4 (H.264) работает во всех браузерах. Пока файла нет, показывается заглушка.',
+                  'Shows over Home on a visitor\'s first visit and at /promo; the switches below set how. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.',
+                  '访客首次访问时在首页播放，也可在 /promo 观看；播放方式由下方开关设置。MP4 (H.264) 适用于所有浏览器。未上传文件时播放占位视频。',
+                ),
+              },
+            },
+            // Ewan, 2026-10-28: all three on by default, as the site behaved before
+            {
+              name: 'introOnFirstVisit',
+              type: 'checkbox',
+              defaultValue: true,
+              label: tr('Показывать на главной при первом визите', 'Show over Home on the first visit', '首次访问时在首页播放'),
+              admin: {
+                description: tr(
+                  'Выключено: главная открывается сразу, видео остаётся на /promo. Проверить показ можно по адресу /?intro.',
+                  'Off: Home opens straight away and the video stays at /promo. /?intro shows it anyway, to check it.',
+                  '关闭后首页直接打开，视频仍可在 /promo 观看。访问 /?intro 可随时预览。',
+                ),
+              },
+            },
+            {
+              name: 'promoAutoplay',
+              type: 'checkbox',
+              defaultValue: true,
+              label: tr('Запускать само (иначе по нажатию)', 'Start by itself (otherwise on a click or tap)', '自动播放（否则点击后播放）'),
+            },
+            {
+              name: 'promoSound',
+              type: 'checkbox',
+              defaultValue: true,
+              label: tr('Со звуком', 'With sound', '有声音'),
+              admin: {
+                description: tr(
+                  'Браузеры не дают видео самому начать со звуком, пока посетитель ничего не нажал: тогда оно идёт без звука с подсказкой, и звук включается от первого нажатия. Выключено: видео идёт без звука, его можно включить кнопкой.',
+                  'Browsers do not let a video start with sound by itself until the visitor has clicked or tapped: it then plays muted with a hint, and the first click or tap turns the sound on. Off: the video plays muted and the sound button turns it on.',
+                  '在访客点击之前，浏览器不允许视频自动带声音播放：此时视频静音播放并显示提示，首次点击即开启声音。关闭后视频静音播放，可用声音按钮开启。',
                 ),
               },
             },

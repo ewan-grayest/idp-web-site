@@ -12,10 +12,10 @@ export async function Author({ project }: { project: Project }) {
   if (!person && !project.summary && !project.quote) return null
   const t = await getT()
   const href = person ? personPath(person.slug) : undefined
-  const portrait = mediaUrl(person?.portrait, 'panorama')
+  const portrait = mediaUrl(person?.photo, 'panorama') ?? mediaUrl(person?.portrait, 'panorama')
 
   return (
-    <section className={`${styles.sec} ${styles.author}`} data-header-title={t.project.about} data-spec="5.2">
+    <section className={`${styles.sec} ${styles.author}`} data-header-title={project.title || t.project.about} data-spec="5.2">
       {href ? (
         <Link href={href} className={styles.portrait} aria-label={t.project.openPerson(person!.name ?? '')} data-spec="5.2.1">
           {portrait ? <Image src={portrait} alt="" fill sizes="100vw" className={styles.cover} /> : <PortraitPlaceholder />}

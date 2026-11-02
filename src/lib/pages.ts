@@ -9,11 +9,13 @@ import type { ProjectKind } from './routes'
 import { coverOf, mediaUrl, toCard, type CollectionCard } from './projects'
 import type { Rich } from './rich'
 import { partnersEmail, partnersPhone, social, studioEmail, studioPhone } from './site'
+import { getSettings } from './settings'
 
 const isObj = <T extends object>(v: number | T | null | undefined): v is T => typeof v === 'object' && v !== null
 
 /** Contacts and social links for the header, menu, footer and pages 3 and 6: the admin's, else the defaults in site.ts. */
 export const getContacts = cache(async () => {
+  const settings = await getSettings()
   const payload = await getPayload({ config })
   const s = await payload.findGlobal({
     slug: 'studio',
@@ -28,14 +30,14 @@ export const getContacts = cache(async () => {
     partnersEmail: s.partnersEmail || partnersEmail,
     social: social.map((x) => ({ ...x, href: s.social?.[x.key] || x.href })),
     address: s.address ?? '',
-    map: { lat: s.lat ?? 55.7533, lng: s.lng ?? 37.6366, zoom: s.zoom ?? 16 },
+    map: { lat: s.lat ?? 55.7533, lng: s.lng ?? 37.6366, zoom: s.zoom ?? 16, provider: settings.mapProvider },
   }
 })
 
 export type Contacts = Awaited<ReturnType<typeof getContacts>>
 
 /** One entry on the vertical timeline of pages 11, 13 and 14. */
-export type Entry = { slug: string; date: string; when: string; title: string; images: { url: string; alt: string }[]; text: Rich }
+export type Entry = { slug: string; shortCode?: string | null; date: string; when: string; title: string; images: { url: string; alt: string }[]; text: Rich }
 
 /** Pages 11 (lifestyle), 13 (careers) and 14 (legal): entries, newest first. */
 export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'): Promise<Entry[]> {
@@ -46,6 +48,7 @@ export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'):
   const format = (d: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(d))
   return docs.map((e) => ({
     slug: e.slug,
+    shortCode: 'shortCode' in e ? e.shortCode : undefined,
     date: e.date,
     when: format(e.date),
     title: e.title ?? '',
@@ -108,7 +111,7 @@ export type PartnerBlock = {
   photo?: string
   discount: string
   projects: (CollectionCard & { kind: ProjectKind })[]
-  tags: { slug: string; title: string }[]
+  tags: { slug: string; title: string; href: string }[]
 }
 
 /** Page 6: every partner, in the admin's order. */
@@ -130,7 +133,7 @@ export async function getPartners(): Promise<PartnerBlock[]> {
 
   return docs.map((p) => {
     const own = (p.projects ?? []).filter(isObj) as Project[]
-    const all = [...own, ...(byPartner.get(p.id) ?? [])].filter((x, i, a) => a.findIndex((y) => y.id === x.id) === i)
+    const all = [...own, ...(byPartner.get(p.id) ?? [])].filter((x, i, a) => a.findIndex((y) => y.id === x.id) === i).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     const tags = new Map<string, string>()
     for (const t of [...(p.tags ?? []), ...all.flatMap((x) => x.tags ?? [])]) if (isObj(t)) tags.set(t.slug, t.title ?? t.slug)
     return {
@@ -142,7 +145,7 @@ export async function getPartners(): Promise<PartnerBlock[]> {
       photo: mediaUrl(p.photo),
       discount: p.discount ?? '',
       projects: all.map((x) => ({ ...toCard(x), kind: x.kind })),
-      tags: [...tags].map(([slug, title]) => ({ slug, title })),
+      tags: [...tags].map(([slug, title]) => ({ slug, title, href: `/projects/${all.find((x) => (x.tags ?? []).some((t) => isObj(t) && t.slug === slug))?.kind ?? 'residential'}?tags=${encodeURIComponent(slug)}` })),
     }
   })
 }

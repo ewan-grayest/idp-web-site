@@ -86,6 +86,7 @@ export function Viewer({ photos, start, onClose }: { photos: Photo[]; start: num
                   {/* The product first and larger, the shop under it (Ewan, 2026-10-26) */}
                   <span className={styles.label}>
                     <span className={styles.name}>{h.name}</span>
+                    {h.logo && <Image src={h.logo} alt={h.shop || h.name} width={100} height={48} style={{ objectFit: 'contain', maxWidth: '100%' }} />}
                     {h.shop && <span className={styles.shop}>{h.shop}</span>}
                   </span>
                 </>

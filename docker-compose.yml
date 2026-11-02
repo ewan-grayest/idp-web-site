@@ -25,7 +25,8 @@ services:
       # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR in .env
       - ${MEDIA_DIR:-media}:/app/media
       # Backups: the "backups" folder beside this file (the scripts use it too)
-      - ./backups:/app/backups
+      # Set BACKUPS_MOUNT=backups when Docker Desktop cannot share the host folder.
+      - ${BACKUPS_MOUNT:-./backups}:/app/backups
       - nextcache:/app/.next/cache
     depends_on:
       db:
@@ -52,3 +53,4 @@ volumes:
   pgdata:
   media:
   nextcache:
+  backups:

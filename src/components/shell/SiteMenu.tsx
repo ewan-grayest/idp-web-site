@@ -14,8 +14,7 @@ import { LanguageLinks } from './LanguageLinks'
 import styles from './SiteMenu.module.css'
 
 /**
- * Site menu: every section one click away, opened by the ID logo 0.1.1 in the header (Ewan, 2026-10-26; it sat on a
- * button at the right before). Home has none. Not in the spec, which only had the footer 0.3.5: added when Ewan found
+ * Site menu: every section one click away, opened by a separate header button. Logo 0.1.1 leads home. Home has no menu. Not in the spec, which only had the footer 0.3.5: added when Ewan found
  * the site had no navigation (2026-10-25). The menu's first link and its own logo lead to Home.
  * Opens over the page; Escape or the cross closes it and gives focus back to the button; a link closes it too.
  */
@@ -91,7 +90,6 @@ export function SiteMenu({ buttonClassName, children, phone, email }: { buttonCl
         aria-label={t.menu.open}
         onClick={() => setOpen(true)}
         data-site-menu
-        data-spec="0.1.1"
       >
         {children}
       </button>

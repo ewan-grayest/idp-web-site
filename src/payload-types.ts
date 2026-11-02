@@ -76,6 +76,8 @@ export interface Config {
     lifestyle: Lifestyle;
     careers: Career;
     legal: Legal;
+    'social-posts': SocialPost;
+    reviews: Review;
     leads: Lead;
     media: Media;
     users: User;
@@ -95,6 +97,8 @@ export interface Config {
     lifestyle: LifestyleSelect<false> | LifestyleSelect<true>;
     careers: CareersSelect<false> | CareersSelect<true>;
     legal: LegalSelect<false> | LegalSelect<true>;
+    'social-posts': SocialPostsSelect<false> | SocialPostsSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -110,10 +114,12 @@ export interface Config {
   globals: {
     studio: Studio;
     'page-texts': PageText;
+    'site-settings': SiteSetting;
   };
   globalsSelect: {
     studio: StudioSelect<false> | StudioSelect<true>;
     'page-texts': PageTextsSelect<false> | PageTextsSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: 'ru' | 'en' | 'zh';
   widgets: {
@@ -165,6 +171,7 @@ export interface Project {
    */
   homeOrder?: number | null;
   tags?: (number | Tag)[] | null;
+  socialHashtag?: string | null;
   gallery?:
     | {
         image: number | Media;
@@ -378,6 +385,7 @@ export interface Person {
   photo?: (number | null) | Media;
   quote?: string | null;
   interests?: string | null;
+  socialHashtag?: string | null;
   tags?: (number | Tag)[] | null;
   achievements?:
     | {
@@ -442,6 +450,7 @@ export interface Press {
  */
 export interface Lifestyle {
   id: number;
+  shortCode?: string | null;
   title?: string | null;
   /**
    * Latin letters, no spaces: the entry opens at /journal#slug
@@ -530,6 +539,42 @@ export interface Legal {
     };
     [k: string]: unknown;
   } | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-posts".
+ */
+export interface SocialPost {
+  id: number;
+  caption?: string | null;
+  date: string;
+  url: string;
+  image: number | Media;
+  scope: 'studio' | 'person' | 'project' | 'partners';
+  person?: (number | null) | Person;
+  project?: (number | null) | Project;
+  hashtags?: string | null;
+  published?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: number;
+  name: string;
+  text: string;
+  project: number | Project;
+  network: 'vk' | 'facebook';
+  sourceUrl?: string | null;
+  date: string;
+  consent: boolean;
+  originUrl: string;
+  approved?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -643,6 +688,14 @@ export interface PayloadLockedDocument {
         value: number | Legal;
       } | null)
     | ({
+        relationTo: 'social-posts';
+        value: number | SocialPost;
+      } | null)
+    | ({
+        relationTo: 'reviews';
+        value: number | Review;
+      } | null)
+    | ({
         relationTo: 'leads';
         value: number | Lead;
       } | null)
@@ -708,6 +761,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   onHome?: T;
   homeOrder?: T;
   tags?: T;
+  socialHashtag?: T;
   gallery?:
     | T
     | {
@@ -815,6 +869,7 @@ export interface PeopleSelect<T extends boolean = true> {
   photo?: T;
   quote?: T;
   interests?: T;
+  socialHashtag?: T;
   tags?: T;
   achievements?:
     | T
@@ -891,6 +946,7 @@ export interface PressSelect<T extends boolean = true> {
  * via the `definition` "lifestyle_select".
  */
 export interface LifestyleSelect<T extends boolean = true> {
+  shortCode?: T;
   title?: T;
   slug?: T;
   date?: T;
@@ -922,6 +978,40 @@ export interface LegalSelect<T extends boolean = true> {
   date?: T;
   images?: T;
   text?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-posts_select".
+ */
+export interface SocialPostsSelect<T extends boolean = true> {
+  caption?: T;
+  date?: T;
+  url?: T;
+  image?: T;
+  scope?: T;
+  person?: T;
+  project?: T;
+  hashtags?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  name?: T;
+  text?: T;
+  project?: T;
+  network?: T;
+  sourceUrl?: T;
+  date?: T;
+  consent?: T;
+  originUrl?: T;
+  approved?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1174,6 +1264,32 @@ export interface PageText {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  limits: {
+    maxTags: number;
+    studioPosts: number;
+    personPosts: number;
+    partnerPosts: number;
+    projectPosts: number;
+    latestReviews: number;
+  };
+  mapProvider: 'yandex' | 'google';
+  feedsEnabled?: boolean | null;
+  reviewsEnabled?: boolean | null;
+  studioHashtag?: string | null;
+  partnerHashtag?: string | null;
+  defaultNetwork?: ('vk' | 'facebook') | null;
+  vkEnabled?: boolean | null;
+  vkAppId?: string | null;
+  facebookAppId?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "studio_select".
  */
 export interface StudioSelect<T extends boolean = true> {
@@ -1227,6 +1343,34 @@ export interface PageTextsSelect<T extends boolean = true> {
   gt?: T;
   payment?: T;
   media?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  limits?:
+    | T
+    | {
+        maxTags?: T;
+        studioPosts?: T;
+        personPosts?: T;
+        partnerPosts?: T;
+        projectPosts?: T;
+        latestReviews?: T;
+      };
+  mapProvider?: T;
+  feedsEnabled?: T;
+  reviewsEnabled?: T;
+  studioHashtag?: T;
+  partnerHashtag?: T;
+  defaultNetwork?: T;
+  vkEnabled?: T;
+  vkAppId?: T;
+  facebookAppId?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

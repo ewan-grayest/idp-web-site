@@ -24,7 +24,7 @@ export const Leads: CollectionConfig = {
       name: 'consent',
       type: 'checkbox',
       required: true,
-      label: tr('Согласие на обработку персональных данных (0.1.9)', 'Consent to personal data processing (0.1.9)', '同意处理个人数据 (0.1.9)'),
+      label: tr('Согласие на обработку персональных данных', 'Consent to personal data processing', '同意处理个人数据'),
       validate: (value: boolean | null | undefined) =>
         value === true || 'Нужно согласие на обработку персональных данных',
     },

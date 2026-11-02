@@ -20,6 +20,9 @@ type Mode = null | 'phone' | 'mail' | 'search'
 type Hit = { key: string; title: string; text: string; href: string }
 type ProjectDoc = { id: number; title: string; slug: string; kind: ProjectKind }
 type PersonDoc = { id: number; name: string; slug: string; role?: string | null }
+type PartnerDoc = { id: number; name: string; slug: string }
+type EntryDoc = { id: number; title: string; slug: string }
+type PressDoc = { id: number; title: string; source: string; url?: string }
 
 /** Header 0.1: fixed, contextual. Hidden on Home and Promo (see SiteChrome). */
 export function Header({ title, phone, email: studioEmail }: { title: string; phone: string; email: string }) {
@@ -34,6 +37,7 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
   const [hits, setHits] = useState<Hit[] | null>(null)
   const [cta, setCta] = useState<EnquireDetail | null>(null)
   const [sectionTitle, setSectionTitle] = useState<string | null>(null)
+  const [reviewContext, setReviewContext] = useState<string | null>(null)
   const mailRef = useRef<HTMLInputElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const ids = useId()
@@ -52,6 +56,11 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
 
   // A new page closes any open panel
   useEffect(() => setMode(null), [pathname])
+  useEffect(() => {
+    const update = (event: Event) => setReviewContext((event as CustomEvent<string | null>).detail)
+    window.addEventListener('idp-review-context', update)
+    return () => window.removeEventListener('idp-review-context', update)
+  }, [])
 
   // Page CTAs open the enquiry with their own context (see lib/enquire)
   useEffect(() => {
@@ -121,15 +130,23 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
         return res.ok ? (((await res.json()).docs ?? []) as T[]) : []
       }
       try {
-        const [projects, people] = await Promise.all([
+        const [projects, people, partners, lifestyle, careers, legal, press] = await Promise.all([
           find<ProjectDoc>('projects', 'title', ['title', 'slug', 'kind']),
           find<PersonDoc>('people', 'name', ['name', 'slug', 'role']),
+          find<PartnerDoc>('partners', 'name', ['name', 'slug']),
+          find<EntryDoc>('lifestyle', 'title', ['title', 'slug']),
+          find<EntryDoc>('careers', 'title', ['title', 'slug']),
+          find<EntryDoc>('legal', 'title', ['title', 'slug']),
+          find<PressDoc>('press', 'title', ['title', 'source', 'url']),
         ])
         setHits([
           ...projects
             .filter((d) => d.kind in projectKinds)
             .map((d) => ({ key: `p${d.id}`, title: d.title, text: t.kinds[d.kind], href: projectPath(d.kind, d.slug) })),
           ...people.map((d) => ({ key: `t${d.id}`, title: d.name, text: d.role || t.header.team, href: personPath(d.slug) })),
+          ...partners.map((d) => ({ key: `partner${d.id}`, title: d.name, text: t.pages[6], href: `/partners#${d.slug}` })),
+          ...([{ docs: lifestyle, path: '/journal', page: 11 }, { docs: careers, path: '/careers', page: 13 }, { docs: legal, path: '/legal', page: 14 }] as const).flatMap(({ docs, path, page }) => docs.map((d) => ({ key: `${path}${d.id}`, title: d.title, text: t.pages[page], href: `${path}#${d.slug}` }))),
+          ...press.map((d) => ({ key: `press${d.id}`, title: d.title, text: d.source || t.pages[10], href: d.url || '/press' })),
         ])
       } catch {
         /* aborted or offline */
@@ -143,12 +160,13 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
 
   const toggle = (m: Exclude<Mode, null>) => setMode((cur) => (cur === m ? null : m))
 
-  const shownTitle = sectionTitle || title
+  const shownTitle = reviewContext || sectionTitle || title
   const enquiryContext = cta?.context ?? t.header.callBack(shownTitle || 'ID project')
 
   // 0.1.7: the mail button opens the field; pressing it again sends the enquiry
   async function onMail() {
     if (mode !== 'mail') return setMode('mail')
+    if (!email.trim()) return setMode(null)
     const problem = checkLead({ email, consent })
     if (problem) return setNote(t.leads[problem])
     setSending(true)
@@ -173,10 +191,7 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
   return (
     <header className={styles.header} data-spec="0.1">
       <div className={styles.left}>
-        {/* 0.1.1 opens the site menu (Ewan, 2026-10-26); Home is the menu's first link */}
-        <SiteMenu buttonClassName={styles.logo} phone={phone} email={studioEmail}>
-          <span>ID</span>
-        </SiteMenu>
+        <Link href="/" className={styles.logo} aria-label={t.header.home} data-spec="0.1.1"><span>ID</span></Link>
         <span className="spec-id">0.1.1</span>
 
         {mode === 'search' ? (
@@ -271,6 +286,7 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
+        <SiteMenu buttonClassName={styles.iconBtn} phone={phone} email={studioEmail}><span aria-hidden>☰</span></SiteMenu>
         <span className="spec-id">0.1.3–5</span>
       </div>
 

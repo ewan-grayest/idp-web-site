@@ -42,7 +42,7 @@ export const personPath = (slug: string) => `${pages[4].path}/${slug}`
 
 /** Header 0.1 is hidden on Home (1) and Promo (2). */
 export function headerVisible(pathname: string): boolean {
-  return pathname !== pages[1].path && !pathname.startsWith(pages[2].path)
+  return pathname !== pages[1].path && pathname !== pages[2].path
 }
 
 /** Header title 0.1.2: the page role the visitor is in (longest path match wins); its title is in the dictionary. */

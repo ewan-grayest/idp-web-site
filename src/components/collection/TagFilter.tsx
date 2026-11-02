@@ -56,7 +56,7 @@ export function TagFilter({ tags, initial, path, max, labelledBy }: { tags: Tag[
           )
         })}
       </div>
-      <p className={styles.hint}>{t.projects.tagHint}</p>
+      <p className={styles.hint}>{t.projects.tagHint(max)}</p>
       <div className={styles.actions}>
         <button type="button" className={action.action} onClick={() => show(picked)} aria-busy={pending || undefined} data-spec="7.1.3">
           {t.projects.apply}
@@ -67,7 +67,7 @@ export function TagFilter({ tags, initial, path, max, labelledBy }: { tags: Tag[
           </button>
         )}
         <span className={styles.count} aria-live="polite">
-          {t.projects.picked(picked.length)}
+          {t.projects.picked(picked.length, max)}
         </span>
       </div>
     </>

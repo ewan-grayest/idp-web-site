@@ -9,6 +9,20 @@ restores either way:
 - **In the admin**: «Резервные копии» in the side menu (`/admin/backups`). No Terminal needed.
 - **With scripts** in Terminal, from the site folder (below). They also run the nightly backup.
 
+## Docker Desktop folder-sharing fallback
+
+The usual setup shares `./backups` with the app. If Docker Desktop refuses that folder, set `BACKUPS_MOUNT=backups` in `.env` and restart with `docker compose up -d app`. This uses the named volume `site_backups` without changing Docker Desktop's sharing permissions.
+
+On this Mac the fallback was enabled during the v0.1.1 update. Existing backup files were copied to the volume; their original host copies are preserved. Use the admin's backup/download/restore controls with this setting. Terminal scripts still write to the host `backups/` folder, so the two stores do not automatically share files or a lock in fallback mode. Avoid running them concurrently with admin backup/restore operations.
+
+To export the volume's files to the host:
+
+```bash
+docker compose cp app:/app/backups/. ./backups/
+```
+
+To resume one shared folder, allow the site backup folder in Docker Desktop → Resources → File Sharing, export any newer volume backups, then set `BACKUPS_MOUNT=./backups` and restart the app. The named volume remains intact.
+
 ## In the admin
 
 Open `/admin/backups` (side menu → Обслуживание → Резервные копии). Every signed-in admin user can:

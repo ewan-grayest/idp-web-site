@@ -9,7 +9,7 @@ import { EnquireButton } from '@/components/shared/EnquireButton'
 import { Rise } from '@/components/shared/Rise'
 import { Link } from '@/i18n/Link'
 import { getT } from '@/i18n/server'
-import { getCollection, maxTags } from '@/lib/projects'
+import { getCollection } from '@/lib/projects'
 import { pages, projectKinds, type ProjectKind } from '@/lib/routes'
 
 export const dynamic = 'force-dynamic'
@@ -34,7 +34,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
   const { kind } = await params
   if (!isKind(kind)) notFound()
   const [{ tags: tagsParam }, t] = await Promise.all([searchParams, getT()])
-  const { total, cards, tags, picked } = await getCollection(kind, tagsParam)
+  const { total, cards, tags, picked, maxTags } = await getCollection(kind, tagsParam)
   const pageId = projectKinds[kind].collection
   const path = pages[pageId].path
   const p = t.projects

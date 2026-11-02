@@ -5,15 +5,15 @@ test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: 'idp-intro-session', value: '1', url: baseURL! }])
 })
 
-test('Home has no header, two sliders and the logo to the Team page', async ({ page }) => {
+test('Home has no header, two sliders and the logo to the Promo page', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('header[data-spec="0.1"]')).toHaveCount(0)
   await expect(page.locator('[data-spec="2"]')).toHaveCount(0)
   await expect(page.locator('[data-spec="1.2"]')).toBeVisible()
   await expect(page.locator('[data-spec="1.3"]')).toBeVisible()
   await page.locator('[data-spec="1.1"]').click()
-  await expect(page).toHaveURL(/\/studio$/)
-  await expect(page.locator('header[data-spec="0.1"]')).toBeVisible()
+  await expect(page).toHaveURL(/\/promo$/)
+  await expect(page.locator('header[data-spec="0.1"]')).toHaveCount(0)
 })
 
 test('Home: the open half follows the cursor and the centre brings both back', async ({ page, isMobile }) => {
@@ -37,7 +37,7 @@ test('Home: the open half follows the cursor and the centre brings both back', a
   await page.mouse.move(720, 450, { steps: 12 })
   await page.mouse.down()
   await page.mouse.up()
-  await expect(page).toHaveURL(/\/studio$/)
+  await expect(page).toHaveURL(/\/promo$/)
 })
 
 test('Home: the language list can be reached from an open half', async ({ page, isMobile }) => {

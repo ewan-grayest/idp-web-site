@@ -102,7 +102,8 @@
 
 /* 6.4 projects: a grid of photos with the kind and name under each, tags under them */
 .projects { margin-top: 48px; }
-.projectGrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 20px; }
+.projectGrid { list-style: none; margin: 0; padding: 0 0 16px; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 20px; }
+.projectGrid > li { flex: 0 0 min(400px, 80vw); scroll-snap-align: start; }
 .projectCard { display: flex; flex-direction: column; gap: 6px; color: var(--c-light); }
 .projectPhoto { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--c-photo-ph); margin-bottom: 8px; }
 .projectPhoto img { transition: transform 0.6s ease; }
@@ -111,7 +112,8 @@
 .projectName { font: 400 20px/26px var(--font-serif); border-bottom: 2px solid transparent; align-self: flex-start; transition: border-color var(--d-hover); }
 .projectCard:hover .projectName { border-bottom-color: var(--c-green); }
 .tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
-.tag { padding: 8px 14px; background: var(--c-tag-bg); color: var(--c-tag-text); font: 500 14px/16px var(--font); }
+.tag { display: inline-block; padding: 8px 14px; background: var(--c-tag-bg); color: var(--c-tag-text); font: 500 14px/16px var(--font); }
+.tag:hover { background: var(--c-accent); color: var(--c-on-green); }
 
 @media (max-width: 1023px) {
   .entries { grid-template-columns: minmax(0, 1fr); gap: 28px; }

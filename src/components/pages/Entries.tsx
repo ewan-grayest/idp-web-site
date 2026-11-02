@@ -25,6 +25,7 @@ export function Entries({ items, bodies, spec }: { items: EntryHead[]; bodies: R
   function pick(k: number) {
     setI(k)
     history.replaceState(null, '', `#${items[k].slug}`)
+    window.dispatchEvent(new Event('idp-entry-change'))
     const top = panels.current?.getBoundingClientRect().top ?? 0
     if (top < 0) panels.current?.scrollIntoView({ block: 'start' })
   }

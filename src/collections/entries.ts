@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { requiredInRussian } from './localized'
 import { groups, tr } from './labels'
+import { makeShortCode } from '../lib/shortCode'
 
 type Names = { singular: Record<'ru' | 'en' | 'zh', string>; plural: Record<'ru' | 'en' | 'zh', string> }
 
@@ -26,7 +27,9 @@ export function entries(slug: string, labels: Names, page: { id: number; path: s
     },
     access: { read: () => true },
     defaultSort: '-date',
+    ...(page.id === 11 ? { hooks: { beforeChange: [({ data, originalDoc }) => ({ ...data, shortCode: originalDoc?.shortCode || data.shortCode || `j-${makeShortCode()}` })] } } : {}),
     fields: [
+      ...(page.id === 11 ? [{ name: 'shortCode', type: 'text' as const, unique: true, index: true, admin: { readOnly: true, position: 'sidebar' as const }, label: 'Short URL' }] : []),
       { name: 'title', type: 'text', ...requiredInRussian, label: tr('Заголовок', 'Title', '标题') },
       {
         name: 'slug',
@@ -55,7 +58,7 @@ export const Lifestyle = entries(
   'lifestyle',
   {
     singular: { ru: 'Запись «Стиль жизни»', en: 'Lifestyle entry', zh: '生活方式条目' },
-    plural: { ru: 'Стиль жизни (11)', en: 'Lifestyle (11)', zh: '生活方式 (11)' },
+    plural: { ru: 'Стиль жизни', en: 'Lifestyle', zh: '生活方式' },
   },
   { id: 11, path: '/journal' },
 )
@@ -64,7 +67,7 @@ export const Careers = entries(
   'careers',
   {
     singular: { ru: 'Вакансия', en: 'Vacancy', zh: '职位' },
-    plural: { ru: 'Работайте с нами (13)', en: 'Work with us (13)', zh: '加入我们 (13)' },
+    plural: { ru: 'Работайте с нами', en: 'Work with us', zh: '加入我们' },
   },
   { id: 13, path: '/careers' },
 )
@@ -73,7 +76,7 @@ export const LegalDocs = entries(
   'legal',
   {
     singular: { ru: 'Документ', en: 'Document', zh: '文件' },
-    plural: { ru: 'Юридические документы (14)', en: 'Legal documents (14)', zh: '法律文件 (14)' },
+    plural: { ru: 'Юридические документы', en: 'Legal documents', zh: '法律文件' },
   },
   { id: 14, path: '/legal' },
   tr('Дата редакции', 'Version date', '版本日期'),

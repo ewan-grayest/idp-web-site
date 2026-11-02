@@ -5,6 +5,8 @@ import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
 import type { Media, Partner, Person, Project, Tag } from '@/payload-types'
 import { pages, personPath, projectKinds, projectPath, type ProjectKind } from './routes'
+import { getSettings } from './settings'
+import { selectTags } from './limits'
 
 /** A photo ready for the page: the image plus its shopping hotspots (5.1.3). */
 export type Photo = {
@@ -14,7 +16,7 @@ export type Photo = {
   width: number
   height: number
   /** `name`: what it is (sofa, lamp…); `shop`: the partner selling it; no `href` when no partner is picked yet */
-  hotspots: { name: string; shop: string; href?: string; x: number; y: number }[]
+  hotspots: { name: string; shop: string; href?: string; logo?: string; x: number; y: number }[]
 }
 
 type PhotoRow = NonNullable<Project['gallery']>[number]
@@ -49,7 +51,7 @@ export function toPhotos(rows: PhotoRow[] | null | undefined, fallbackAlt: strin
           const partner = isObj(h.partner) ? h.partner : undefined
           const name = h.label?.trim() || partner?.name || ''
           if (typeof h.x !== 'number' || typeof h.y !== 'number' || !name) return []
-          return [{ name, shop: h.label?.trim() ? partner?.name || '' : '', href: partner && partnerPath(partner), x: h.x, y: h.y }]
+          return [{ name, shop: h.label?.trim() ? partner?.name || '' : '', href: partner && partnerPath(partner), logo: partner && mediaUrl(partner.logo, 'thumb'), x: h.x, y: h.y }]
         }),
       },
     ]
@@ -78,9 +80,6 @@ export async function getProject(kind: ProjectKind, slug: string): Promise<Proje
   return docs[0] ?? null
 }
 
-/** 7.1.2: a visitor picks at most five tags. */
-export const maxTags = 5
-
 /** `ratio`: the cover's height to width, so the salon grid (7.2) gives an upright photo an upright frame */
 export type CollectionCard = { key: number; title: string; href: string; image?: string; alt: string; ratio?: number }
 
@@ -107,6 +106,7 @@ export function toCard(p: Project): CollectionCard {
  * Unknown slugs are ignored; more than five are cut to the first five.
  */
 export async function getCollection(kind: ProjectKind, tagsParam: string | string[] | undefined) {
+  const { limits } = await getSettings()
   const payload = await getPayload({ config })
   const { docs } = await payload.find({
     collection: 'projects',
@@ -121,8 +121,7 @@ export async function getCollection(kind: ProjectKind, tagsParam: string | strin
   for (const p of docs) for (const t of tagsOf(p)) tags.set(t.slug, t)
   const available = [...tags.values()].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
 
-  const asked = [tagsParam ?? []].flat().flatMap((v) => v.split(','))
-  const picked = [...new Set(asked.map((s) => s.trim()).filter((s) => tags.has(s)))].slice(0, maxTags)
+  const picked = selectTags(tagsParam, [...tags.keys()], limits.maxTags)
 
   const cards: CollectionCard[] = docs
     .filter((p) => picked.every((slug) => tagsOf(p).some((t) => t.slug === slug)))
@@ -133,6 +132,7 @@ export async function getCollection(kind: ProjectKind, tagsParam: string | strin
     cards,
     tags: available.map((t) => ({ slug: t.slug, title: t.title ?? t.slug })),
     picked,
+    maxTags: limits.maxTags,
   }
 }
 

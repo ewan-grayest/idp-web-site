@@ -1,23 +1,22 @@
 import type { Metadata, Viewport } from 'next'
 import { headers } from 'next/headers'
-// Design tokens v1.0 type: Cormorant Garamond headings, Manrope text (self-hosted, OFL, Cyrillic)
-import '@fontsource/cormorant-garamond/cyrillic-300.css'
-import '@fontsource/cormorant-garamond/cyrillic-300-italic.css'
-import '@fontsource/cormorant-garamond/cyrillic-400.css'
-import '@fontsource/cormorant-garamond/latin-300.css'
-import '@fontsource/cormorant-garamond/latin-300-italic.css'
-import '@fontsource/cormorant-garamond/latin-400.css'
-import '@fontsource/manrope/cyrillic-400.css'
-import '@fontsource/manrope/cyrillic-500.css'
-import '@fontsource/manrope/cyrillic-600.css'
-import '@fontsource/manrope/cyrillic-700.css'
-import '@fontsource/manrope/latin-400.css'
-import '@fontsource/manrope/latin-500.css'
-import '@fontsource/manrope/latin-600.css'
-import '@fontsource/manrope/latin-700.css'
+// Self-hosted Roboto, including Cyrillic. No font CDN requests.
+import '@fontsource/roboto/cyrillic-300.css'
+import '@fontsource/roboto/cyrillic-400.css'
+import '@fontsource/roboto/cyrillic-500.css'
+import '@fontsource/roboto/cyrillic-600.css'
+import '@fontsource/roboto/cyrillic-700.css'
+import '@fontsource/roboto/cyrillic-300-italic.css'
+import '@fontsource/roboto/latin-300.css'
+import '@fontsource/roboto/latin-400.css'
+import '@fontsource/roboto/latin-500.css'
+import '@fontsource/roboto/latin-600.css'
+import '@fontsource/roboto/latin-700.css'
+import '@fontsource/roboto/latin-300-italic.css'
 import '@/styles/globals.css'
 
 import { SiteChrome } from '@/components/shell/SiteChrome'
+import { SpecInspector } from '@/components/shared/SpecInspector'
 import { I18nProvider } from '@/i18n/client'
 import { locales, localePath, PATH_HEADER } from '@/i18n/locales'
 import { getLocale, getT } from '@/i18n/server'
@@ -44,8 +43,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f2ec' },
-    { media: '(prefers-color-scheme: dark)', color: '#151412' },
+    { media: '(prefers-color-scheme: light)', color: '#f7f7f7' },
+    { media: '(prefers-color-scheme: dark)', color: '#161616' },
   ],
 }
 
@@ -62,6 +61,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
       <body>
         <I18nProvider locale={locale}>
           <SiteChrome contacts={contacts}>{children}</SiteChrome>
+          <SpecInspector />
         </I18nProvider>
       </body>
     </html>

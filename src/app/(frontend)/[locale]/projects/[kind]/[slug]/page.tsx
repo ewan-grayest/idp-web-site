@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { Recommendations } from '@/components/project/Recommendations'
+import { Reviews } from '@/components/project/Reviews'
 import { Author } from '@/components/project/Author'
 import { Share } from '@/components/project/Share'
 import { Stage } from '@/components/project/Stage'
@@ -9,6 +10,7 @@ import { Strip } from '@/components/project/Strip'
 import styles from '@/components/project/Project.module.css'
 import { EnquireButton } from '@/components/shared/EnquireButton'
 import { Rise } from '@/components/shared/Rise'
+import { SocialFeed } from '@/components/shared/SocialFeed'
 import { Timeline } from '@/components/shared/Timeline'
 import { Link } from '@/i18n/Link'
 import { localePath } from '@/i18n/locales'
@@ -16,6 +18,8 @@ import { getLocale, getT } from '@/i18n/server'
 import { getProject, getRecommendations, mediaUrl, tagPath, tagsOf, toPhotos } from '@/lib/projects'
 import { pages, projectKinds, projectPath, type ProjectKind } from '@/lib/routes'
 import { shortPath } from '@/lib/shortCode'
+import { getSettings } from '@/lib/settings'
+import { getReviews } from '@/lib/social'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,7 +57,7 @@ export default async function ProjectPage({ params }: Params) {
   const url = site + localePath(locale, projectPath(kind, slug))
   const title = project.title ?? ''
   const entity = { type: 'project' as const, ref: slug }
-  const recs = await getRecommendations(project)
+  const [recs, reviews, settings] = await Promise.all([getRecommendations(project), getReviews(project.id), getSettings()])
   const achievements = (project.achievements ?? []).map((a) => ({
     key: a.id ?? a.date,
     date: a.date,
@@ -96,7 +100,7 @@ export default async function ProjectPage({ params }: Params) {
           <Stage key={s.spec} spec={s.spec} title={s.title} photos={toPhotos(s.data?.photos, `${title} · ${s.title}`)} text={s.data?.text} flip={k % 2 === 1} />
         ))}
 
-        <section className={`${styles.sec} ${styles.pad}`} data-spec="5.7">
+        <section className={`${styles.sec} ${styles.pad}`} data-spec="5.7" data-header-title={t.project.share}>
           <Share title={title} url={url} shortUrl={project.shortCode ? site + localePath(locale, shortPath(project.shortCode)) : undefined} />
           {kind === 'public' && (
             <div className={styles.priceRow} data-spec="5.7-b">
@@ -108,15 +112,18 @@ export default async function ProjectPage({ params }: Params) {
         {achievements.length > 0 && (
           <section className={`${styles.sec} ${styles.pad}`} data-header-title={t.project.achievements} data-spec="5.8">
             <h2 className={styles.h2}>{t.project.achievements}</h2>
-            <Timeline events={achievements} spec="5.8.1" />
+            <Timeline events={achievements} spec="5.8.2" />
           </section>
         )}
+
+        {settings.reviewsEnabled !== false && <Reviews project={project.id} title={title} url={url} items={reviews} limit={settings.limits.latestReviews} defaultNetwork={settings.defaultNetwork ?? 'vk'} vkAppId={settings.vkEnabled === true ? settings.vkAppId : null} facebookAppId={settings.facebookAppId} />}
 
         <section className={`${styles.sec} ${styles.ctaRow}`} data-spec="5.10">
           <EnquireButton label={t.project.learnMore} spec="5.10.1" context={t.project.learnMoreContext(title)} entity={entity} />
         </section>
 
         {recs.length > 0 && <Recommendations items={recs} />}
+        <SocialFeed scope="project" entity={project.id} hashtag={project.socialHashtag} spec="5.12" />
       </Rise>
     </article>
   )

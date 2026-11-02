@@ -4,6 +4,7 @@ import { useI18n } from '@/i18n/client'
 import { Link } from '@/i18n/Link'
 import type { Contacts } from '@/lib/pages'
 import { footerColumns, sisterSites } from '@/lib/site'
+import { SITE_VERSION } from '@/lib/version'
 import { LanguageLinks } from './LanguageLinks'
 import styles from './Footer.module.css'
 
@@ -38,13 +39,13 @@ export function Footer({ social }: { social: Contacts['social'] }) {
 
         <div className={styles.bottom}>
           {sisterSites.map((s) => (
-            <Link key={s.id} href={s.href} className={styles.sister} data-spec={s.id}>
-              {s.label}
-            </Link>
+            s.href ? <Link key={s.id} href={s.href} className={styles.sister} data-spec={s.id}>{s.label}</Link>
+              : <span key={s.id} className={styles.sister} data-spec={s.id} aria-disabled="true" title={t.common.inProgress}>{s.label}</span>
           ))}
           <span className="spec-id">0.3.6–0.3.8</span>
           <LanguageLinks className={styles.langs} pill />
           <span className={styles.copy}>© ID project, {new Date().getFullYear()}</span>
+          <span className={styles.copy} data-site-version>v{SITE_VERSION}</span>
         </div>
       </div>
     </footer>

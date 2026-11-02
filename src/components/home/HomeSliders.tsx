@@ -35,8 +35,7 @@ const SWIPE = 40
  * far edge; leaving the page closes. Captions and controls keep to each half's outer side, inside its zone.
  * Phones stack the halves: a swipe or ‹ › changes the slide.
  * Names, «Смотреть проект», the arrows and the segments were added on 2026-10-25, when Ewan found Home vague.
- * 1.1: floating logo, grows 20% on hover, opens the Team page 3. (The spec opened the promo video; Ewan changed it
- *   on 2026-10-25: the video now plays by itself on the first visit, see PromoVideo `intro`.)
+ * 1.1: floating logo, grows 20% on hover and opens the fullscreen Promo page 2.
  */
 export function HomeSliders({ left, right }: { left: Slide[]; right: Slide[] }) {
   const { t } = useI18n()
@@ -108,7 +107,7 @@ export function HomeSliders({ left, right }: { left: Slide[]; right: Slide[] }) 
         <ChevronIcon dir="right" />
         {t.home.residential}
       </span>
-      <Link ref={logo} href="/studio" className={styles.logo} aria-label={t.home.logo} data-spec="1.1">
+      <Link ref={logo} href="/promo" className={styles.logo} aria-label={t.home.logo} data-spec="1.1">
         ID
       </Link>
       <LanguageLinks className={styles.langs} pill />

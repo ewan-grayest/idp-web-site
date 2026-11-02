@@ -1,17 +1,20 @@
 import styles from './Studio.module.css'
 
-type Point = { lat: number; lng: number; zoom: number }
+type Point = { lat: number; lng: number; zoom: number; provider?: 'google' | 'yandex' }
 
 const ll = (p: Point) => `${p.lng},${p.lat}`
 
 /**
  * 3.5.2 map, full width and zoomable.
- * ASSUMPTION: the spec asks for a custom Google map; we use the free Yandex map widget instead
- * (no key, no foreign billing, works for a Russian audience). The point is set in the admin (Студия → Контакты).
+ * Google/Yandex provider is configurable in Site settings. Coordinates and zoom are set in Studio → Contacts.
  */
-export function StudioMap({ point, title }: { point: Point; title: string }) {
-  const src = `https://yandex.ru/map-widget/v1/?ll=${ll(point)}&z=${point.zoom}&pt=${ll(point)},pm2gnm`
-  return <iframe className={styles.map} src={src} title={title} loading="lazy" allowFullScreen data-spec="3.5.2" />
+export function StudioMap({ point, title, spec = '3.5.2' }: { point: Point; title: string; spec?: string }) {
+  const src = point.provider === 'google'
+    ? `https://maps.google.com/maps?q=${point.lat},${point.lng}&z=${point.zoom}&output=embed`
+    : `https://yandex.ru/map-widget/v1/?ll=${ll(point)}&z=${point.zoom}&pt=${ll(point)},pm2gnm`
+  return <iframe className={styles.map} src={src} title={title} loading="lazy" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" data-spec={spec} />
 }
 
-export const mapLink = (p: Point) => `https://yandex.ru/maps/?pt=${ll(p)}&z=${p.zoom}&l=map`
+export const mapLink = (p: Point) => p.provider === 'google'
+  ? `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`
+  : `https://yandex.ru/maps/?pt=${ll(p)}&z=${p.zoom}&l=map`

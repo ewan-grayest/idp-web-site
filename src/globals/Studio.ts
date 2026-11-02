@@ -16,9 +16,9 @@ export const Studio: GlobalConfig = {
   slug: 'studio',
   // Named after the page Ewan sees: «Наша история» was hard to find under «Студия» (2026-10-26)
   label: {
-    ru: 'Наша команда: миссия, история, контакты, реквизиты (2, 3, 14)',
-    en: 'Our team: mission, history, contacts, company details (2, 3, 14)',
-    zh: '我们的团队：使命、历史、联系方式、公司信息 (2, 3, 14)',
+    ru: 'Наша команда: миссия, история, контакты, реквизиты',
+    en: 'Our team: mission, history, contacts, company details',
+    zh: '我们的团队：使命、历史、联系方式、公司信息',
   },
   admin: { group: groups.pages, preview: previewTeamPage },
   access: { read: () => true },
@@ -27,7 +27,7 @@ export const Studio: GlobalConfig = {
       type: 'tabs',
       tabs: [
         {
-          label: tr('Промо-видео 2', 'Promo video 2', '宣传视频 2'),
+          label: tr('Промо-видео', 'Promo video', '宣传视频'),
           fields: [
             {
               name: 'promoVideo',
@@ -79,14 +79,14 @@ export const Studio: GlobalConfig = {
           ],
         },
         {
-          label: tr('Миссия 3.1', 'Mission 3.1', '使命 3.1'),
+          label: tr('Миссия', 'Mission', '使命'),
           fields: [
             { name: 'mission', type: 'textarea', localized: true, label: tr('Миссия (крупный текст)', 'Mission (large text)', '使命（大字）') },
             { name: 'vision', type: 'textarea', localized: true, label: tr('Видение', 'Vision', '愿景') },
           ],
         },
         {
-          label: tr('Наша история 3.3', 'Our history 3.3', '我们的历史 3.3'),
+          label: tr('Наша история', 'Our history', '我们的历史'),
           description: tr(
             'Шкала «Наша история» на странице «Наша команда» (/studio). Личные достижения сотрудников — в «Команда» → сотрудник → «Достижения 4.2».',
             'The «Our history» timeline on the «Our team» page (/studio). Each person\'s own achievements are in «People» → the person → «Achievements 4.2».',
@@ -101,21 +101,21 @@ export const Studio: GlobalConfig = {
               fields: [
                 { name: 'date', type: 'date', required: true, label: tr('Дата', 'Date', '日期') },
                 { name: 'title', type: 'text', ...requiredInRussian, label: tr('Событие', 'Event', '事件') },
-                { name: 'text', type: 'textarea', localized: true, label: tr('Текст (3.3.5)', 'Text (3.3.5)', '文字 (3.3.5)') },
-                { name: 'image', type: 'upload', relationTo: 'media', label: tr('Изображение (3.3.6)', 'Image (3.3.6)', '图片 (3.3.6)') },
-                { name: 'project', type: 'relationship', relationTo: 'projects', label: tr('Ссылка на проект (5 / 8 / 16)', 'Link to a project (5 / 8 / 16)', '项目链接（5、8 或 16）') },
+                { name: 'text', type: 'textarea', localized: true, label: tr('Текст', 'Text', '文字') },
+                { name: 'image', type: 'upload', relationTo: 'media', label: tr('Изображение', 'Image', '图片') },
+                { name: 'project', type: 'relationship', relationTo: 'projects', label: tr('Ссылка на проект', 'Link to a project', '项目链接（5、8 或 16）') },
               ],
             },
           ],
         },
         {
-          label: tr('Контакты 3.5', 'Contacts 3.5', '联系方式 3.5'),
+          label: tr('Контакты', 'Contacts', '联系方式'),
           fields: [
             {
               name: 'address',
               type: 'textarea',
               localized: true,
-              label: tr('Адрес (3.5.3)', 'Address (3.5.3)', '地址 (3.5.3)'),
+              label: tr('Адрес', 'Address', '地址'),
               defaultValue: '119028, Москва, Басманный район (ЦАО), м. Китай-город, ул. Солянка, 1/2, стр. 2',
             },
             {
@@ -137,8 +137,8 @@ export const Studio: GlobalConfig = {
             {
               type: 'row',
               fields: [
-                { name: 'partnersPhone', type: 'text', label: tr('Телефон для партнёров (6.5)', 'Partnerships phone (6.5)', '合作电话 (6.5)'), admin: { placeholder: partnersPhone } },
-                { name: 'partnersEmail', type: 'email', label: tr('E-mail для партнёров (6.5)', 'Partnerships e-mail (6.5)', '合作邮箱 (6.5)'), admin: { placeholder: partnersEmail } },
+                { name: 'partnersPhone', type: 'text', label: tr('Телефон для партнёров', 'Partnerships phone', '合作电话'), admin: { placeholder: partnersPhone } },
+                { name: 'partnersEmail', type: 'email', label: tr('E-mail для партнёров', 'Partnerships e-mail', '合作邮箱'), admin: { placeholder: partnersEmail } },
               ],
             },
             {
@@ -157,7 +157,7 @@ export const Studio: GlobalConfig = {
           ],
         },
         {
-          label: tr('Реквизиты 14', 'Company details 14', '公司信息 14'),
+          label: tr('Реквизиты', 'Company details', '公司信息'),
           description: tr(
             'Показываются первыми на странице «Юридические аспекты» (/legal#details). Пустые поля не выводятся.',
             'Shown first on the Legal page (/legal#details). Empty fields are left out.',

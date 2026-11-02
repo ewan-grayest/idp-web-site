@@ -37,9 +37,9 @@ export const footerColumns = [
     key: 'press',
     links: [
       { key: 'press', href: '/press' },
-      { key: 'journal', href: '/journal' },
+      { key: 'journal', href: '/studio#journal' },
       { key: 'media', href: '/media' },
-      { key: 'lifestyle', href: '/journal#lifestyle' },
+      { key: 'lifestyle', href: '/journal' },
     ],
   },
   {
@@ -56,6 +56,7 @@ export const footerColumns = [
     links: [
       { key: 'terms', href: '/legal' },
       { key: 'copyright', href: '/legal#copyright' },
+      { key: 'archive', href: '/projects/archive' },
     ],
   },
 ] as const
@@ -89,7 +90,7 @@ export const menuMore = [
 /** Footer 0.3.6–0.3.8 sister brands. */
 export const sisterSites = [
   { id: '0.3.6', label: 'ID project', href: '/' },
-  { id: '0.3.7', label: 'ID Lab', href: '#' }, // PLACEHOLDER: address unknown
+  { id: '0.3.7', label: 'ID Lab', href: null }, // PLACEHOLDER: address unknown
   { id: '0.3.8', label: 'Get-Together', href: '/partners' },
 ]
 

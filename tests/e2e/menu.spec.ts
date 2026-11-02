@@ -8,23 +8,21 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 const panel = (page: import('@playwright/test').Page) => page.locator('[data-site-menu-panel]')
 
-test('The ID logo opens the menu, which leads to every main section; Home has none (Ewan, 2026-10-25/26)', async ({ page }) => {
+test('The separate menu button leads to every main section; the ID logo leads home', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('[data-site-menu]')).toHaveCount(0)
   await page.goto('/studio')
   await page.waitForLoadState('networkidle')
-  // The ID logo is the menu button (Ewan, 2026-10-26); there is no other one
+  // Spec 0.1.1 is a Home link. The supplemental menu has its own button.
   await expect(page.locator('header [data-site-menu]')).toHaveCount(1)
-  await expect(page.locator('header [data-site-menu]')).toHaveAttribute('data-spec', '0.1.1')
-  await expect(page.locator('header [data-site-menu]')).toHaveText('ID')
+  await expect(page.locator('header [data-spec="0.1.1"]')).toHaveAttribute('href', '/')
   await page.locator('header [data-site-menu]').click()
   const menu = page.getByRole('dialog', { name: 'Меню' })
   await expect(menu).toBeVisible()
   for (const name of ['Главная', 'Студия', 'Команда', 'Жилые интерьеры', 'Общественные интерьеры', 'Партнёры']) {
     await expect(menu.getByRole('navigation', { name: 'Разделы сайта' }).getByRole('link', { name })).toBeVisible()
   }
-  // Archive projects are out of the menu and footer (Ewan, 2026-10-26)
-  await expect(page.locator('a[href$="/projects/archive"]')).toHaveCount(0)
+  await expect(page.locator('footer a[href$="/projects/archive"]')).toHaveCount(1)
   await menu.getByRole('link', { name: 'Жилые интерьеры' }).click()
   await expect(page).toHaveURL(/\/projects\/residential$/)
   await expect(panel(page)).toHaveCount(0)

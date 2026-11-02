@@ -1,9 +1,9 @@
 # ID project website
 
 Next.js 16 + Payload CMS 3 + PostgreSQL, one app and one Docker image.
-Stack decisions: "Tools and tech stack" doc. Design: "IDP Site design" canvas.
+Source: https://github.com/ewan-grayest/idp-web-site. Requirements and component coverage: [SPEC-COMPLIANCE.md](SPEC-COMPLIANCE.md).
 
-## What's built (slice 1)
+## Specification implementation (v0.1.1)
 
 | Spec | Where |
 |---|---|
@@ -11,7 +11,7 @@ Stack decisions: "Tools and tech stack" doc. Design: "IDP Site design" canvas.
 | 17 page roles and permalinks | `src/lib/routes.ts` |
 | 0.1 Header: logo, section title, phone, enquiry + consent, search | `src/components/shell/Header.tsx` |
 | 0.3 Footer | `src/components/shell/Footer.tsx`, links in `src/lib/site.ts` |
-| 1 Home: opposing sliders 1.2/1.3 of the projects ticked for Home (name, «Смотреть проект», ‹ ›, one progress segment per project, «Пауза» on hover, swipe on phones), floating logo 1.1 (opens the Team page); the promo video plays over Home on a visitor's first visit (`/?intro` replays it) | `src/components/home/HomeSliders.tsx`, `src/app/(frontend)/[locale]/page.tsx` |
+| 1 Home: opposing sliders 1.2/1.3 of the projects ticked for Home (name, «Смотреть проект», ‹ ›, one progress segment per project, «Пауза» on hover, swipe on phones), floating logo 1.1 (opens Promo); the promo video plays over Home on a visitor's first visit (`/?intro` replays it) | `src/components/home/HomeSliders.tsx`, `src/app/(frontend)/[locale]/page.tsx` |
 | 2 Promo video: uploaded in the admin (Студия → Промо-видео), a wordless placeholder clip until then | `src/components/promo/PromoVideo.tsx`, `public/promo-placeholder.*` |
 | 3 Studio and team: mission, team strip with an open card (photo, quote, link to Person), history timeline, online journal, map and address, company enquiry, partner tiles | `src/app/(frontend)/[locale]/studio`, `src/components/studio/`, `src/globals/Studio.ts`, `src/collections/Issues.ts` |
 | 4 Person: wide photo, role, name (header title), quote, interests, achievements timeline, their projects and tags, "ask me" enquiry | `src/app/(frontend)/[locale]/team/[slug]`, `src/components/person/`, `src/lib/person.ts` |
@@ -26,11 +26,11 @@ Stack decisions: "Tools and tech stack" doc. Design: "IDP Site design" canvas.
 | Dark/light switch (design tokens v1.0): follows the system setting, remembers the visitor's choice; Home, Promo and the photo viewer stay dark | `src/styles/tokens.css`, `src/lib/theme.ts` |
 | Languages: Russian (default, `/studio`), English (`/en/studio`), Chinese (`/zh/studio`); switch in the header, footer and on Home; translatable content with Russian fallback | `src/i18n/`, `src/proxy.ts`, `localization` in `src/payload.config.ts` |
 | Site menu (not in the spec; added 2026-10-25 when Ewan found no navigation): the header's last button opens every section, contacts, languages and the theme switch; Home has none (Ewan, 2026-10-25) | `src/components/shell/SiteMenu.tsx`, `menuMain` / `menuMore` in `src/lib/site.ts` |
-| CMS admin, in Russian, English or Chinese; "Open site" and "Log out" always in its top bar; side menu grouped as projects and team / site pages (each named with its page number) / enquiries, files, access; contacts, social links and company details in Студия | `/admin`, `src/components/admin/`, `groups` in `src/collections/labels.ts` |
+| CMS admin, in Russian, English or Chinese; "Open site" and "Log out" always in its top bar; side menu grouped as projects and team / site pages / enquiries, files, access; contacts, social links and company details in Студия | `/admin`, `src/components/admin/`, `groups` in `src/collections/labels.ts` |
 
-All 17 page roles are built; `/team` alone still shows the "in progress" stand-in.
+All 17 page roles use the shared templates. `/team` permanently redirects to `/studio#team`; individual people remain at `/team/[slug]`. Unknown nested URLs return 404. The generated `/sitemap.xml` includes the public routes and entity pages in all three languages.
 Legal drafts and the press articles found online load with `npx payload run scripts/fill-pages.ts` (safe to re-run).
-Every component carries its spec ID in a `data-spec` attribute; add `?ids=1` to any URL to see them as badges.
+Components carry their spec IDs in `data-spec` attributes. Shared project and collection templates use the reference IDs from pages 5 and 7; the outer `data-spec` identifies the actual page role (5/8/16 or 7/9/17). Add `?ids=1` for existing inline badges, and inspect `data-spec` for the full traceability surface.
 
 ## Run the site on this Mac (Docker)
 
@@ -80,6 +80,8 @@ Full backup (database and uploaded media) and restore, for the local dev site an
 In the admin: «Резервные копии» (`/admin/backups`) makes, checks, downloads, uploads, restores and deletes backups.
 In Terminal: `scripts/backup.sh`, `scripts/restore.sh backups/<file>.tar`; nightly: `scripts/schedule-backup.sh on` (add `--prod` on the server).
 
+The local backup-folder mount can be configured with `BACKUPS_MOUNT` (`./backups` by default). On this Mac it is `backups`, a Docker volume, because Docker Desktop refused the host-folder mount. All existing backups were preserved and copied into the volume. See [the fallback notes](BACKUP.md#docker-desktop-folder-sharing-fallback) before mixing admin and Terminal backup operations.
+
 ## Develop with live reload
 
 Needs Node 20.9+ and Docker (for the database only).
@@ -125,32 +127,60 @@ Before deploying a change, run `npx payload migrate:create <name>`; the producti
 
 Not in use: the site runs locally for now. `deploy/` holds a ready setup for one server (site, database, HTTPS) for later.
 
-## Open assumptions
+## Settings, feeds and reviews
 
-- Header is shown on text pages 12 and 15 (spec wireframe omits it).
-- Header and footer are hidden on Home and Promo; the footer appears on every other page.
-- Navigation: the spec has no menu, only the footer. The site menu lists the main sections in large type (Studio, Team, residential and public projects, Partners) and the rest smaller. Archive projects (16/17) are left out of the menu and footer (Ewan, 2026-10-26); `/projects/archive` still opens. On phones the theme switch moved from the header into the menu.
-- Home sliders (Ewan found them vague, 2026-10-25): each slide shows its project's name and «Смотреть проект» and opens it; ‹ › and one segment per project sit beside the time indicator 1.2.1/1.3.1, «Пауза» shows while a half is pointed at, and the other side's name waits at the far edge of an open half. Autoplay moves toward the logo as the spec says; ‹ › and swipes move like any carousel (next comes in from the right). Reduced motion turns autoplay off.
-- Media descriptions (alt) are optional (Ewan, 2026-10-25); an empty one falls back to the project's name.
-- Logo 1.1 opens the Team page instead of the promo video (Ewan, 2026-10-25). The video plays by itself over Home once per browser session, so again on every new visit (session cookie `idp-intro-session`, Ewan 2026-10-25); it starts muted when the browser allows no sound before a click, with a sound button; closing it, Escape or its end shows Home. Visitors whose system asks for less motion get the play button instead. Afterwards the video stays at `/promo`. Since 2026-10-28 three admin switches in Студия → Промо-видео 2 (all on by default, Ewan) turn off the Home intro (`/?intro` still shows it), make the video wait for a click on the play button, or play it muted; the last two also apply at `/promo`.
-- Footer link targets (`src/lib/site.ts`) are our reading of the spec; Instagram, VK, the phone and e-mail are the studio's real ones (from its Taplink and VK pages); Houzz points to the studio's Flatica profile (houzz.ru now redirects to Flatica); Facebook and the ID Lab address are still placeholders.
-- Consent box is unticked by default, remembered in the browser once ticked, forgotten if unticked.
-- 5.1 "up to 7" read as 7 frames visible at once; any number of frames scroll sideways.
-- 5.11 cards: next stage of this project (set by hand), a similar project of the same kind (shared tag), and one of the other kind.
-- "Team that worked on the project" (5.3.2) opens the Team page narrowed to that project's authors (`/studio?project=<slug>#team`); `?tag=<slug>` narrows it by tag.
-- 3.2: nobody is open when the page loads; choosing a person opens 3.2-a, choosing them again or the cross closes it.
-- 3.4: the date and number bar is always shown (touch screens have no hover) and turns green on hover; a click opens the enquiry "Получить экземпляр".
-- 3.5.2: free Yandex map widget instead of a custom Google map (no key, no foreign billing). The map point is approximate until checked in the admin (Студия → Контакты).
-- 3.5.3: address text is from the spec (postcode 119028); ул. Солянка is usually 109028, worth checking.
-- 3.8 Instagram feed is not built (social feeds dropped).
-- Search covers project titles and people's names, not yet partners, articles or entries.
-- 6.7 Instagram feed is not built (social feeds dropped). Partner projects 6.4 are the ones picked in the partner plus those where it is tagged on a photo.
-- 10: hovering an article shows a green «Читать статью» bar; the source and date sit on the photo (they would hide on touch screens otherwise).
-- 14: the legal texts are drafts for a lawyer to check; Russian only, so English and Chinese show the Russian text until translated.
-- Names over photos (Home, the strip 5.1, cards) sit on a dark fade with a halo around the letters (Ewan, 2026-10-26: hard to read on bright photos).
-- Languages: Russian, English and Chinese until Ewan confirms the list. No automatic redirect by browser language: Russian stays at the clean address and visitors switch themselves. Arabic would need a right-to-left layout pass. Phones show the language list in the footer (no room for a fifth header button).
-- An enquiry records the site language it was sent from (Leads → "Язык сайта").
-- 4.1.1 uses a separate wide photo when there is one, otherwise the strip portrait. 4.3 lists projects the person led or worked on, newest first; 4.3.3 shows those projects' tags plus the person's own.
-- 4.5 Instagram feed is not built (social feeds dropped).
-- 7.1: the tag buttons are the tags used by projects of that kind, alphabetical. A click picks a tag, a double click (or a second click, for keyboard users) puts it back; a sixth tag can't be picked. The grid changes only on «Выбрать», and the choice goes into the address, so a filtered list can be shared; tags on a project page (5.3.1) open it the same way.
-- 7.2: projects shown are those carrying all picked tags (each tag narrows the list), newest first, all on one page (no "load more" until there are many). Cards use the cover photo, or the first strip photo; touch screens show the name on a dark fade instead of the hover veil.
+In the CMS, **Site settings and integrations** controls tag limits (default 5), feed caps (Studio/Person/GT 12, project 3), latest reviews (5), exact hashtag filters, map provider, feed/review visibility and social provider settings. All caps are integers from 1–100 and are enforced on the server. Map coordinates and zoom remain in Studio → Contacts.
+
+**VK integration is disabled by default**, as requested on 2 November 2026. To enable it, enter a registered public VK site/app ID and enable the switch. The SDK only loads after a visitor opens social comments. An empty Facebook app ID keeps its external comment plugin disabled. The visitor's selected network is remembered; a recognized social referrer is used as a fallback. Browser login sessions on other domains cannot be inspected.
+
+**Social feeds** stores approved Instagram post URLs, uploaded thumbnails, dates and hashtags. Choose Studio, GT, a person or a project; only published posts for that entity appear, newest first, within its configured cap. This curated feed works without an API token. Automatic Instagram synchronization requires a separately authorized provider; it is not enabled or represented as a live account connection.
+
+**Reviews** stores project-specific reviews with moderation. Anonymous reviews require consent and cannot set their own approval status. Only approved reviews are public; origin URLs and consent are readable by staff only. Local website reviews are not automatically posted to VK/Facebook. Once configured, the optional provider widgets handle their own sign-in and comments. Live provider behavior requires a registered domain/app and provider acceptance testing.
+
+Project and blog sharing use stable `/p/<code>` redirects. Existing blog entries receive short codes during migration. Facebook is `.1` and VK is `.2` under both `5.7` and `11.2`, matching the specification.
+
+## Versioning and source control
+
+Use the configured `origin`: `https://github.com/ewan-grayest/idp-web-site.git`.
+
+After cloning, install the tracked commit hook once:
+
+```bash
+npm run hooks:install
+```
+
+Before **every commit**, increment the version, then stage both version files:
+
+```bash
+npm run version:patch        # or version:minor / version:major
+# stage the intended changes, including package.json and package-lock.json
+npm run version:check
+git commit
+```
+
+The hook checks the staged files, rejects unchanged/decreasing versions and requires the lockfile versions to match. GitHub Actions checks every new commit. Existing local history predates this policy; the initial push checks its tip. The current version appears in the footer. Tests for numerical version ordering are included.
+
+## Verification against isolated data
+
+The task's verification uses a separate database named `idp_spec_qa`; it never adds sample projects or test enquiries to the running site's database.
+
+```bash
+# create idp_spec_qa in the local PostgreSQL container first
+DATABASE_URI=postgres://idp:idp@127.0.0.1:5432/idp_spec_qa npx payload migrate
+DATABASE_URI=postgres://idp:idp@127.0.0.1:5432/idp_spec_qa MEDIA_DIR=/private/tmp/idp-qa-media npx payload run scripts/seed.ts
+DATABASE_URI=postgres://idp:idp@127.0.0.1:5432/idp_spec_qa MEDIA_DIR=/private/tmp/idp-qa-media NEXT_PUBLIC_SITE_URL=http://localhost:3001 npm run dev -- --port 3001
+# in another terminal, with that preview running:
+DATABASE_URI=postgres://idp:idp@127.0.0.1:5432/idp_spec_qa MEDIA_DIR=/private/tmp/idp-qa-media npx payload run scripts/verify-spec.ts
+```
+
+The verifier creates marked fixtures only in that database and exercises page roles, caps, direct-URL filtering, map selection, consent, review moderation, private lead access, short URLs and sitemap behavior. It restores the default settings when done.
+
+## Content and scope decisions
+
+- The attachment contains inconsistent page references. The 17-role page map takes precedence: legal and consent documents are on 14, media/PR on 15, archive projects on 16/17. Shared template element IDs remain those printed in the spec.
+- Roboto is self-hosted throughout. Brand tokens retain `#6d6d6d`, `#d2d2d2` and `#8dc63f`; neutral light/dark themes and readable type scales are retained.
+- Logo `1.1` opens `/promo`; logo `0.1.1` opens Home. The supplemental navigation menu has a separate button. Header/footer are hidden on Home/Promo, with the full footer elsewhere, including Archive.
+- The optional first-visit video remains controlled by the existing Studio promo switches. `/promo` always provides a replayable presentation. The uploaded film is preferred; a labeled placeholder is used when none is supplied.
+- “Up to seven” in `5.1` means at most seven visible presentation frames on desktop, with horizontal scrolling for the unlimited `5.1.1` items. Mobile shows fewer frames.
+- Feed and review sections need approved CMS content. Missing studio photos/text are editorial content to fill in the CMS; development fixtures are clearly marked and are not production content.
+- ID Lab design/content remains TBD and its footer label is intentionally inactive. Checkout, job application forms and reward accounting are out of scope.

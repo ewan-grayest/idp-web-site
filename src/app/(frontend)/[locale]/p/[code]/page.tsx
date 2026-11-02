@@ -17,6 +17,9 @@ export default async function ShortLink({ params }: { params: Promise<{ code: st
     depth: 0,
     select: { slug: true, kind: true },
   })
-  if (!docs[0]) notFound()
-  permanentRedirect(localePath(await getLocale(), projectPath(docs[0].kind, docs[0].slug)))
+  const locale = await getLocale()
+  if (docs[0]) permanentRedirect(localePath(locale, projectPath(docs[0].kind, docs[0].slug)))
+  const entries = await payload.find({ collection: 'lifestyle', where: { shortCode: { equals: code } }, limit: 1, depth: 0, select: { slug: true } })
+  if (!entries.docs[0]) notFound()
+  permanentRedirect(`${localePath(locale, '/journal')}#${entries.docs[0].slug}`)
 }

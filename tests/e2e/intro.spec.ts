@@ -16,13 +16,13 @@ test('First visit: the promo video plays over Home, and only once', async ({ pag
   await expect(page.locator('[data-spec="1.2"]')).toBeVisible()
 })
 
-test('Closing the intro shows Home; the logo then opens the Team page', async ({ page }) => {
+test('Closing the intro shows Home; the logo then opens the Promo page', async ({ page }) => {
   await page.goto('/')
   await page.waitForLoadState('networkidle')
   await page.locator('[data-spec="2.1"]').click()
   await expect(page.locator('[data-spec="2"]')).toHaveCount(0)
   await page.locator('[data-spec="1.1"]').click()
-  await expect(page).toHaveURL(/\/studio$/)
+  await expect(page).toHaveURL(/\/promo$/)
 })
 
 test('Escape closes the intro', async ({ page }) => {
@@ -31,7 +31,7 @@ test('Escape closes the intro', async ({ page }) => {
   await expect(page.locator('[data-spec="2"][data-intro]')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.locator('[data-spec="2"]')).toHaveCount(0)
-  await expect(page.locator('[data-spec="1.1"]')).toHaveAttribute('href', '/en/studio')
+  await expect(page.locator('[data-spec="1.1"]')).toHaveAttribute('href', '/en/promo')
 })
 
 test('The intro gives way to Home when the video ends', async ({ page }) => {

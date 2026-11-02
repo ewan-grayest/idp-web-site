@@ -36,7 +36,7 @@ export async function EntriesPage({ collection, page, first }: Props) {
       </section>
       {page === 11 && (
         <section className={`${base.sec} ${base.pad}`} data-spec="11.2">
-          <Share title={t.pages[11]} url={site + localePath(locale, pages[11].path)} />
+          <Share title={t.pages[11]} spec="11.2" url={site + localePath(locale, pages[11].path)} entries={entries.map((e) => ({ slug: e.slug, title: e.title, shortUrl: e.shortCode ? site + localePath(locale, `/p/${e.shortCode}`) : undefined }))} />
         </section>
       )}
     </article>

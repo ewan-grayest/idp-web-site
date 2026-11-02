@@ -4,6 +4,7 @@ import { PartnersView } from '@/components/pages/PartnersView'
 import styles from '@/components/pages/Pages.module.css'
 import base from '@/components/project/Project.module.css'
 import { EnquireButton } from '@/components/shared/EnquireButton'
+import { SocialFeed } from '@/components/shared/SocialFeed'
 import { Prose } from '@/components/shared/Prose'
 import { StudioMap } from '@/components/studio/StudioMap'
 import studio from '@/components/studio/Studio.module.css'
@@ -18,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Page 6 · Partners and the Get-Together bonus scheme: 6.1 the scheme, 6.2–6.4 partners and their projects,
- * 6.5 how to find us, 6.6 «Узнать больше о бонусной системе Get-Together». 6.7 (Instagram feed) was dropped.
+ * 6.5 how to find us, 6.6 enquiry and 6.7 the capped social feed.
  */
 export default async function PartnersPage() {
   const [partners, gt, contacts, t] = await Promise.all([getPartners(), getPageText('gt'), getContacts(), getT()])
@@ -51,7 +52,7 @@ export default async function PartnersPage() {
         <h2 className={`${base.h2} ${studio.inset}`} data-spec="6.5.1">
           {t.partners.findUs}
         </h2>
-        <StudioMap point={contacts.map} title={t.studio.map} />
+        <StudioMap point={contacts.map} title={t.studio.map} spec="6.5.2" />
         <div className={studio.contacts} data-spec="6.5.3">
           <address>{contacts.address}</address>
           <a href={tel(contacts.partnersPhone)}>{contacts.partnersPhone}</a>
@@ -62,6 +63,7 @@ export default async function PartnersPage() {
       <section className={`${base.sec} ${base.ctaRow}`} data-spec="6.6">
         <EnquireButton label={t.partners.learnGt} spec="6.6.1" context={t.partners.learnGt} entity={{ type: 'page', ref: 'partners' }} />
       </section>
+      <SocialFeed scope="partners" spec="6.7" />
     </article>
   )
 }

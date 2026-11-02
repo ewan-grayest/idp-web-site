@@ -31,17 +31,18 @@ export const People: CollectionConfig = {
           fields: [
             { name: 'name', type: 'text', ...requiredInRussian, label: tr('Имя', 'Name', '姓名') },
             { name: 'slug', type: 'text', required: true, unique: true, index: true, label: tr('Адрес (slug)', 'Address (slug)', '网址 (slug)') },
-            { name: 'role', type: 'text', localized: true, label: tr('Должность (4.1.2)', 'Position (4.1.2)', '职位 (4.1.2)') },
+            { name: 'role', type: 'text', localized: true, label: tr('Должность', 'Position', '职位') },
             { name: 'portrait', type: 'upload', relationTo: 'media', label: tr('Портрет вертикальный (лента 3.2)', 'Vertical portrait (strip 3.2)', '竖版肖像（3.2 横条）') },
-            { name: 'photo', type: 'upload', relationTo: 'media', label: tr('Широкое фото (4.1.1); если его нет — берётся портрет', 'Wide photo (4.1.1); the portrait is used if empty', '宽幅照片 (4.1.1)；留空时使用肖像') },
-            { name: 'quote', type: 'textarea', localized: true, label: tr('Умная мысль или цитата (3.2.7 и 4.1.4)', 'Quote (3.2.7 and 4.1.4)', '语录 (3.2.7、4.1.4)') },
-            { name: 'interests', type: 'textarea', localized: true, label: tr('Интересы (4.1.5)', 'Interests (4.1.5)', '兴趣 (4.1.5)') },
+            { name: 'photo', type: 'upload', relationTo: 'media', label: tr('Широкое фото; если его нет — берётся портрет', 'Wide photo; the portrait is used if empty', '宽幅照片；留空时使用肖像') },
+            { name: 'quote', type: 'textarea', localized: true, label: tr('Умная мысль или цитата', 'Quote', '语录') },
+            { name: 'interests', type: 'textarea', localized: true, label: tr('Интересы', 'Interests', '兴趣') },
+            { name: 'socialHashtag', type: 'text', label: 'Instagram hashtag' },
             // 3.2.2: people are tagged, so the strip can show e.g. only the team of one project or one skill
-            { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, label: tr('Теги и интересы (4.3.3)', 'Tags and interests (4.3.3)', '标签、兴趣 (4.3.3)') },
+            { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, label: tr('Теги и интересы', 'Tags and interests', '标签、兴趣') },
           ],
         },
         {
-          label: tr('Достижения 4.2', 'Achievements 4.2', '成就 4.2'),
+          label: tr('Достижения', 'Achievements', '成就'),
           description: tr(
             'Показываются на личной странице сотрудника (/team/адрес), раздел «Мои достижения», и ссылкой из его карточки на странице «Наша команда». Кнопка «Предпросмотр» вверху открывает эту страницу.',
             'Shown on the person\'s own page (/team/address) under «My achievements», and linked from their card on the «Our team» page. The «Preview» button at the top opens that page.',
@@ -56,9 +57,9 @@ export const People: CollectionConfig = {
               fields: [
                 { name: 'date', type: 'date', required: true, label: tr('Дата', 'Date', '日期') },
                 { name: 'title', type: 'text', ...requiredInRussian, label: tr('Событие', 'Event', '事件') },
-                { name: 'text', type: 'textarea', localized: true, label: tr('Текст (4.2.5)', 'Text (4.2.5)', '文字 (4.2.5)') },
-                { name: 'image', type: 'upload', relationTo: 'media', label: tr('Изображение (4.2.6)', 'Image (4.2.6)', '图片 (4.2.6)') },
-                { name: 'project', type: 'relationship', relationTo: 'projects', label: tr('Ссылка на проект (5 / 8 / 16)', 'Link to a project (5 / 8 / 16)', '项目链接（5、8 或 16）') },
+                { name: 'text', type: 'textarea', localized: true, label: tr('Текст', 'Text', '文字') },
+                { name: 'image', type: 'upload', relationTo: 'media', label: tr('Изображение', 'Image', '图片') },
+                { name: 'project', type: 'relationship', relationTo: 'projects', label: tr('Ссылка на проект', 'Link to a project', '项目链接（5、8 或 16）') },
               ],
             },
           ],

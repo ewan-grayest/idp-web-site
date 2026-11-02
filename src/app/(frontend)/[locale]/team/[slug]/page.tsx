@@ -6,6 +6,7 @@ import person from '@/components/person/Person.module.css'
 import base from '@/components/project/Project.module.css'
 import { EnquireButton } from '@/components/shared/EnquireButton'
 import { Rise } from '@/components/shared/Rise'
+import { SocialFeed } from '@/components/shared/SocialFeed'
 import { Timeline } from '@/components/shared/Timeline'
 import { Link } from '@/i18n/Link'
 import { getT } from '@/i18n/server'
@@ -119,6 +120,7 @@ export default async function PersonPage({ params }: Params) {
             entity={{ type: 'person', ref: p.slug }}
           />
         </section>
+        <SocialFeed scope="person" entity={p.id} hashtag={p.socialHashtag} spec="4.5" />
       </Rise>
     </article>
   )

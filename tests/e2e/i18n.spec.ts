@@ -80,7 +80,7 @@ test('Home has its own language links', async ({ page, context, baseURL }) => {
   await context.addCookies([{ name: 'idp-intro-session', value: '1', url: baseURL! }])
   await page.goto('/en')
   await expect(page.locator('[data-spec="1"] [data-language-links] a[aria-current="true"]')).toHaveText('EN')
-  await expect(page.locator('[data-spec="1.1"]')).toHaveAttribute('href', '/en/studio')
+  await expect(page.locator('[data-spec="1.1"]')).toHaveAttribute('href', '/en/promo')
 })
 
 test('Enquiry from an English page says which language the visitor used', async ({ page }) => {

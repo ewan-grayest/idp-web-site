@@ -6,6 +6,7 @@ import { getLocale } from '@/i18n/server'
 import type { Person, Project } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
 import { mediaUrl, partnerPath, personPath, projectPath } from './projects'
+import { getSettings } from './settings'
 
 /** One team member as the strip 3.2 needs it. */
 export type Member = {
@@ -28,7 +29,7 @@ const toMember = (p: Person): Member => ({
   href: personPath(p.slug),
   achievements: p.achievements?.length ?? 0,
   thumb: mediaUrl(p.portrait, 'thumb'),
-  photo: mediaUrl(p.portrait, 'wide'),
+  photo: mediaUrl(p.photo, 'wide') ?? mediaUrl(p.portrait, 'wide'),
 })
 
 /**
@@ -106,6 +107,7 @@ export async function getPromoVideo(): Promise<PromoVideoData> {
 
 /** Everything else on page 3: mission 3.1, history 3.3, journal 3.4, contacts 3.5, partners 3.7. */
 export async function getStudio() {
+  const settings = await getSettings()
   const payload = await getPayload({ config })
   const locale = await getLocale()
   const [studio, issues, partners] = await Promise.all([
@@ -131,7 +133,7 @@ export async function getStudio() {
     vision: studio.vision ?? '',
     history,
     address: studio.address ?? '',
-    map: { lat: studio.lat ?? 55.7533, lng: studio.lng ?? 37.6366, zoom: studio.zoom ?? 16 },
+    map: { lat: studio.lat ?? 55.7533, lng: studio.lng ?? 37.6366, zoom: studio.zoom ?? 16, provider: settings.mapProvider },
     issues: issues.docs.map((i) => ({
       key: String(i.id),
       number: i.number,

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import base from '@/components/project/Project.module.css'
 import { EnquireButton } from '@/components/shared/EnquireButton'
 import { Rise } from '@/components/shared/Rise'
+import { SocialFeed } from '@/components/shared/SocialFeed'
 import { Timeline } from '@/components/shared/Timeline'
 import { Journal } from '@/components/studio/Journal'
 import { mapLink, StudioMap } from '@/components/studio/StudioMap'
@@ -26,7 +27,7 @@ type Props = { searchParams: Promise<{ project?: string; tag?: string }> }
 
 /**
  * Page 3 · Studio and team. Sections 3.1–3.7 rise and overlap as the visitor scrolls,
- * and each one names itself in the header 0.1.2. 3.8 (Instagram feed) was dropped.
+ * and each one names itself in the header 0.1.2. 3.8 is the capped, hashtag-filtered social feed.
  */
 export default async function StudioPage({ searchParams }: Props) {
   const filter = await searchParams
@@ -125,6 +126,7 @@ export default async function StudioPage({ searchParams }: Props) {
             </div>
           </section>
         )}
+        <SocialFeed scope="studio" spec="3.8" />
       </Rise>
     </article>
   )

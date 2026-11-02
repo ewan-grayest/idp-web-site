@@ -1,29 +1,15 @@
-/*
- * ID project design tokens v1.0 (from the Site design thread, project files design/tokens-v1.css): light and dark themes with a visitor switch.
- * Ewan 2026-10-22: "make web site with switch dark/light".
- * Light = direction v0.2 (warm paper, editorial). Dark = v0.1 graphite, warmed to match.
- * Spec colours kept: #8dc63f (accent), #6d6d6d / #d2d2d2 live on as stone and line.
- *
- * How the theme is chosen:
- *   1. <html data-theme="light|dark"> when the visitor has used the switch (saved in localStorage "idp-theme").
- *   2. Otherwise the system setting (prefers-color-scheme).
- * Put this inline in <head> before CSS paints, to avoid a flash:
- *   <script>try{var t=localStorage.getItem('idp-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
- * The switch sets dataset.theme and saves it. Promo (2) and the photo viewer (5.1-a) stay dark in both themes: use .theme-dark on them.
- */
-
+/* ID Project · Roboto and neutral studio palette; spec slide 1. */
 :root {
-  /* Fonts: self-hosted, OFL, with Cyrillic (@fontsource/cormorant-garamond, @fontsource/manrope) */
-  /* Chinese has no glyphs in the web fonts: the visitor's system CJK fonts take over */
-  --font-serif: "Cormorant Garamond", Georgia, "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
-  --font-sans: Manrope, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  /* Spec design system: Roboto throughout, with system CJK fallbacks. */
+  --font-sans: Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-serif: var(--font-sans);
   --font: var(--font-sans);
 
   --t-display: 300 64px/68px var(--font-serif);
   --t-h1: 300 48px/52px var(--font-serif);
   --t-h2: 400 34px/40px var(--font-serif);
   --t-h3: 600 20px/28px var(--font-sans);
-  --t-body: 400 16px/27px var(--font-sans);
+  --t-body: 400 13.333px/22px var(--font-sans);
   --t-lead: 400 18px/30px var(--font-sans);
   --t-small: 400 13px/20px var(--font-sans);   /* = spec "10pt" */
   --t-label: 600 12px/16px var(--font-sans);   /* caps, letter-spacing .14em */
@@ -66,45 +52,45 @@
 /* LIGHT (default when the system has no preference) */
 :root, :root[data-theme="light"], .theme-light {
   color-scheme: light;
-  --c-bg: #f5f2ec;             /* paper */
-  --c-surface: #ece7de;        /* linen: cards, header on scroll, forms */
-  --c-raised: #e4ded3;         /* search panel, menus */
-  --c-line: #d9d4cb;           /* hairlines, timeline track (heir of spec #d2d2d2) */
-  --c-text: #1c1b19;           /* ink, 15.6:1 */
-  --c-text-2: #4a4843;         /* secondary body, 8.4:1 */
-  --c-muted: #6d6a64;          /* captions, meta (heir of spec #6d6d6d), 4.8:1 */
+  --c-bg: #f7f7f7;             /* paper */
+  --c-surface: #ededed;        /* linen: cards, header on scroll, forms */
+  --c-raised: #e4e4e4;         /* search panel, menus */
+  --c-line: #d2d2d2;           /* hairlines, timeline track (heir of spec #d2d2d2) */
+  --c-text: #252525;           /* ink, 15.6:1 */
+  --c-text-2: #4a4a4a;         /* secondary body, 8.4:1 */
+  --c-muted: #6d6d6d;          /* captions, meta (heir of spec #6d6d6d), 4.8:1 */
   --c-accent-text: #46701a;    /* green when it must be text, 5.2:1 */
-  --c-tag-bg: #ece7de;
-  --c-tag-text: #1c1b19;
-  --c-photo-ph: #d8d0c3;       /* photo placeholder */
-  --c-action: #6d6a64;         /* secondary text actions at rest (old --c-mid) */
+  --c-tag-bg: #ededed;
+  --c-tag-text: #252525;
+  --c-photo-ph: #d2d2d2;       /* photo placeholder */
+  --c-action: #6d6d6d;         /* secondary text actions at rest (old --c-mid) */
   --sec-shadow: 0 -16px 32px rgba(28, 27, 25, 0.06);
 }
 
 /* DARK */
 :root[data-theme="dark"], .theme-dark {
   color-scheme: dark;
-  --c-bg: #151412;             /* warm graphite */
-  --c-surface: #1e1c1a;
-  --c-raised: #282623;
-  --c-line: #34312c;
-  --c-text: #e6e1d8;           /* 14.9:1 */
-  --c-text-2: #bdb7ad;         /* 9.6:1 */
-  --c-muted: #9c978e;          /* 6.6:1 */
+  --c-bg: #161616;             /* warm graphite */
+  --c-surface: #202020;
+  --c-raised: #292929;
+  --c-line: #3b3b3b;
+  --c-text: #d2d2d2;           /* 14.9:1 */
+  --c-text-2: #bdbdbd;         /* 9.6:1 */
+  --c-muted: #a0a0a0;          /* 6.6:1 */
   --c-accent-text: #8dc63f;    /* 9.4:1 on dark */
-  --c-tag-bg: #2a2825;
-  --c-tag-text: #e6e1d8;
-  --c-photo-ph: #2c2a27;
-  --c-action: #8a857c;         /* 5.0:1 */
+  --c-tag-bg: #2a2a2a;
+  --c-tag-text: #d2d2d2;
+  --c-photo-ph: #2c2c2c;
+  --c-action: #a0a0a0;         /* 5.0:1 */
   --sec-shadow: 0 -28px 40px rgba(0, 0, 0, 0.45);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --c-bg: #151412; --c-surface: #1e1c1a; --c-raised: #282623; --c-line: #34312c;
-    --c-text: #e6e1d8; --c-text-2: #bdb7ad; --c-muted: #9c978e; --c-accent-text: #8dc63f;
-    --c-tag-bg: #2a2825; --c-tag-text: #e6e1d8; --c-photo-ph: #2c2a27; --c-action: #8a857c;
+    --c-bg: #161616; --c-surface: #202020; --c-raised: #292929; --c-line: #3b3b3b;
+    --c-text: #d2d2d2; --c-text-2: #bdbdbd; --c-muted: #a0a0a0; --c-accent-text: #8dc63f;
+    --c-tag-bg: #2a2a2a; --c-tag-text: #d2d2d2; --c-photo-ph: #2c2c2c; --c-action: #a0a0a0;
     --sec-shadow: 0 -28px 40px rgba(0, 0, 0, 0.45);
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "idp-site",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,12 @@
     "test:e2e": "playwright test",
     "payload": "payload",
     "generate:types": "payload generate:types",
-    "generate:importmap": "payload generate:importmap"
+    "generate:importmap": "payload generate:importmap",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "version:check": "node scripts/check-version.mjs --staged"
   },
   "engines": {
     "node": ">=20.9"

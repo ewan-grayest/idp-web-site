@@ -19,7 +19,7 @@ export type PartnerHead = {
   photo?: string
   discount: string
   projects: (CollectionCard & { kind: ProjectKind })[]
-  tags: { slug: string; title: string }[]
+  tags: { slug: string; title: string; href: string }[]
 }
 
 /**
@@ -138,8 +138,8 @@ export function PartnersView({ partners, texts }: { partners: PartnerHead[]; tex
             {p.tags.length > 0 && (
               <ul className={styles.tags} data-spec="6.4.3">
                 {p.tags.map((x) => (
-                  <li key={x.slug} className={styles.tag}>
-                    {x.title}
+                  <li key={x.slug}>
+                    <Link href={x.href} className={styles.tag}>{x.title}</Link>
                   </li>
                 ))}
               </ul>

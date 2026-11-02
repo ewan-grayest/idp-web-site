@@ -1,0 +1,143 @@
+/*
+ * ID project design tokens v1.0 (from the Site design thread, project files design/tokens-v1.css): light and dark themes with a visitor switch.
+ * Ewan 2026-10-22: "make web site with switch dark/light".
+ * Light = direction v0.2 (warm paper, editorial). Dark = v0.1 graphite, warmed to match.
+ * Spec colours kept: #8dc63f (accent), #6d6d6d / #d2d2d2 live on as stone and line.
+ *
+ * How the theme is chosen:
+ *   1. <html data-theme="light|dark"> when the visitor has used the switch (saved in localStorage "idp-theme").
+ *   2. Otherwise the system setting (prefers-color-scheme).
+ * Put this inline in <head> before CSS paints, to avoid a flash:
+ *   <script>try{var t=localStorage.getItem('idp-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+ * The switch sets dataset.theme and saves it. Promo (2) and the photo viewer (5.1-a) stay dark in both themes: use .theme-dark on them.
+ */
+
+:root {
+  /* Fonts: self-hosted, OFL, with Cyrillic (@fontsource/cormorant-garamond, @fontsource/manrope) */
+  /* Chinese has no glyphs in the web fonts: the visitor's system CJK fonts take over */
+  --font-serif: "Cormorant Garamond", Georgia, "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  --font-sans: Manrope, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font: var(--font-sans);
+
+  --t-display: 300 64px/68px var(--font-serif);
+  --t-h1: 300 48px/52px var(--font-serif);
+  --t-h2: 400 34px/40px var(--font-serif);
+  --t-h3: 600 20px/28px var(--font-sans);
+  --t-body: 400 16px/27px var(--font-sans);
+  --t-lead: 400 18px/30px var(--font-sans);
+  --t-small: 400 13px/20px var(--font-sans);   /* = spec "10pt" */
+  --t-label: 600 12px/16px var(--font-sans);   /* caps, letter-spacing .14em */
+  --t-title: 400 22px/28px var(--font-serif);  /* header section title 0.1.2 */
+  --t-quote: italic 300 26px/34px var(--font-serif);
+
+  /* Spacing: 8px base */
+  --s-1: 4px; --s-2: 8px; --s-3: 16px; --s-4: 24px; --s-5: 32px;
+  --s-6: 48px; --s-7: 64px; --s-8: 96px; --s-9: 128px; --s-10: 160px;
+  --section-gap: var(--s-10);
+
+  /* Layout: 12 col, margins 6vw, max 1320px content; photos bleed full width */
+  --content-w: calc(100% - 12vw);
+  --content-max: 1320px;
+  --gutter: 24px;
+  --photo-gap: 6px;
+  --header-h: 84px;            /* v0.2 slim header (replaces spec's 15% height) */
+  --radius: 2px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-slide: cubic-bezier(0.6, 0, 0.2, 1);
+  --d-hover: 200ms;
+  --d-theme: 300ms;
+  --d-expand: 500ms;
+  --d-rise: 800ms;
+
+  /* Fixed across themes */
+  --c-accent: #8dc63f;         /* spec green: dots, underlines, active tag, footer band */
+  --c-on-accent: #1a1a1a;      /* text on green (8.6:1) */
+  --c-promo: #0b0b0b;          /* Promo video and photo viewer */
+
+  /* Text over photos: a dark fade behind it and a tight halo around the letters,
+     so names stay readable on bright photos (Ewan, 2026-10-26) */
+  --scrim-top: linear-gradient(rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.36) 50%, transparent);
+  --scrim-bottom: linear-gradient(transparent, rgba(0, 0, 0, 0.36) 50%, rgba(0, 0, 0, 0.66));
+  --on-photo-shadow: 0 0 1px rgba(0, 0, 0, 0.7), 0 1px 3px rgba(0, 0, 0, 0.6), 0 2px 20px rgba(0, 0, 0, 0.55);
+}
+
+/* LIGHT (default when the system has no preference) */
+:root, :root[data-theme="light"], .theme-light {
+  color-scheme: light;
+  --c-bg: #f5f2ec;             /* paper */
+  --c-surface: #ece7de;        /* linen: cards, header on scroll, forms */
+  --c-raised: #e4ded3;         /* search panel, menus */
+  --c-line: #d9d4cb;           /* hairlines, timeline track (heir of spec #d2d2d2) */
+  --c-text: #1c1b19;           /* ink, 15.6:1 */
+  --c-text-2: #4a4843;         /* secondary body, 8.4:1 */
+  --c-muted: #6d6a64;          /* captions, meta (heir of spec #6d6d6d), 4.8:1 */
+  --c-accent-text: #46701a;    /* green when it must be text, 5.2:1 */
+  --c-tag-bg: #ece7de;
+  --c-tag-text: #1c1b19;
+  --c-photo-ph: #d8d0c3;       /* photo placeholder */
+  --c-action: #6d6a64;         /* secondary text actions at rest (old --c-mid) */
+  --sec-shadow: 0 -16px 32px rgba(28, 27, 25, 0.06);
+}
+
+/* DARK */
+:root[data-theme="dark"], .theme-dark {
+  color-scheme: dark;
+  --c-bg: #151412;             /* warm graphite */
+  --c-surface: #1e1c1a;
+  --c-raised: #282623;
+  --c-line: #34312c;
+  --c-text: #e6e1d8;           /* 14.9:1 */
+  --c-text-2: #bdb7ad;         /* 9.6:1 */
+  --c-muted: #9c978e;          /* 6.6:1 */
+  --c-accent-text: #8dc63f;    /* 9.4:1 on dark */
+  --c-tag-bg: #2a2825;
+  --c-tag-text: #e6e1d8;
+  --c-photo-ph: #2c2a27;
+  --c-action: #8a857c;         /* 5.0:1 */
+  --sec-shadow: 0 -28px 40px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --c-bg: #151412; --c-surface: #1e1c1a; --c-raised: #282623; --c-line: #34312c;
+    --c-text: #e6e1d8; --c-text-2: #bdb7ad; --c-muted: #9c978e; --c-accent-text: #8dc63f;
+    --c-tag-bg: #2a2825; --c-tag-text: #e6e1d8; --c-photo-ph: #2c2a27; --c-action: #8a857c;
+    --sec-shadow: 0 -28px 40px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* v0.1 names kept as aliases so existing components keep working while they move to the new names.
+   Declared on the theme classes too, so .theme-dark areas resolve them to dark values. */
+:root, .theme-light, .theme-dark {
+  --c-ground: var(--c-bg);
+  --c-hairline: var(--c-line);
+  --c-light: var(--c-text);
+  --c-mid: var(--c-action);
+  --c-on-green: var(--c-on-accent);
+  --c-green: var(--c-accent);
+  --c-soft: var(--c-text-2);
+}
+
+/* Breakpoints: phone 360–767, tablet 768–1279, desktop 1280–1919, wide 1920+ */
+@media (max-width: 1279px) {
+  :root { --header-h: 72px; --section-gap: var(--s-9); }
+}
+@media (max-width: 767px) {
+  :root {
+    --content-w: calc(100% - 32px);
+    --header-h: 64px;
+    --section-gap: var(--s-8);
+    --t-display: 300 44px/48px var(--font-serif);
+    --t-h1: 300 36px/40px var(--font-serif);
+    --t-h2: 400 28px/34px var(--font-serif);
+    --t-title: 400 18px/24px var(--font-serif);
+    --t-quote: italic 300 21px/28px var(--font-serif);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --d-hover: 0ms; --d-theme: 0ms; --d-expand: 0ms; --d-rise: 0ms; }
+}

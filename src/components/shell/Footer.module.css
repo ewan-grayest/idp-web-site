@@ -1,0 +1,73 @@
+/* Graphite text on green (confirmed; spec #6d6d6d on green is 2.5:1) */
+.footer {
+  background: var(--c-green);
+  color: var(--c-on-green);
+  padding: 40px 0 36px;
+}
+.footer a { color: var(--c-on-green); }
+.footer a:hover {
+  color: var(--c-on-green);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.inner {
+  width: var(--content-w);
+  max-width: var(--content-max);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.social {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 20px;
+  border-bottom: 1.5px solid var(--c-on-green);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gutter);
+  font: 500 14px/20px var(--font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gutter);
+  font: 400 15px/28px var(--font);
+}
+.col { display: flex; flex-direction: column; }
+
+.bottom { display: flex; gap: var(--s-3); align-items: center; flex-wrap: wrap; }
+.sister {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 24px;
+  border: 1.5px solid var(--c-on-green);
+  font: 500 14px var(--font);
+  letter-spacing: 0.06em;
+}
+.footer .sister:hover { background: var(--c-on-green); color: var(--c-green); text-decoration: none; }
+.copy { margin-left: auto; font: var(--t-small); }
+
+/* Site languages: the same bar as on Home (LanguageLinks `pill`); the header has no language button */
+.footer .langs { margin-left: auto; background: #23221f; }
+.langs + .copy { margin-left: 0; }
+.footer .langs a { color: rgba(245, 242, 236, 0.72); }
+.footer .langs a:hover, .footer .langs a[aria-current='true'] { color: #f5f2ec; text-decoration: none; }
+
+@media (max-width: 1279px) {
+  .columns { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-4); }
+}
+@media (max-width: 767px) {
+  .social { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 12px; }
+  .columns { grid-template-columns: 1fr; }
+  .col a { padding: 8px 0; }
+  .copy { margin-left: 0; width: 100%; }
+  .footer .langs { margin-left: 0; }
+}

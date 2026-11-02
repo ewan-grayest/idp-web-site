@@ -1,0 +1,31 @@
+/* Page 4 · Person. Hero and section shell reuse Project.module.css (author 5.2 is the same layout). */
+.cover { object-fit: cover; }
+.h1 { margin: 0; font: var(--t-h1); color: var(--c-text); }
+
+/* 4.3.2 projects: sideways, newest on the left; the description rises on hover */
+.projSec { padding: 56px 0 56px 10%; display: flex; flex-direction: column; gap: 28px; }
+.projects { list-style: none; margin: 0; padding: 0 10% 0 0; display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none; }
+.projects::-webkit-scrollbar { display: none; }
+.projects li { flex: none; }
+.proj { position: relative; display: block; width: 400px; height: 300px; overflow: hidden; background: var(--c-photo-ph); }
+.projText {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px;
+  background: color-mix(in srgb, var(--c-bg) 92%, transparent); border-top: 3px solid var(--c-accent); color: var(--c-text);
+  transform: translateY(100%); transition: transform 0.25s var(--ease-out);
+}
+.proj:hover .projText, .proj:focus-visible .projText { transform: none; }
+.projTitle { font: 500 16px/22px var(--font); }
+.projSummary { font: var(--t-small); color: var(--c-text-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tags { display: flex; flex-wrap: wrap; gap: 10px; padding-right: 10%; }
+@media (hover: none) {
+  .projText { transform: none; }
+}
+
+@media (max-width: 767px) {
+  .projSec { padding: 28px 0 28px 16px; gap: 16px; }
+  .projects { gap: 10px; padding-right: 16px; }
+  .proj { width: 300px; height: 220px; }
+  .projText { padding: 10px 14px; }
+  .projSummary { display: none; }
+  .tags { padding-right: 16px; gap: 8px; }
+}

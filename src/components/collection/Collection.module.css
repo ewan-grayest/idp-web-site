@@ -1,0 +1,75 @@
+/* Pages 7, 9 and 17: all projects of one kind (sections and cards come from Project.module.css) */
+.head { display: flex; flex-direction: column; gap: 8px; }
+.head h1 { margin: 0; }
+.note { margin: 0; color: var(--c-muted); }
+.hint { margin: -12px 0 0; font: var(--t-small); color: var(--c-muted); }
+.count { font: var(--t-small); color: var(--c-muted); }
+
+/* 7.1.2 tag buttons: grey at rest, green when picked */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip {
+  min-height: 40px; padding: 0 16px; border: 0; border-radius: var(--radius); cursor: pointer; user-select: none;
+  font: 500 14px/16px var(--font); background: var(--c-tag-bg); color: var(--c-tag-text);
+  box-shadow: inset 0 0 0 1.5px transparent; transition: background var(--d-hover), color var(--d-hover), box-shadow var(--d-hover);
+}
+.chip:hover { box-shadow: inset 0 0 0 1.5px var(--c-green); }
+.chip[aria-pressed='true'] { background: var(--c-green); color: var(--c-on-green); }
+.chip[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/* 7.1.3 and reset */
+.actions { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.actions [aria-busy='true'] { opacity: 0.6; }
+
+/* 7.2 salon hang («шпалерная раскладка», Ewan, 2026-10-28): the cards are hung close together like paintings in a
+   gallery, a large one every few cards, the others in pairs beside it. One grid row is 3/8 of a column (cqw: % of
+   .salon), so a card two rows high is 4:3, a large one (2 columns × 4 rows) is 4:3 too and an upright cover (data-shape
+   tall: 1 × 4) is 2:3. `dense` lets later cards fill any gap. The large cards alternate sides. */
+.gridHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; }
+.salon { container-type: inline-size; }
+.grid {
+  --cols: 4; --gap: 10px;
+  --col: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-auto-rows: calc(var(--col) * 3 / 8);
+  grid-auto-flow: row dense; gap: var(--gap);
+}
+.grid > li { grid-row: span 2; }
+.grid > li[data-shape='tall'] { grid-row: span 4; }
+@media (min-width: 1024px) {
+  .grid > li:nth-child(10n + 1) { grid-column: 1 / span 2; grid-row: span 4; }
+  .grid > li:nth-child(10n + 6) { grid-column: 3 / span 2; grid-row: span 4; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid { --cols: 3; }
+  .grid > li:nth-child(6n + 1) { grid-column: 1 / span 2; grid-row: span 4; }
+  .grid > li:nth-child(6n + 4) { grid-column: 2 / span 2; grid-row: span 4; }
+}
+@media (max-width: 767px) {
+  .grid { --cols: 2; --gap: 6px; }
+  .grid > li:nth-child(5n + 1) { grid-column: 1 / -1; grid-row: span 4; }
+}
+.card { position: relative; display: block; height: 100%; overflow: hidden; background: var(--c-raised); }
+.card img { transition: transform 0.6s ease; }
+.card:hover img { transform: scale(1.03); }
+.noImage { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 28px; font: 400 20px/26px var(--font); color: var(--c-light); }
+/* 7.2.3 hover: green veil with the name 7.2.4; on touch screens the name sits on a dark fade instead */
+.overlay {
+  position: absolute; inset: 0; z-index: 2; background: rgba(141, 198, 63, 0.88); opacity: 0; transition: opacity 0.25s;
+  display: flex; align-items: flex-end; padding: 28px; color: var(--c-on-green); font: 400 20px/26px var(--font);
+}
+.card:hover .overlay, .card:focus-visible .overlay { opacity: 1; }
+@media (hover: none) {
+  .overlay { opacity: 1; background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.45) 65%, rgba(0, 0, 0, 0.85)); color: #f5f2ec; text-shadow: var(--on-photo-shadow); }
+  .noImage { display: none; }
+}
+.none { display: flex; flex-direction: column; gap: 12px; }
+
+@media (max-width: 767px) {
+  .hint { margin-top: -6px; }
+  .actions { gap: 20px; }
+  .noImage, .overlay { padding: 12px; font-size: 15px; line-height: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card img { transition: none; }
+}

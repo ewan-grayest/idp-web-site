@@ -1,0 +1,15 @@
+.picker { display: flex; flex-direction: column; gap: calc(var(--base) / 2); margin-bottom: var(--base); }
+.note { margin: 0; color: var(--theme-elevation-600); font-size: 13px; }
+/* The image at its own ratio, so % from the left and top match the site's photo viewer */
+.photo { position: relative; max-width: 720px; cursor: crosshair; user-select: none; line-height: 0; }
+.photo img { width: 100%; height: auto; display: block; border-radius: var(--style-radius-s); }
+.dot {
+  position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; padding: 0;
+  border: 2px solid #fff; border-radius: 50%; background: #8dc63f; color: #1b1b1b;
+  font: 600 13px/26px var(--font-body, sans-serif); text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); cursor: grab; touch-action: none;
+}
+.dot:focus-visible { outline: 2px solid var(--theme-success-500, #2f80ed); outline-offset: 2px; }
+.dot[data-dragging] { cursor: grabbing; transform: scale(1.15); }
+.dot[data-no-partner] { background: #fff; border: 2px dashed #e0a100; }
+.warn { margin: 0; font-size: 13px; color: var(--theme-warning-600, #b07a00); }

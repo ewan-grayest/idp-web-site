@@ -1,0 +1,14 @@
+/* Text action · 2.3, 3.6.1, 5.7-b: grey caps at rest, light with a green underline on hover */
+.action {
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  font: 500 14px/20px var(--font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-mid);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color var(--d-hover), border-color var(--d-hover);
+}
+.action:hover { color: var(--c-light); border-bottom-color: var(--c-green); }

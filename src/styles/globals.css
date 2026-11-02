@@ -1,0 +1,66 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--c-ground);
+  color: var(--c-light);
+  font: var(--t-body);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--d-theme), color var(--d-theme);
+}
+
+/* Long words in any language wrap instead of overflowing (hyphens follow <html lang>) */
+h1, h2, h3, p, blockquote, address, li { overflow-wrap: break-word; hyphens: auto; }
+
+/* Chinese: no slanted (synthesised) italics, no tracking on labels, CJK line-breaking rules */
+:lang(zh) { line-break: strict; word-break: normal; }
+:lang(zh) blockquote, :lang(zh) em, :lang(zh) i { font-style: normal; }
+:lang(zh) [class] { letter-spacing: normal; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: var(--c-accent-text); }
+
+button { font: inherit; color: inherit; }
+
+:focus-visible { outline: 2px solid var(--c-accent-text); outline-offset: 3px; }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* In-page anchors (#team …) land below the fixed header */
+section[id] { scroll-margin-top: var(--header-h); }
+
+/* Content 0.2: 80% wide frame */
+.content {
+  width: var(--content-w);
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+/* Spec ID badges, shown with ?ids=1 for traceability review */
+.spec-id { display: none; }
+html[data-show-ids] .spec-id {
+  display: inline-block;
+  font: 500 11px/14px var(--font);
+  color: var(--c-ground);
+  background: var(--c-green);
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

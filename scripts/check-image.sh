@@ -1,7 +1,7 @@
 #!/bin/sh
 # Checks the image can start on a host it knows nothing about. Builds it with no build arguments, then starts it the way
 # hosting platforms do: settings as variables only, with the port, HOSTNAME and user chosen by the host.
-# Uses a throwaway database and removes everything it made, so it touches no real data. Needs Docker and curl.
+# Uses a throwaway database and cleans up its containers, network and image. Needs Docker and curl.
 # Usage: scripts/check-image.sh [--platform linux/amd64]   (the platform of the host, when it differs from this one)
 set -eu
 cd "$(dirname "$0")/.."
@@ -13,7 +13,10 @@ case "${1:-}" in
   *) echo "Usage: scripts/check-image.sh [--platform linux/amd64]"; exit 1 ;;
 esac
 
-id=$$
+# A process ID can repeat across runs or machines using the same Docker server.
+id=$(od -An -N16 -tx1 /dev/urandom)
+id=$(printf '%s' "$id" | tr -d '[:space:]')
+[ "${#id}" -eq 32 ] || { echo "Could not generate a unique test ID" >&2; exit 1; }
 image="idp-site-check:$id"
 net="idp-check-$id"
 db="idp-check-db-$id"
@@ -21,11 +24,20 @@ app="idp-check-app-$id"
 db_url="postgres://idp:check@$db:5432/idp"
 secret="check-secret-$id"
 failures=0
+app_id=
+db_id=
+net_id=
+image_built=false
 
 cleanup() {
-  docker rm -f "$app" "$db" >/dev/null 2>&1 || true
-  docker network rm "$net" >/dev/null 2>&1 || true
-  docker rmi "$image" >/dev/null 2>&1 || true
+  # Only remove IDs returned by this run, never a name that may belong to someone else.
+  [ -z "$app_id" ] || docker rm -fv "$app_id" >/dev/null 2>&1 || true
+  [ -z "$db_id" ] || docker rm -fv "$db_id" >/dev/null 2>&1 || true
+  [ -z "$net_id" ] || docker network rm "$net_id" >/dev/null 2>&1 || true
+  if [ "$image_built" = true ]; then
+    owner=$(docker image inspect -f '{{ index .Config.Labels "idp.check-run" }}' "$image" 2>/dev/null) || owner=
+    [ "$owner" != "$id" ] || docker rmi "$image" >/dev/null 2>&1 || true
+  fi
 }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
@@ -68,19 +80,20 @@ docker_says_healthy() {
 }
 
 echo "Building with no build arguments"
-docker build $platform -t "$image" .
+docker build $platform --label "idp.check-run=$id" -t "$image" .
+image_built=true
 
-docker network create "$net" >/dev/null
-docker run -d --name "$db" --network "$net" -e POSTGRES_USER=idp -e POSTGRES_PASSWORD=check -e POSTGRES_DB=idp postgres:16 >/dev/null
+net_id=$(docker network create "$net")
+db_id=$(docker run -d --name "$db" --network "$net" -e POSTGRES_USER=idp -e POSTGRES_PASSWORD=check -e POSTGRES_DB=idp postgres:16)
 until docker exec "$db" pg_isready -q -h 127.0.0.1 -U idp 2>/dev/null; do sleep 1; done
 
 echo "No settings at all"
 check "stops and names the missing setting" stops_with_message
 
 echo "A platform: its own port, HOSTNAME and DATABASE_URL, one disk, a bare domain as the address"
-docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::8080 \
+app_id=$(docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::8080 \
   -e PORT=8080 -e HOSTNAME=some-pod-name -e DATABASE_URL="$db_url" -e PAYLOAD_SECRET="$secret" \
-  -e NEXT_PUBLIC_SITE_URL=check.example -e MEDIA_DIR=/data/media -e BACKUPS_DIR=/data/backups --tmpfs /data "$image" >/dev/null
+  -e NEXT_PUBLIC_SITE_URL=check.example -e MEDIA_DIR=/data/media -e BACKUPS_DIR=/data/backups --tmpfs /data "$image")
 if wait_for_site 8080; then
   echo "  ok    answers on the host's port, migrations applied"
   check "uses the address set when it started, not at build" page_mentions / 'https://check.example'
@@ -91,11 +104,12 @@ if wait_for_site 8080; then
 else
   echo "  FAIL  the site didn't answer"; failures=$((failures + 1))
 fi
-docker rm -f "$app" >/dev/null
+docker rm -fv "$app_id" >/dev/null
+app_id=
 
 echo "A host that forbids root: an arbitrary user, default folders and port"
-docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::3000 --user 12345:0 \
-  -e DATABASE_URI="$db_url" -e PAYLOAD_SECRET="$secret" -e NEXT_PUBLIC_SITE_URL=https://check.example "$image" >/dev/null
+app_id=$(docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::3000 --user 12345:0 \
+  -e DATABASE_URI="$db_url" -e PAYLOAD_SECRET="$secret" -e NEXT_PUBLIC_SITE_URL=https://check.example "$image")
 if wait_for_site 3000; then
   echo "  ok    starts and answers"
   check "home page opens" page_opens /

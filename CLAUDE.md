@@ -77,3 +77,4 @@ Run one test with `npx vitest run tests/unit/routes.test.ts` or `npx playwright 
 - `site/` has its own git repo, and the parent `IDP Site/` folder holds a separate one that also tracks it. Commands here act on the inner repo.
 - `AGENTS.md` is rewritten by `next dev`: keep that block as it is.
 - Never commit `.env`, `deploy/.env`, `backups/` or `media/`. `.claude/` is ignored, so project docs for Claude go here or in `docs/`.
+- Temporary, development-only and other non-production code goes in `extras/`. Git, Docker and `tsc` ignore it, so it is never committed or shipped. `scripts/` is for tooling the project keeps.

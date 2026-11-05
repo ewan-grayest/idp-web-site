@@ -123,44 +123,81 @@ Before deploying a change, run `npx payload migrate:create <name>`; the producti
 
 ## Server hosting
 
-`deploy/` holds a setup for one server (site, PostgreSQL 16, HTTPS through Caddy); install steps are in [deploy/README.md](deploy/README.md).
-On any other Docker host, give the image the same settings and storage.
+One image runs on any Docker host. Everything specific to a host (address, secrets, database, folders) comes in as settings when the container starts, so moving hosts or changing address needs no rebuild. Pick the setup that fits:
+
+| The host gives you | Use | Database | HTTPS |
+| --- | --- | --- | --- |
+| A server with Docker, and ports 80 and 443 free | `deploy/docker-compose.prod.yml`, steps in [deploy/README.md](deploy/README.md) | Container | Caddy, included |
+| Docker with its own proxy and HTTPS: a hosting panel, or nginx on a shared server | `deploy/docker-compose.behind-proxy.yml` | Container | The host |
+| One container and a managed database: a container platform | The `Dockerfile`, or an image you built and pushed | The host | The host |
+
+**Not supported:** hosts that keep no files between deploys, such as serverless containers. Uploads live on disk, so they would disappear.
+
+**Behind your own proxy.** Fill in `deploy/.env`, or enter the same settings in the panel and point it at the file:
+
+```bash
+docker compose -f deploy/docker-compose.behind-proxy.yml --env-file deploy/.env up -d --build
+```
+
+The site is then on `127.0.0.1:3000`. Set `APP_BIND` to change that, for example `8080` for all interfaces. Use backups from the admin («Резервные копии») in this setup, because `scripts/restore.sh` expects `docker-compose.prod.yml` and would also start Caddy.
+
+**One container.** A host that builds from the repository needs nothing more than the settings below. To build elsewhere and push the image, adding `--platform linux/amd64` when the host's processor differs from the one building:
+
+```bash
+docker build -t <registry>/idp-site .
+```
+
+```bash
+docker push <registry>/idp-site
+```
+
+**Check before trying a new host.** This builds the image with no build arguments and starts it the way hosts do: settings as variables only, with the host's own port and user. It uses a throwaway database and touches no real data:
+
+```bash
+./scripts/check-image.sh
+```
 
 ### Required settings
 
-Values marked "build" are baked into the image: pass them as build arguments and rebuild after changing them. Setting them only as container variables has no effect.
+All are read when the container starts: change one and recreate the container (`up -d`), with no rebuild. The `NEXT_PUBLIC_` prefix is a leftover in the names and has no effect on when they are read.
 
-| Setting | When | Value | If it is wrong |
-| --- | --- | --- | --- |
-| `PAYLOAD_SECRET` | run | Long random string (`openssl rand -hex 32`). Keep it unchanged | Empty: every page fails. Changed: everyone must sign in again |
-| `DATABASE_URI` | run | `postgres://user:password@host:5432/idp`, with special characters in the password URL-encoded. `deploy/` builds it from `POSTGRES_PASSWORD` | Every page fails |
-| `POSTGRES_PASSWORD` | run, `deploy/` only | `openssl rand -hex 32`. PostgreSQL reads it only when it creates the database, so changing it later also needs `ALTER USER` in the database | Every page fails with `password authentication failed` |
-| `NEXT_PUBLIC_SITE_URL` | build | Full address with the scheme: `https://example.ru` | No `https://`: every page fails with `Invalid URL`. Empty: links and share addresses point to `localhost` |
-| `SITE_DOMAIN` | run, `deploy/` only | Domain without the scheme: `example.ru` | Caddy can't get a certificate |
-| `NEXT_PUBLIC_STUDIO_PHONE` | build | Optional fallback phone | |
-| `NEXT_PUBLIC_PROMO_VIDEO_URL` | build | Optional, used when no video is uploaded | |
-| `MEDIA_DIR`, `PGDATA_DIR` | run, compose | Optional server folders, see "Where the data is kept" | |
+| Setting | Value | If it is wrong |
+| --- | --- | --- |
+| `PAYLOAD_SECRET` | Long random string (`openssl rand -hex 32`). Keep it unchanged | Empty: the container stops and says so. Changed: everyone must sign in again |
+| `DATABASE_URI` (or `DATABASE_URL`) | `postgres://user:password@host:5432/idp`, with special characters in the password URL-encoded. The compose files in `deploy/` build it from `POSTGRES_PASSWORD` | Empty: the container stops and says so. Wrong: every page fails |
+| `POSTGRES_PASSWORD` | Compose files in `deploy/` only. `openssl rand -hex 32`. PostgreSQL reads it only when it creates the database, so changing it later also needs `ALTER USER` in the database | Every page fails with `password authentication failed` |
+| `NEXT_PUBLIC_SITE_URL` | Site address: `https://example.ru` | Empty: links and share addresses point to `localhost`, with a warning in the log |
+| `SITE_DOMAIN` | `docker-compose.prod.yml` only. Domain without the scheme: `example.ru` | Caddy can't get a certificate |
+| `NEXT_PUBLIC_STUDIO_PHONE` | Optional fallback phone | |
+| `NEXT_PUBLIC_PROMO_VIDEO_URL` | Optional, used when no video is uploaded | |
+| `MEDIA_DIR`, `PGDATA_DIR` | Compose only. Optional server folders, see "Where the data is kept" | |
+| `APP_BIND` | `docker-compose.behind-proxy.yml` only. Where the proxy reaches the site, default `127.0.0.1:3000` | |
 
-Set by the image or by `deploy/docker-compose.prod.yml`. Keep these values if the host runs the image another way:
+The image already sets the rest, so leave these alone unless the host needs otherwise:
 
 | Setting | Value | Why |
 | --- | --- | --- |
 | `NODE_ENV` | `production` | Any other value skips migrations and lets the app change the database schema by itself |
-| `PORT`, `HOSTNAME` | `3000`, `0.0.0.0` | Without `HOSTNAME`, Next.js listens on the container's name only, so health checks to `localhost` fail |
-| `MEDIA_DIR` | `/app/media` | Upload folder inside the container |
-| `BACKUPS_DIR`, `BACKUP_MODE` | `/app/backups`, `prod` | Backups made from the admin |
+| `PORT` | `3000` | A host may set its own, and the site follows it |
+| `HOSTNAME` | Always `0.0.0.0`, whatever the host sets | Otherwise Next.js listens on the container's name only, so health checks to `localhost` fail |
+| `MEDIA_DIR`, `BACKUPS_DIR` | `/app/media`, `/app/backups` | Folders inside the container. With only the image and a host that allows one disk, mount it at `/data` and set `/data/media` and `/data/backups`. The compose files keep these paths and use `MEDIA_DIR` for the server folder instead |
+| `BACKUP_MODE` | `prod` | Names of backups made from the admin |
 
-Run every Compose command from the site folder with both `-f deploy/docker-compose.prod.yml` and `--env-file deploy/.env`. Without `--env-file` the build arguments and the database password come through empty.
+Run every Compose command from the site folder with `-f` and the compose file, and with `--env-file deploy/.env`. Without `--env-file`, the database password comes through empty.
 
 ### What the host must provide
 
-- **Storage that survives redeploys:** `/app/media`, `/app/backups` and `/var/lib/postgresql/data`. `/app/.next/cache` is optional and only holds resized images.
-- **PostgreSQL 16:** the backup tools in the image are version 16 and refuse a newer server. With a managed database, the role must be able to create tables. Restoring from the admin also needs `CREATEDB` and access to the `postgres` database.
+- **Storage that survives redeploys:** the upload and backup folders above, and `/var/lib/postgresql/data` when the database is a container. `/app/.next/cache` is optional and only holds resized images.
+- **PostgreSQL 16:** the backup tools in the image are version 16 and refuse a newer server. With a managed database, the role must be able to create tables. Restoring from the admin also needs `CREATEDB` and access to the `postgres` database. If its certificate is the provider's own, add `?sslmode=no-verify` to the address, or `self-signed certificate` appears in the log. Traffic stays encrypted, but the certificate isn't checked.
 - **Automatic restart** (`restart: unless-stopped` or the host's equivalent): a restore from the admin ends the process and relies on the restart.
-- **Starting as root:** the image starts as root to give the upload folder to its own user (uid 100, gid 101), then drops to that user. If the host forbids root, make the folders writable by the user it runs as.
-- **Proxy:** forward to port 3000 and keep the original `Host`, or set `X-Forwarded-Host` and `X-Forwarded-Proto`. A mismatch breaks saving in the admin. Allow large request bodies for video and backup uploads. Caddy in `deploy/` already does this.
-- **Network:** ports 80 and 443 open and the domain's DNS pointing at the server, so Caddy can get its certificate.
-- **Disk and memory:** keep about 20 GB free beyond the database and media, and about 2 GB of memory (or swap) for the build. These are rules of thumb: rebuild leftovers filled about 21 GB in the local environment.
+- **One running copy:** uploads are on one disk and migrations run at start, so don't scale the site to several copies.
+- **Health check, if the host asks for one:** `/api/health` answers 200 once the database is readable and 503 otherwise. The first answer also applies migrations, so allow it up to 2 minutes. The image declares this as its Docker health check too.
+- **Starting as root, ideally:** the image starts as root to give the upload folder to its own user (uid 100, gid 101), then drops to that user. If the host forbids root, the image runs as the user it is given, and that user must be able to write to the folders. The image's own folders already allow any user in group 0. If the host only forbids changing user, the site stays root and logs a warning.
+- **Proxy:** forward to the site's port and keep the original `Host`, or set `X-Forwarded-Host` and `X-Forwarded-Proto`. A mismatch breaks saving in the admin. Allow large request bodies for video and backup uploads. Caddy in `deploy/` already does this.
+- **Search engines:** only `deploy/Caddyfile` sends `X-Robots-Tag: noindex`. Behind any other proxy the site can be indexed from the first day, unless that proxy sends the header.
+- **Network for Caddy:** ports 80 and 443 open and the domain's DNS pointing at the server, so Caddy can get its certificate.
+- **Network for building:** Docker Hub, the npm registry and the Alpine package servers. Where Docker Hub is blocked, set `registry-mirrors` in the Docker daemon's settings, or build elsewhere and push the image.
+- **Disk and memory:** keep about 20 GB free beyond the database and media, and about 2 GB of memory (or swap) for the build. A smaller host can run an image built elsewhere. These are rules of thumb: rebuild leftovers filled about 21 GB in the local environment.
 - **Clean-up after each rebuild:** `docker image prune -f && docker builder prune -f`. Volumes are not touched. `./start.sh` does this locally, `deploy/` does not.
 
 ### "A server error occurred. Reload to try again."
@@ -179,11 +216,11 @@ In the local environment, use `docker compose logs --tail=100 app db`.
 
 | In the log | Cause | Fix |
 | --- | --- | --- |
-| `missing secret key` | `PAYLOAD_SECRET` is empty, or the settings file is empty or wasn't loaded | Set it and recreate the container. `up -d` is enough, no rebuild |
+| `Can't start: the setting ... is empty` | The setting is empty, or the settings file is empty or wasn't loaded. The container stops and restarts | Set it and recreate the container. `up -d` is enough, no rebuild |
 | `cannot connect to Postgres` | Wrong `DATABASE_URI`, or the database is down or still starting | Check the address and the `db` log |
 | `password authentication failed` | `POSTGRES_PASSWORD` changed after the database was created | Restore the old value or run `ALTER USER` |
 | `No space left on device`, `PANIC` in the `db` log | Disk full, which stops PostgreSQL | Run the clean-up above, then restart. Never prune volumes |
-| `Invalid URL` | `NEXT_PUBLIC_SITE_URL` has no scheme | Fix it and rebuild |
+| `self-signed certificate` | A managed database uses the provider's own certificate | Add `?sslmode=no-verify` to `DATABASE_URI` |
 | `Error running migration` (the app keeps restarting), `relation` or `column ... does not exist` | The database doesn't match the code, often after pushing a schema in dev mode | Restore a backup, or repair the failed migration. See below |
 | `Invalid Server Actions request` | The proxy changes `Host` | Fix the proxy headers |
 
@@ -225,3 +262,4 @@ Deleting that row lets production run, but any migration not yet recorded then r
 - 7.1: the tag buttons are the tags used by projects of that kind, alphabetical. A click picks a tag, a double click (or a second click, for keyboard users) puts it back; a sixth tag can't be picked. The grid changes only on «Выбрать», and the choice goes into the address, so a filtered list can be shared; tags on a project page (5.3.1) open it the same way.
 - 7.2: projects shown are those carrying all picked tags (each tag narrows the list), newest first, all on one page (no "load more" until there are many). Cards use the cover photo, or the first strip photo; touch screens show the name on a dark fade instead of the hover veil.
 - Admin tabs carry no spec numbers, so «Миссия», not «Миссия 3.1» (Ewan, 2026-11-05). Field labels and hints keep theirs.
+- The site must start on any Docker host (Ewan, 2026-11-05), so one image takes all its settings at start, including `NEXT_PUBLIC_*`, which are no longer build arguments. Hosts that keep no files between deploys stay unsupported, because uploads live on disk and foreign storage services are avoided.

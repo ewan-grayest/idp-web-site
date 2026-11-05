@@ -5,6 +5,7 @@ import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
 import type { Person, Project } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
+import { promoVideoSetting } from './hosting'
 import { mediaUrl, partnerPath, personPath, projectPath } from './projects'
 
 /** One team member as the strip 3.2 needs it. */
@@ -100,7 +101,7 @@ export async function getPromoVideo(): Promise<PromoVideoData> {
   if (file && typeof file === 'object' && file.url) {
     return { sources: [{ src: file.url, type: file.mimeType ?? undefined }], placeholder: false, ...options }
   }
-  const url = process.env.NEXT_PUBLIC_PROMO_VIDEO_URL
+  const url = promoVideoSetting()
   return url ? { sources: [{ src: url }], placeholder: false, ...options } : { sources: placeholderVideo, placeholder: true, ...options }
 }
 

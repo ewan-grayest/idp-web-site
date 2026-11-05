@@ -4,12 +4,7 @@
 # For development with live reload, start only the database: docker compose up -d db
 services:
   app:
-    build:
-      context: .
-      args:
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-        NEXT_PUBLIC_STUDIO_PHONE: ${NEXT_PUBLIC_STUDIO_PHONE:-}
-        NEXT_PUBLIC_PROMO_VIDEO_URL: ${NEXT_PUBLIC_PROMO_VIDEO_URL:-}
+    build: .
     restart: unless-stopped
     env_file: .env
     environment:

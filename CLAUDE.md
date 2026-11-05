@@ -24,6 +24,7 @@ npx payload migrate:create <name>        # after any schema change
 npm run generate:types                   # after any collection or global change
 npm run generate:importmap               # after adding or moving an admin component
 npx payload run scripts/seed.ts          # sample content, safe to re-run
+./scripts/check-image.sh                 # build the image and check it starts the way hosts run it; needs Docker
 ```
 
 Run one test with `npx vitest run tests/unit/routes.test.ts` or `npx playwright test tests/e2e/home.spec.ts --project=desktop`.

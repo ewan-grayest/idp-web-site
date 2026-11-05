@@ -3,6 +3,7 @@ import { Share } from '@/components/project/Share'
 import { Prose } from '@/components/shared/Prose'
 import { localePath } from '@/i18n/locales'
 import { getLocale, getT } from '@/i18n/server'
+import { siteUrl } from '@/lib/hosting'
 import { getEntries } from '@/lib/pages'
 import { pages } from '@/lib/routes'
 import { Entries, type EntryHead } from './Entries'
@@ -20,7 +21,7 @@ export async function EntriesPage({ collection, page, first }: Props) {
   const [entries, t, locale] = await Promise.all([getEntries(collection), getT(), getLocale()])
   const heads: EntryHead[] = [...(first ? [first.head] : []), ...entries]
   const bodies = [...(first ? [first.body] : []), ...entries.map((e) => <Prose key={e.slug} data={e.text} empty={t.entries.noText} />)]
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const site = siteUrl()
 
   return (
     <article className={base.page} data-spec={String(page)}>

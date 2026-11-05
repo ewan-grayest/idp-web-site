@@ -177,3 +177,5 @@ On the production server, a daily disk snapshot from the hosting provider is a g
 
 Run `scripts/verify-backup.sh --deep --latest` after changing anything about backups, and once a month restore
 a backup into a spare copy of the site to make sure the whole procedure still works.
+`scripts/check-image.sh` does a quick version of that: in a throwaway copy, it makes, checks and restores a backup
+through the admin's API and waits for the site to restart.

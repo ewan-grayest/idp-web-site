@@ -151,7 +151,7 @@ docker build -t <registry>/idp-site .
 docker push <registry>/idp-site
 ```
 
-**Check before trying a new host.** This builds the image with no build arguments and starts it the way hosts do: settings as variables only, with the host's own port and user. It uses a throwaway database and touches no real data:
+**Check before trying a new host.** This builds the image with no build arguments and starts it the way hosts do: settings as variables only, with the host's own port and user, and a database that wants TLS with its own certificate. Then it works the site like an editor: uploads a photo, and makes, checks and restores a backup through the admin's API, waiting for the site to restart by itself. It uses a throwaway database and touches no real data. Add `--platform linux/amd64` when the host's processor differs from the local environment's:
 
 ```bash
 ./scripts/check-image.sh

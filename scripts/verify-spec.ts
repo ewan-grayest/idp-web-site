@@ -32,7 +32,7 @@ try {
     const review = await payload.create({ collection: 'reviews', data: { name: 'QA reviewer', text: `QA review ${n}: a detailed review of this interior.`, project: project.id, date: new Date(Date.UTC(2026, 9, n + 1)).toISOString(), consent: true, originUrl: origin, network: 'vk' } })
     await payload.update({ collection: 'reviews', id: review.id, data: { approved: true } })
   }
-  for (const path of ['/', '/promo', '/studio', '/team/sample-architect', '/projects/residential', '/projects/public', '/projects/archive', '/projects/residential/sample-loft', '/projects/public/sample-cafe', '/partners', '/press', '/journal', '/payment', '/careers', '/legal', '/media', '/en/studio', '/zh/studio']) await html(path)
+  for (const path of ['/', '/promo', '/studio', '/team/sample-architect', '/projects/residential', '/projects/public', '/id-lab', '/projects/residential/sample-loft', '/projects/public/sample-cafe', '/partners', '/press', '/journal', '/payment', '/careers', '/legal', '/media', '/en/studio', '/zh/studio']) await html(path)
   ok('all page roles and RU / EN / ZH routes respond')
   const home = await html('/')
   assert(home.includes('data-spec="1.1"')); assert(home.includes('href="/promo"')); assert(!home.includes('data-spec="0.1"'))
@@ -78,7 +78,7 @@ try {
   assert([401, 403].includes((await api('consents')).status))
   ok('context-aware leads are saved with email, consent, origin, entity and language; staff-only read')
   assert(source.includes('data-spec="0.3.7"')); assert(!source.includes('href="#"'))
-  const sitemap = await html('/sitemap.xml'); assert(sitemap.includes('/projects/archive')); assert(sitemap.includes('/team/sample-architect'))
+  const sitemap = await html('/sitemap.xml'); assert(sitemap.includes('/id-lab')); assert(sitemap.includes('/team/sample-architect'))
   assert.equal((await fetch(origin + '/projects/public/no-such-project/deep', { headers: { 'Accept-Language': 'ru' } })).status, 404)
   const team = await fetch(origin + '/team', { redirect: 'manual', headers: { 'Accept-Language': 'ru' } }); assert.equal(team.status, 308)
   const journal = await payload.create({ collection: 'lifestyle', data: { slug: `qa-short-${Date.now()}`, title: 'QA short permalink', date: new Date().toISOString() } })

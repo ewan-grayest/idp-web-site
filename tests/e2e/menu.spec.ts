@@ -22,7 +22,10 @@ test('The separate menu button leads to every main section; the ID logo leads ho
   for (const name of ['Главная', 'Студия', 'Команда', 'Жилые интерьеры', 'Общественные интерьеры', 'Партнёры']) {
     await expect(menu.getByRole('navigation', { name: 'Разделы сайта' }).getByRole('link', { name })).toBeVisible()
   }
-  await expect(page.locator('footer a[href$="/projects/archive"]')).toHaveCount(1)
+  // Archive projects were out of the menu and footer (Ewan, 2026-10-26); as product design they are under ID Lab,
+  // which only the footer links to (Ewan, 2026-11-05)
+  await expect(page.locator('a[href$="/projects/archive"]')).toHaveCount(0)
+  await expect(menu.locator('a[href$="/id-lab"]')).toHaveCount(0)
   await menu.getByRole('link', { name: 'Жилые интерьеры' }).click()
   await expect(page).toHaveURL(/\/projects\/residential$/)
   await expect(panel(page)).toHaveCount(0)

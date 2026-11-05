@@ -13,6 +13,9 @@
 .h2 { margin: 0; font: var(--t-h2); color: var(--c-light); }
 .cover { object-fit: cover; }
 
+/* Staff preview of a project that is not published: a green band above the page */
+.unpublished { margin: 0; padding: 12px 10%; font: var(--t-small); background: var(--c-accent); color: var(--c-on-accent); }
+
 /* 5.1 strip: 7 frames on screen */
 .strip { height: min(560px, calc(100vh - var(--header-h))); }
 .stripHead {

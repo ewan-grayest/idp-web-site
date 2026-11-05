@@ -25,8 +25,8 @@ const ru = {
     13: 'Работайте с нами',
     14: 'Юридические аспекты',
     15: 'Работа со СМИ, PR',
-    16: 'Архивные проекты',
-    17: 'Архивные проекты',
+    16: 'ID Lab',
+    17: 'ID Lab',
   },
   common: {
     close: 'Закрыть',
@@ -44,7 +44,7 @@ const ru = {
   kinds: {
     residential: 'Жилой проект',
     public: 'Общественный проект',
-    archive: 'Архивный проект',
+    product: 'Предметный дизайн',
   },
   header: {
     home: 'ID project, на главную',
@@ -95,7 +95,6 @@ const ru = {
       terms: 'Соглашения и правила',
       privacy: 'Политика обработки персональных данных',
       copyright: 'Авторское право',
-      archive: 'Архивные проекты',
     },
     languages: 'Язык',
   },
@@ -146,6 +145,8 @@ const ru = {
     moreTitle: 'Больше интерьеров',
     moreHeading: 'Больше дизайна и интерьеров',
     badges: { soon: 'Скоро', similar: 'Похожий', public: 'Общественный', residential: 'Жилой' },
+    /** Shown to signed-in staff previewing a project with «Публиковать на сайте» off */
+    unpublished: 'Проект не опубликован: посетители его не видят. Включите «Публиковать на сайте» в админке.',
   },
   studio: {
     label: 'Студия ID project',

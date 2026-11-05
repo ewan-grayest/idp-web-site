@@ -13,7 +13,7 @@ const photoFields: Field[] = [
   {
     name: 'hotspots',
     type: 'array',
-    label: tr('Товары на фото (5.1.3)', 'Products in the photo (5.1.3)', '照片中的商品 (5.1.3)'),
+    label: tr('Товары на фото', 'Products in the photo', '照片中的商品'),
     labels: { singular: tr('Товар', 'Product', '商品'), plural: tr('Товары', 'Products', '商品') },
     // Nothing here is required, so a half-filled product never blocks saving the project;
     // the site shows a product once it has a partner and both coordinates
@@ -106,7 +106,7 @@ export const Projects: CollectionConfig = {
               name: 'onHome',
               type: 'checkbox',
               defaultValue: false,
-              label: tr('Показывать в слайдере на главной (1.2 / 1.3)', 'Show in the Home slider (1.2 / 1.3)', '在首页轮播中显示 (1.2 / 1.3)'),
+              label: tr('Показывать в слайдере на главной', 'Show in the Home slider', '在首页轮播中显示'),
               admin: {
                 description: tr(
                   'Проект станет слайдом на главной: общественные слева, жилые справа. Клик по слайду открывает проект.',
@@ -140,7 +140,7 @@ export const Projects: CollectionConfig = {
                 ),
               },
             },
-            { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, label: tr('Теги (5.3.1)', 'Tags (5.3.1)', '标签 (5.3.1)') },
+            { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, label: tr('Теги', 'Tags', '标签') },
           ],
         },
         {
@@ -149,7 +149,7 @@ export const Projects: CollectionConfig = {
             {
               name: 'gallery',
               type: 'array',
-              label: tr('Кадры (5.1.1): сколько угодно; на экране видно 7', 'Frames (5.1.1): any number; 7 are visible at once', '画面 (5.1.1)，数量不限；一屏显示 7 张'),
+              label: tr('Кадры: сколько угодно; на экране видно 7', 'Frames: any number; 7 are visible at once', '画面：数量不限；一屏显示 7 张'),
               labels: { singular: tr('Кадр', 'Frame', '画面'), plural: tr('Кадры', 'Frames', '画面') },
               fields: photoFields,
             },
@@ -158,20 +158,20 @@ export const Projects: CollectionConfig = {
         {
           label: tr('Автор', 'Author', '作者'),
           fields: [
-            { name: 'leadAuthor', type: 'relationship', relationTo: 'people', label: tr('Автор (5.2.1 и 5.2.3)', 'Author (5.2.1 and 5.2.3)', '作者 (5.2.1、5.2.3)') },
+            { name: 'leadAuthor', type: 'relationship', relationTo: 'people', label: tr('Автор', 'Author', '作者') },
             // No default role: an empty one shows "Ведущий архитектор" in the page's language
-            { name: 'leadRole', type: 'text', localized: true, label: tr('Роль (5.2.2): если не «Ведущий архитектор»', 'Role (5.2.2): if not «Ведущий архитектор» (lead architect)', '角色 (5.2.2)，如果不是“首席建筑师”') },
-            { name: 'summary', type: 'textarea', localized: true, label: tr('О проекте (5.2.5)', 'About the project (5.2.5)', '项目简介 (5.2.5)') },
-            { name: 'quote', type: 'textarea', localized: true, label: tr('Цитата автора (5.2.4)', 'Author\'s quote (5.2.4)', '作者语录 (5.2.4)') },
-            { name: 'authors', type: 'relationship', relationTo: 'people', hasMany: true, label: tr('Команда проекта (5.3.2)', 'Project team (5.3.2)', '项目团队 (5.3.2)') },
+            { name: 'leadRole', type: 'text', localized: true, label: tr('Роль: если не «Ведущий архитектор»', 'Role: if not «Ведущий архитектор» (lead architect)', '角色：如果不是“首席建筑师”') },
+            { name: 'summary', type: 'textarea', localized: true, label: tr('О проекте', 'About the project', '项目简介') },
+            { name: 'quote', type: 'textarea', localized: true, label: tr('Цитата автора', 'Author\'s quote', '作者语录') },
+            { name: 'authors', type: 'relationship', relationTo: 'people', hasMany: true, label: tr('Команда проекта', 'Project team', '项目团队') },
           ],
         },
         {
           label: tr('Этапы', 'Stages', '阶段'),
           fields: [
-            stage('concept', tr('Концепт (5.4)', 'Concept (5.4)', '概念 (5.4)')),
-            stage('preview', tr('Превью (5.5)', 'Preview (5.5)', '预览 (5.5)')),
-            stage('process', tr('Процесс (5.6)', 'Process (5.6)', '过程 (5.6)')),
+            stage('concept', tr('Концепт', 'Concept', '概念')),
+            stage('preview', tr('Превью', 'Preview', '预览')),
+            stage('process', tr('Процесс', 'Process', '过程')),
           ],
         },
         {
@@ -199,7 +199,7 @@ export const Projects: CollectionConfig = {
               name: 'nextStage',
               type: 'relationship',
               relationTo: 'projects',
-              label: tr('Следующий этап этого проекта (5.11.2 «Скоро»)', 'Next stage of this project (5.11.2 «Скоро»: coming soon)', '本项目的下一阶段（5.11.2“即将推出”）'),
+              label: tr('Следующий этап этого проекта («Скоро»)', 'Next stage of this project («Скоро»: coming soon)', '本项目的下一阶段（“即将推出”）'),
             },
           ],
         },
@@ -210,7 +210,7 @@ export const Projects: CollectionConfig = {
       type: 'text',
       unique: true,
       index: true,
-      label: tr('Короткая ссылка (5.7.4)', 'Short link (5.7.4)', '短链接 (5.7.4)'),
+      label: tr('Короткая ссылка', 'Short link', '短链接'),
       admin: { position: 'sidebar', readOnly: true },
     },
   ],

@@ -101,8 +101,8 @@ export const Studio: GlobalConfig = {
               fields: [
                 { name: 'date', type: 'date', required: true, label: tr('Дата', 'Date', '日期') },
                 { name: 'title', type: 'text', ...requiredInRussian, label: tr('Событие', 'Event', '事件') },
-                { name: 'text', type: 'textarea', localized: true, label: tr('Текст (3.3.5)', 'Text (3.3.5)', '文字 (3.3.5)') },
-                { name: 'image', type: 'upload', relationTo: 'media', label: tr('Изображение (3.3.6)', 'Image (3.3.6)', '图片 (3.3.6)') },
+                { name: 'text', type: 'textarea', localized: true, label: tr('Текст', 'Text', '文字') },
+                { name: 'image', type: 'upload', relationTo: 'media', label: tr('Изображение', 'Image', '图片') },
                 { name: 'project', type: 'relationship', relationTo: 'projects', label: tr('Ссылка на проект (5 / 8 / 16)', 'Link to a project (5 / 8 / 16)', '项目链接（5、8 或 16）') },
               ],
             },
@@ -115,7 +115,7 @@ export const Studio: GlobalConfig = {
               name: 'address',
               type: 'textarea',
               localized: true,
-              label: tr('Адрес (3.5.3)', 'Address (3.5.3)', '地址 (3.5.3)'),
+              label: tr('Адрес', 'Address', '地址'),
               defaultValue: '119028, Москва, Басманный район (ЦАО), м. Китай-город, ул. Солянка, 1/2, стр. 2',
             },
             {
@@ -130,21 +130,21 @@ export const Studio: GlobalConfig = {
             {
               type: 'row',
               fields: [
-                { name: 'phone', type: 'text', label: tr('Телефон (шапка 0.1.6 и 3.5.3)', 'Phone (header 0.1.6 and 3.5.3)', '电话（页眉 0.1.6、3.5.3）'), admin: { placeholder: studioPhone } },
+                { name: 'phone', type: 'text', label: tr('Телефон (шапка и контакты)', 'Phone (header and contacts)', '电话（页眉、联系方式）'), admin: { placeholder: studioPhone } },
                 { name: 'email', type: 'email', label: tr('E-mail', 'E-mail', '电子邮箱'), admin: { placeholder: studioEmail } },
               ],
             },
             {
               type: 'row',
               fields: [
-                { name: 'partnersPhone', type: 'text', label: tr('Телефон для партнёров (6.5)', 'Partnerships phone (6.5)', '合作电话 (6.5)'), admin: { placeholder: partnersPhone } },
-                { name: 'partnersEmail', type: 'email', label: tr('E-mail для партнёров (6.5)', 'Partnerships e-mail (6.5)', '合作邮箱 (6.5)'), admin: { placeholder: partnersEmail } },
+                { name: 'partnersPhone', type: 'text', label: tr('Телефон для партнёров', 'Partnerships phone', '合作电话'), admin: { placeholder: partnersPhone } },
+                { name: 'partnersEmail', type: 'email', label: tr('E-mail для партнёров', 'Partnerships e-mail', '合作邮箱'), admin: { placeholder: partnersEmail } },
               ],
             },
             {
               name: 'social',
               type: 'group',
-              label: tr('Соцсети (подвал 0.3.1–0.3.4)', 'Social links (footer 0.3.1–0.3.4)', '社交链接（页脚 0.3.1–0.3.4）'),
+              label: tr('Соцсети (подвал)', 'Social links (footer)', '社交链接（页脚）'),
               admin: { description: tr('Пустая ссылка: берётся адрес по умолчанию.', 'An empty link keeps the default address.', '留空则使用默认地址。') },
               fields: social.map((s) => ({
                 name: s.key,

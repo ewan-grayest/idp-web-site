@@ -20,7 +20,7 @@ export const Press: CollectionConfig = {
   defaultSort: '-date',
   fields: [
     { name: 'title', type: 'text', ...requiredInRussian, label: tr('Заголовок статьи', 'Article title', '文章标题') },
-    { name: 'source', type: 'text', ...requiredInRussian, label: tr('Издание (10.4)', 'Publication (10.4)', '媒体 (10.4)') },
+    { name: 'source', type: 'text', ...requiredInRussian, label: tr('Издание', 'Publication', '媒体') },
     { name: 'date', type: 'date', required: true, label: tr('Дата публикации', 'Publication date', '发布日期'), admin: { date: { pickerAppearance: 'dayOnly', displayFormat: 'd MMMM yyyy' } } },
     {
       name: 'url',
@@ -33,7 +33,7 @@ export const Press: CollectionConfig = {
       name: 'photo',
       type: 'upload',
       relationTo: 'media',
-      label: tr('Широкое фото (10.2)', 'Wide photo (10.2)', '宽幅照片 (10.2)'),
+      label: tr('Широкое фото', 'Wide photo', '宽幅照片'),
       admin: { description: tr('Если пусто, берётся первое фото проекта.', "If empty, the project's first photo is used.", '留空时使用项目的第一张照片。') },
     },
     { name: 'project', type: 'relationship', relationTo: 'projects', label: tr('Проект в статье', 'Project in the article', '文章中的项目') },

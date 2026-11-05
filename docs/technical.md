@@ -148,7 +148,7 @@ Search (`Header.tsx`) queries `projects.title` and `people.name` through REST wi
 - `HotspotPicker`: click and drag products on a photo.
 - `backups/*`: the `/admin/backups` view and its menu link.
 
-Field labels name the page and component ID, so editors and the spec line up. `tests/unit/adminLabels.test.ts` constrains them. «Предпросмотр» opens the live page in the content language being edited (`collections/preview.ts`).
+Admin tabs, field labels and hints carry plain names, with no spec numbers (Ewan, 2026-11-05); the IDs stay in code comments and `data-spec`. `tests/unit/adminLabels.test.ts` constrains them. «Предпросмотр» opens the live page in the content language being edited (`collections/preview.ts`).
 
 ## Backups
 

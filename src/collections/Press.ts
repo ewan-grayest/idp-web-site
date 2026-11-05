@@ -8,7 +8,7 @@ export const Press: CollectionConfig = {
   slug: 'press',
   labels: {
     singular: { ru: 'Публикация', en: 'Article', zh: '报道' },
-    plural: { ru: 'О нас пишут (10)', en: 'Press (10)', zh: '媒体报道 (10)' },
+    plural: { ru: 'О нас пишут', en: 'Press', zh: '媒体报道' },
   },
   admin: {
     group: groups.pages,

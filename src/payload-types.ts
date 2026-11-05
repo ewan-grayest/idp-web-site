@@ -164,6 +164,10 @@ export interface Project {
    * Lower numbers come first in the slider; no number means last.
    */
   homeOrder?: number | null;
+  /**
+   * Untick to leave only the photo and «Смотреть проект» (view project) on the slide. The title itself is still needed: the project page and lists use it.
+   */
+  homeShowName?: boolean | null;
   tags?: (number | Tag)[] | null;
   gallery?:
     | {
@@ -707,6 +711,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   cover?: T;
   onHome?: T;
   homeOrder?: T;
+  homeShowName?: T;
   tags?: T;
   gallery?:
     | T

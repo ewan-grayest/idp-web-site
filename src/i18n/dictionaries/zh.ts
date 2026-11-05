@@ -221,19 +221,19 @@ const zh: Dictionary = {
     findUs: '如何找到我们',
     gtLink: '合作伙伴为工作室客户提供的折扣和特别条件',
     learnGt: '了解更多 Get-Together 积分计划',
-    empty: '在后台添加合作伙伴后，他们将显示在这里：合作伙伴 (6)。',
+    empty: '在后台添加合作伙伴后，他们将显示在这里：合作伙伴。',
     gtEmpty: '[积分计划介绍在后台填写：页面文字 → 合作伙伴 6]',
     noProjects: '在后台标记后，与该合作伙伴相关的项目将显示在这里。',
   },
   press: {
     open: '阅读文章',
     read: (source) => `${source}：阅读文章（在新标签页中打开）`,
-    empty: '在后台添加后，报道将显示在这里：媒体报道 (10)。',
+    empty: '在后台添加后，报道将显示在这里：媒体报道。',
   },
   entries: {
     list: '条目',
     empty: (section) => `在后台添加后，条目将显示在这里：${section}。`,
-    sections: { lifestyle: '生活方式 (11)', careers: '加入我们 (13)', legal: '法律文件 (14)' },
+    sections: { lifestyle: '生活方式', careers: '加入我们', legal: '法律文件' },
     noText: '[条目正文在后台填写]',
   },
   legal: {

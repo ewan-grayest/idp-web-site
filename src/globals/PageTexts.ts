@@ -7,7 +7,7 @@ const body = (name: string, label: Record<'ru' | 'en' | 'zh', string>) => ({ nam
 /** Texts of the pages that are one text each: Get-Together 6.1.2, Payment 12.1 and Media and PR 15.1. */
 export const PageTexts: GlobalConfig = {
   slug: 'page-texts',
-  label: { ru: 'Тексты страниц (6, 12, 15)', en: 'Page texts (6, 12, 15)', zh: '页面文字 (6, 12, 15)' },
+  label: { ru: 'Тексты страниц', en: 'Page texts', zh: '页面文字' },
   admin: { group: groups.pages },
   access: { read: () => true },
   fields: [

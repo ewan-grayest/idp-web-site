@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT()).pages[13] }
 }
 
-/** Page 13 · Work with us: vacancies from the admin section «Работайте с нами (13)». */
+/** Page 13 · Work with us: vacancies from the admin section «Работайте с нами». */
 export default function CareersPage() {
   return <EntriesPage collection="careers" page={13} />
 }

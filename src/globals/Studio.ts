@@ -16,9 +16,9 @@ export const Studio: GlobalConfig = {
   slug: 'studio',
   // Named after the page Ewan sees: «Наша история» was hard to find under «Студия» (2026-10-26)
   label: {
-    ru: 'Наша команда: миссия, история, контакты, реквизиты (2, 3, 14)',
-    en: 'Our team: mission, history, contacts, company details (2, 3, 14)',
-    zh: '我们的团队：使命、历史、联系方式、公司信息 (2, 3, 14)',
+    ru: 'Наша команда: миссия, история, контакты, реквизиты',
+    en: 'Our team: mission, history, contacts, company details',
+    zh: '我们的团队：使命、历史、联系方式、公司信息',
   },
   admin: { group: groups.pages, preview: previewTeamPage },
   access: { read: () => true },

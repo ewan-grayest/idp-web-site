@@ -8,6 +8,8 @@ import { projectPath, type ProjectKind } from './routes'
 export type Slide = {
   key: string
   title: string
+  /** Name left off the slide («Показывать название на слайде главной»); links and photo descriptions still use the title */
+  hideName?: boolean
   /** The project page; placeholders have none and are not links */
   href?: string
   image?: { url: string; alt: string; width?: number; height?: number }
@@ -40,6 +42,7 @@ export async function getHomeSlides(): Promise<{ left: Slide[]; right: Slide[] }
       return {
         key: String(d.id),
         title: d.title ?? '',
+        hideName: d.homeShowName === false,
         href: projectPath(d.kind as ProjectKind, d.slug),
         image: img?.url ? { url: img.url, alt: cover?.alt?.trim() || d.title || '', width: img.width ?? undefined, height: img.height ?? undefined } : undefined,
       }

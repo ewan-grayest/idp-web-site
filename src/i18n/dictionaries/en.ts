@@ -220,19 +220,19 @@ const en: Dictionary = {
     findUs: 'How to find us',
     gtLink: 'Discounts and special terms from our partners for studio clients',
     learnGt: 'Learn more about the Get-Together bonus scheme',
-    empty: 'Partners will appear here once they are added in the admin: Partners (6).',
+    empty: 'Partners will appear here once they are added in the admin: Partners.',
     gtEmpty: '[The bonus scheme description is written in the admin: Page texts → Partners 6]',
     noProjects: 'Projects with this partner will appear here once they are marked in the admin.',
   },
   press: {
     open: 'Read the article',
     read: (source) => `${source}: read the article (opens in a new tab)`,
-    empty: 'Articles will appear here once they are added in the admin: Press (10).',
+    empty: 'Articles will appear here once they are added in the admin: Press.',
   },
   entries: {
     list: 'Entries',
     empty: (section) => `Entries will appear here once they are added in the admin: ${section}.`,
-    sections: { lifestyle: 'Lifestyle (11)', careers: 'Work with us (13)', legal: 'Legal documents (14)' },
+    sections: { lifestyle: 'Lifestyle', careers: 'Work with us', legal: 'Legal documents' },
     noText: '[The entry text is written in the admin]',
   },
   legal: {

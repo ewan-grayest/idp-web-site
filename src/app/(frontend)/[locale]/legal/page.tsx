@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Page 14 · Legal: the company details first (/legal#details, from Студия → Реквизиты 14), then the documents
- * from «Юридические документы (14)»: user agreement, personal data consent (/legal#personal-data, linked from the
+ * from «Юридические документы»: user agreement, personal data consent (/legal#personal-data, linked from the
  * enquiry consent 0.1.10), privacy policy, copyright (/legal#copyright, footer).
  */
 export default async function LegalPage() {

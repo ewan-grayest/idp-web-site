@@ -10,6 +10,7 @@ import { coverOf, mediaUrl, toCard, type CollectionCard } from './projects'
 import type { Rich } from './rich'
 import { studioPhoneSetting } from './hosting'
 import { partnersEmail, partnersPhone, social, studioEmail, studioPhone } from './site'
+import { asVisitor } from './published'
 
 const isObj = <T extends object>(v: number | T | null | undefined): v is T => typeof v === 'object' && v !== null
 
@@ -17,6 +18,7 @@ const isObj = <T extends object>(v: number | T | null | undefined): v is T => ty
 export const getContacts = cache(async () => {
   const payload = await getPayload({ config })
   const s = await payload.findGlobal({
+    ...asVisitor,
     slug: 'studio',
     locale: await getLocale(),
     depth: 0,
@@ -43,7 +45,7 @@ export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'):
   const payload = await getPayload({ config })
   const locale = await getLocale()
   // Same date: in the order they were added
-  const { docs } = await payload.find({ collection, locale, sort: ['-date', 'createdAt'], depth: 1, pagination: false })
+  const { docs } = await payload.find({ ...asVisitor, collection, locale, sort: ['-date', 'createdAt'], depth: 1, pagination: false })
   const format = (d: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(d))
   return docs.map((e) => ({
     slug: e.slug,
@@ -62,6 +64,7 @@ export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'):
 export async function getCompany() {
   const payload = await getPayload({ config })
   const s = await payload.findGlobal({
+    ...asVisitor,
     slug: 'studio',
     locale: await getLocale(),
     depth: 0,
@@ -74,7 +77,7 @@ export async function getCompany() {
 export async function getPageText(key: 'gt' | 'payment' | 'media'): Promise<Rich> {
   const payload = await getPayload({ config })
   // depth 1: documents linked inside the text («Связь», internal links) come with their names and addresses
-  const g = await payload.findGlobal({ slug: 'page-texts', locale: await getLocale(), depth: 1 })
+  const g = await payload.findGlobal({ ...asVisitor, slug: 'page-texts', locale: await getLocale(), depth: 1 })
   return g[key] as Rich
 }
 
@@ -82,7 +85,7 @@ export async function getPageText(key: 'gt' | 'payment' | 'media'): Promise<Rich
 export async function getPress() {
   const payload = await getPayload({ config })
   const locale = await getLocale()
-  const { docs } = await payload.find({ collection: 'press', locale, sort: '-date', depth: 2, pagination: false })
+  const { docs } = await payload.find({ ...asVisitor, collection: 'press', locale, sort: '-date', depth: 2, pagination: false })
   return docs.map((a) => {
     const project = isObj(a.project) ? (a.project as Project) : null
     const photo = isObj(a.photo) ? a.photo : project ? coverOf(project) : undefined
@@ -117,8 +120,8 @@ export async function getPartners(): Promise<PartnerBlock[]> {
   const payload = await getPayload({ config })
   const locale = await getLocale()
   const [{ docs }, tagged] = await Promise.all([
-    payload.find({ collection: 'partners', locale, sort: 'order', depth: 2, pagination: false }),
-    payload.find({ collection: 'projects', locale, depth: 1, pagination: false }),
+    payload.find({ ...asVisitor, collection: 'partners', locale, sort: 'order', depth: 2, pagination: false }),
+    payload.find({ ...asVisitor, collection: 'projects', locale, depth: 1, pagination: false }),
   ])
 
   // Projects where a partner is tagged on a photo (5.1.3)

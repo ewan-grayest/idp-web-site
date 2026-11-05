@@ -246,7 +246,8 @@ for (const p of fresh) {
     data: {
       title: p.title.trim(),
       slug: p.slug,
-      kind: p.kind === 'other' ? 'archive' : p.kind,
+      // Archive projects became product design under ID Lab (Ewan, 2026-11-05)
+      kind: p.kind === 'other' ? 'product' : p.kind,
       cover: coverImg ? ids.get(coverImg.path) : undefined,
       onHome,
       homeOrder: onHome ? homeOrder++ : undefined,

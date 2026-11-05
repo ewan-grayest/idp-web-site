@@ -20,20 +20,32 @@ export const pages = {
   13: { path: '/careers', header: true },
   14: { path: '/legal', header: true },
   15: { path: '/media', header: true }, // ASSUMPTION: header kept
-  16: { path: '/projects/archive', header: true }, // /[slug]
-  17: { path: '/projects/archive', header: true },
+  // Archive in the spec; now product design on the ID Lab page (Ewan, 2026-11-05)
+  16: { path: '/id-lab', header: true }, // /[slug]
+  17: { path: '/id-lab', header: true },
 } as const
 
 export type PageId = keyof typeof pages
 
-/** Project kinds map to the detail page (5, 8, 16) and collection page (7, 9, 17). */
+/**
+ * Project kinds map to the detail page (5, 8, 16) and collection page (7, 9, 17).
+ * Product design took the place of archive projects and lives on the ID Lab page (Ewan, 2026-11-05).
+ */
 export const projectKinds = {
   residential: { detail: 5, collection: 7 },
   public: { detail: 8, collection: 9 },
-  archive: { detail: 16, collection: 17 },
+  product: { detail: 16, collection: 17 },
 } as const
 
 export type ProjectKind = keyof typeof projectKinds
+
+/** The kind listed at /projects/<segment>; product design is not one, it has the ID Lab address. */
+export function kindAtProjects(segment: string): ProjectKind | undefined {
+  return (Object.keys(projectKinds) as ProjectKind[]).find((k) => pages[projectKinds[k].collection].path === `/projects/${segment}`)
+}
+
+/** /projects/<segment> addresses that moved, so old links keep working: archive projects became product design. */
+export const movedKinds: Record<string, ProjectKind> = { archive: 'product', product: 'product' }
 
 export const projectPath = (kind: ProjectKind, slug: string) =>
   `${pages[projectKinds[kind].collection].path}/${slug}`

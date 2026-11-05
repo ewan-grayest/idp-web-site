@@ -7,6 +7,7 @@ import type { Person, Project } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
 import { promoVideoSetting } from './hosting'
 import { mediaUrl, partnerPath, personPath, projectPath } from './projects'
+import { asVisitor } from './published'
 
 /** One team member as the strip 3.2 needs it. */
 export type Member = {
@@ -44,7 +45,7 @@ export async function getTeam(filter: { project?: string; tag?: string }) {
   let label: string | null = null
 
   if (filter.project) {
-    const { docs } = await payload.find({ collection: 'projects', locale, where: { slug: { equals: filter.project } }, depth: 0, limit: 1 })
+    const { docs } = await payload.find({ ...asVisitor, collection: 'projects', locale, where: { slug: { equals: filter.project } }, depth: 0, limit: 1 })
     const project = docs[0]
     if (project) {
       const ids = [project.leadAuthor, ...(project.authors ?? [])].flatMap((a) => (a == null ? [] : [typeof a === 'object' ? a.id : a]))
@@ -52,14 +53,14 @@ export async function getTeam(filter: { project?: string; tag?: string }) {
       label = t.projectTeam(project.title ?? '')
     }
   } else if (filter.tag) {
-    const { docs } = await payload.find({ collection: 'tags', locale, where: { slug: { equals: filter.tag } }, depth: 0, limit: 1 })
+    const { docs } = await payload.find({ ...asVisitor, collection: 'tags', locale, where: { slug: { equals: filter.tag } }, depth: 0, limit: 1 })
     if (docs[0]) {
       where = { and: [where, { tags: { contains: docs[0].id } }] }
       label = t.tagTeam(docs[0].title ?? '')
     }
   }
 
-  const { docs } = await payload.find({ collection: 'people', locale, where, sort: 'order', depth: 1, limit: 200 })
+  const { docs } = await payload.find({ ...asVisitor, collection: 'people', locale, where, sort: 'order', depth: 1, limit: 200 })
   return { members: docs.map(toMember), label }
 }
 
@@ -88,6 +89,7 @@ export type PromoVideoData = {
 export async function getPromoVideo(): Promise<PromoVideoData> {
   const payload = await getPayload({ config })
   const studio = await payload.findGlobal({
+    ...asVisitor,
     slug: 'studio',
     depth: 1,
     select: { promoVideo: true, introOnFirstVisit: true, promoAutoplay: true, promoSound: true },
@@ -110,9 +112,9 @@ export async function getStudio() {
   const payload = await getPayload({ config })
   const locale = await getLocale()
   const [studio, issues, partners] = await Promise.all([
-    payload.findGlobal({ slug: 'studio', locale, depth: 1 }),
-    payload.find({ collection: 'issues', locale, sort: '-date', depth: 1, limit: 48 }),
-    payload.find({ collection: 'partners', locale, sort: 'order', depth: 1, limit: 120 }),
+    payload.findGlobal({ ...asVisitor, slug: 'studio', locale, depth: 1 }),
+    payload.find({ ...asVisitor, collection: 'issues', locale, sort: '-date', depth: 1, limit: 48 }),
+    payload.find({ ...asVisitor, collection: 'partners', locale, sort: 'order', depth: 1, limit: 120 }),
   ])
 
   const history: TimelineEvent[] = (studio.history ?? []).map((e, k) => {

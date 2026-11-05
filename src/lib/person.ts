@@ -5,10 +5,11 @@ import { getLocale } from '@/i18n/server'
 import type { Person, Project, Tag } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
 import { mediaUrl, projectPath, tagPath, tagsOf } from './projects'
+import { asVisitor } from './published'
 
 export async function getPerson(slug: string): Promise<Person | null> {
   const payload = await getPayload({ config })
-  const { docs } = await payload.find({ collection: 'people', locale: await getLocale(), where: { slug: { equals: slug } }, depth: 2, limit: 1 })
+  const { docs } = await payload.find({ ...asVisitor, collection: 'people', locale: await getLocale(), where: { slug: { equals: slug } }, depth: 2, limit: 1 })
   return docs[0] ?? null
 }
 
@@ -35,6 +36,7 @@ export type PersonProject = { key: string; title: string; summary: string; href:
 export async function getPersonProjects(p: Person) {
   const payload = await getPayload({ config })
   const { docs } = await payload.find({
+    ...asVisitor,
     collection: 'projects',
     locale: await getLocale(),
     where: { or: [{ leadAuthor: { equals: p.id } }, { authors: { contains: p.id } }] },

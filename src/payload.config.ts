@@ -18,6 +18,7 @@ import { Partners } from './collections/Partners'
 import { Issues } from './collections/Issues'
 import { Press } from './collections/Press'
 import { Careers, LegalDocs, Lifestyle } from './collections/entries'
+import { Home } from './globals/Home'
 import { Studio } from './globals/Studio'
 import { PageTexts } from './globals/PageTexts'
 import { defaultLocale, locales } from './i18n/locales'
@@ -59,7 +60,7 @@ export default buildConfig({
   },
   // Admin side menu order: projects and team, then each page's section, then enquiries, files and users
   collections: [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, Leads, Media, Users],
-  globals: [Studio, PageTexts],
+  globals: [Home, Studio, PageTexts],
   // /api/v1/backups: see src/endpoints/backups.ts
   endpoints: backupEndpoints,
   editor: lexicalEditor(),

@@ -63,7 +63,8 @@ export const footerColumns = [
 /**
  * Site menu (not in the spec: Ewan asked for navigation on 2026-10-25, the spec only had the footer).
  * Main sections in large type, the rest smaller. Labels are dictionary keys: menu.*
- * Archive projects 16/17 are left out of the menu and footer (Ewan, 2026-10-26); /projects/archive still opens.
+ * Pages 16/17 (archive, now product design under ID Lab) are left out of the menu (Ewan, 2026-10-26); the footer's
+ * ID Lab link 0.3.7 opens them (Ewan, 2026-11-05).
  */
 export const menuMain = [
   { key: 'home', href: '/' },
@@ -89,7 +90,7 @@ export const menuMore = [
 /** Footer 0.3.6–0.3.8 sister brands. */
 export const sisterSites = [
   { id: '0.3.6', label: 'ID project', href: '/' },
-  { id: '0.3.7', label: 'ID Lab', href: '#' }, // PLACEHOLDER: address unknown
+  { id: '0.3.7', label: 'ID Lab', href: '/id-lab' }, // The studio's product design projects (Ewan, 2026-11-05)
   { id: '0.3.8', label: 'Get-Together', href: '/partners' },
 ]
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { dictionaries } from '@/i18n/dictionaries'
-import { headerVisible, pages, projectPath, sectionPage } from '@/lib/routes'
+import { headerVisible, kindAtProjects, movedKinds, pages, projectPath, sectionPage } from '@/lib/routes'
 
 describe('page roles', () => {
   it('covers all 17 spec pages', () => {
@@ -29,6 +29,16 @@ describe('page roles', () => {
 
   it('builds stable project permalinks', () => {
     expect(projectPath('public', 'fabrika')).toBe('/projects/public/fabrika')
-    expect(projectPath('archive', 'old')).toBe('/projects/archive/old')
+    expect(projectPath('product', 'chair')).toBe('/id-lab/chair')
+  })
+
+  it('lists residential and public under /projects, and sends archive and product design to ID Lab', () => {
+    expect(kindAtProjects('residential')).toBe('residential')
+    expect(kindAtProjects('public')).toBe('public')
+    expect(kindAtProjects('product')).toBeUndefined()
+    expect(kindAtProjects('archive')).toBeUndefined()
+    expect(movedKinds.archive).toBe('product')
+    expect(movedKinds.residential).toBeUndefined()
+    expect(dictionaries.ru.pages[sectionPage('/id-lab/chair')!]).toBe('ID Lab')
   })
 })

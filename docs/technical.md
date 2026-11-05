@@ -61,13 +61,14 @@ Page routes are under `src/app/(frontend)/[locale]/`:
 | Home, Promo | `page.tsx`, `promo/` |
 | Studio | `studio/` (`?project=<slug>` and `?tag=<slug>` narrow the team strip) |
 | Person | `team/[slug]/` |
-| Projects list, detail | `projects/[kind]/`, `projects/[kind]/[slug]/` |
+| Projects list, detail | `projects/[kind]/`, `projects/[kind]/[slug]/`: residential and public; `/projects/archive` (and `/projects/product`) redirect permanently to ID Lab |
+| ID Lab: product design list, detail | `id-lab/`, `id-lab/[slug]/`, the same views (`components/collection/CollectionPage`, `components/project/ProjectPage`) |
 | Short link | `p/[code]/`: permanent redirect to the project, keeps the language |
 | Partners, Press, Payment, Media | `partners/`, `press/`, `payment/`, `media/` |
 | Lifestyle, Careers, Legal | `journal/`, `careers/`, `legal/` |
 | Stand-in | `[...slug]/`: any address under a known page path with no route of its own (bare `/team`, also `/press/x`) shows "in progress"; anything else is a 404 |
 
-`src/lib/routes.ts` is the single source for page numbers and paths. Project kinds: `residential`, `public`, `archive`. Use `projectPath()` and `personPath()` instead of building strings.
+`src/lib/routes.ts` is the single source for page numbers and paths. Project kinds: `residential`, `public`, `product` (product design at `/id-lab`; it replaced `archive`, 2026-11-05). Use `projectPath()` and `personPath()` instead of building strings.
 
 Rendering: content pages use `force-dynamic`. There is no CDN or data cache layer. `React.cache` deduplicates within a request (`getContacts`).
 
@@ -77,7 +78,7 @@ Collections, in admin menu order (`payload.config.ts`):
 
 | Slug | Purpose | Key fields | Read access |
 |---|---|---|---|
-| `projects` | Pages 5/8/16 | `title`, `slug`, `kind`, `cover`, `onHome`, `homeOrder`, `homeShowName`, `tags`, `gallery[]` with hotspots, `leadAuthor`, `leadRole`, `summary`, `quote`, `authors`, `concept`/`preview`/`process`, `achievements[]`, `nextStage`, `shortCode` | Public |
+| `projects` | Pages 5/8/16 | `title`, `slug`, `kind`, `publishOnSite`, `cover`, `onHome`, `homeOrder`, `tags`, `gallery[]` with hotspots, `leadAuthor`, `leadRole`, `summary`, `quote`, `authors`, `concept`/`preview`/`process`, `achievements[]`, `nextStage`, `shortCode` | Public where `publishOnSite` is not false; signed-in staff read all |
 | `people` | Team strip 3.2, page 4 | `name`, `slug`, `role`, `portrait`, `photo`, `quote`, `interests`, `tags`, `achievements[]`, `onTeam`, `order` | Public |
 | `tags` | Shared by projects, people, partners | `title`, `slug` | Public |
 | `partners` | Page 6, hotspots | `name`, `slug`, `logo`, `text`, `link`, `photo`, `discount`, `projects`, `tags`, `order` | Public |
@@ -88,7 +89,9 @@ Collections, in admin menu order (`payload.config.ts`):
 | `media` | Uploads: images, MP4, WebM | `alt`, sizes | Public |
 | `users` | Admin accounts | `email`, `name` | Payload auth default |
 
-Globals, both publicly readable:
+Globals, all publicly readable:
+
+- `home`: `showSlideNames`, one switch for the names on every Home slide.
 
 - `studio`: promo video and its switches `introOnFirstVisit`, `promoAutoplay`, `promoSound`; `mission`, `vision`; `history[]`; `address`, `lat`, `lng`, `zoom`; `phone`, `email`, `partnersPhone`, `partnersEmail`, `social`; `company`, `inn`, `kpp`, `ogrn`, `legalAddress`, `bank`.
 - `page-texts`: `gt`, `payment`, `media`, all rich text.
@@ -105,6 +108,8 @@ Behaviour to preserve:
 ## Data access
 
 Server components call helpers in `src/lib/` (`projects`, `pages`, `person`, `studio`, `homeSlides`), which use `getPayload({ config })` and the page's locale. Relations are read at `depth: 1` or more and narrowed with type guards, since Payload returns `number | Doc`.
+
+Every read for the public site spreads `asVisitor` (`src/lib/published.ts`, `overrideAccess: false`), so it gets what the public API gets: an unpublished project is left out of lists, and a relation to one comes back as a bare id, which the type guards skip. `getProject` alone retries as the signed-in user, so staff can preview an unpublished project. Header search also asks for published projects only.
 
 On the public site, client code reaches the API in only two places: header search and `sendLead`.
 
@@ -219,7 +224,7 @@ Run TypeScript ones with `npx payload run <file>`. All import scripts are additi
 
 - `POST /leads` has no rate limiting or spam protection, and leads send no notification; staff read them in the admin.
 - Bare `/team` is a stand-in, and the catch-all answers unknown sub-paths of known pages (`/press/x`) with "in progress" instead of a 404.
-- Placeholders in `lib/site.ts`: Facebook URL, ID Lab address. The map point and legal drafts need checking.
+- Placeholders in `lib/site.ts`: Facebook URL. The map point and legal drafts need checking.
 - The `Leads.ts` header comment says leads are stored in Yandex Cloud; the site currently runs locally only.
 
 ### README statements that no longer match the code

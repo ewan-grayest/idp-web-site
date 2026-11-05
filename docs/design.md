@@ -98,7 +98,7 @@ Breakpoints: phone 360–767, tablet 768–1279, desktop 1280–1919, wide 1920+
 - Section title 0.1.2: the page title, replaced on scroll by the nearest section above the header line that has `data-header-title`.
 - Then the icon buttons: call 0.1.3 (reveals phone 0.1.6), mail 0.1.4 (opens the email field 0.1.7 and consent 0.1.8–0.1.10, and becomes the send button), search 0.1.5 (opens the search form), theme. On phones the theme switch moves into the menu.
 
-**Site menu** (`shell/SiteMenu.tsx`). Not in the spec; added 2026-10-25. Main sections in large type, the rest smaller, plus contacts, languages and theme. Lists: `menuMain` and `menuMore` in `lib/site.ts`. Archive projects are deliberately left out.
+**Site menu** (`shell/SiteMenu.tsx`). Not in the spec; added 2026-10-25. Main sections in large type, the rest smaller, plus contacts, languages and theme. Lists: `menuMain` and `menuMore` in `lib/site.ts`. Pages 16/17 are deliberately left out: archive projects at first, product design under ID Lab since 2026-11-05, which the footer's ID Lab link 0.3.7 opens.
 
 **Footer 0.3** (`shell/Footer.tsx`). Green band with `--c-on-accent` text; hover is an underline. Social row, link columns (`footerColumns`), sister brands, languages.
 
@@ -126,8 +126,8 @@ Numbers are the spec's page roles, keyed in `src/lib/routes.ts`. Russian address
 | 2 | `/promo` | Promo video | Full-screen, always dark. Also plays over Home once per browser session. |
 | 3 | `/studio` | Studio and team | Mission, team strip with an open card, history timeline, journal covers, map and address, partner tiles. |
 | 4 | `/team/[slug]` | Person | Wide photo, role, name, quote, interests, achievements, projects, "ask me". Bare `/team` is still a stand-in. |
-| 5, 8, 16 | `/projects/{residential,public,archive}/[slug]` | Project | Shared template: strip and viewer, author, tags, concept/preview/process stages, sharing and short link, achievements, CTAs, recommendations. Price CTA 5.7-b appears on public projects only (page 8). |
-| 7, 9, 17 | `/projects/{kind}` | All projects of a kind | Tag filter (up to 5, applied by «Выбрать», kept in `?tags=a,b`) above a card grid. |
+| 5, 8, 16 | `/projects/{residential,public}/[slug]`, `/id-lab/[slug]` | Project | Shared template: strip and viewer, author, tags, concept/preview/process stages, sharing and short link, achievements, CTAs, recommendations. Price CTA 5.7-b appears on public projects only (page 8). |
+| 7, 9, 17 | `/projects/{residential,public}`, `/id-lab` | All projects of a kind; 17 is ID Lab, the product design projects (archive in the spec) | Tag filter (up to 5, applied by «Выбрать», kept in `?tags=a,b`) above a card grid. |
 | 6 | `/partners` | Partners / Get-Together | Scheme text, logo buttons that pick a partner (`#slug`), map, contacts. |
 | 10 | `/press` | Press | Sideways slider of wide photos with source and date; opens the article. |
 | 11, 13, 14 | `/journal`, `/careers`, `/legal` | Entries | Vertical timeline, newest on top, beside the picked entry; `#slug` opens one. 11 adds sharing, 14 starts with company details. |

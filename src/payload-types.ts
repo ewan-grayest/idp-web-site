@@ -108,10 +108,12 @@ export interface Config {
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en' | 'zh') | ('ru' | 'en' | 'zh')[];
   globals: {
+    home: Home;
     studio: Studio;
     'page-texts': PageText;
   };
   globalsSelect: {
+    home: HomeSelect<false> | HomeSelect<true>;
     studio: StudioSelect<false> | StudioSelect<true>;
     'page-texts': PageTextsSelect<false> | PageTextsSelect<true>;
   };
@@ -151,7 +153,10 @@ export interface Project {
   id: number;
   title?: string | null;
   slug: string;
-  kind: 'residential' | 'public' | 'archive';
+  /**
+   * Product design shows on the ID Lab page (/id-lab), not under «Проекты» (projects).
+   */
+  kind: 'residential' | 'public' | 'product';
   /**
    * A wide photo: the project's slide on Home. Without it the slide shows a placeholder drawing.
    */
@@ -164,10 +169,6 @@ export interface Project {
    * Lower numbers come first in the slider; no number means last.
    */
   homeOrder?: number | null;
-  /**
-   * Untick to leave only the photo and «Смотреть проект» (view project) on the slide. The title itself is still needed: the project page and lists use it.
-   */
-  homeShowName?: boolean | null;
   tags?: (number | Tag)[] | null;
   gallery?:
     | {
@@ -266,6 +267,10 @@ export interface Project {
       }[]
     | null;
   nextStage?: (number | null) | Project;
+  /**
+   * Untick to keep the project in the admin only: the site leaves it out of lists, Home, search and links, and its address shows «Страница не найдена» (page not found). «Предпросмотр» (preview) still shows it to signed-in staff.
+   */
+  publishOnSite?: boolean | null;
   shortCode?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -711,7 +716,6 @@ export interface ProjectsSelect<T extends boolean = true> {
   cover?: T;
   onHome?: T;
   homeOrder?: T;
-  homeShowName?: T;
   tags?: T;
   gallery?:
     | T
@@ -804,6 +808,7 @@ export interface ProjectsSelect<T extends boolean = true> {
         id?: T;
       };
   nextStage?: T;
+  publishOnSite?: T;
   shortCode?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1068,6 +1073,19 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home".
+ */
+export interface Home {
+  id: number;
+  /**
+   * Applies to every slide at once. Off: slides show only the photo and «Смотреть проект» (view project). The name still appears on the project page and in lists, and screen readers still read it.
+   */
+  showSlideNames?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "studio".
  */
 export interface Studio {
@@ -1176,6 +1194,16 @@ export interface PageText {
   } | null;
   updatedAt?: string | null;
   createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home_select".
+ */
+export interface HomeSelect<T extends boolean = true> {
+  showSlideNames?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

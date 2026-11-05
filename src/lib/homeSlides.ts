@@ -4,11 +4,12 @@ import config from '@payload-config'
 import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
 import { projectPath, type ProjectKind } from './routes'
+import { asVisitor } from './published'
 
 export type Slide = {
   key: string
   title: string
-  /** Name left off the slide («Показывать название на слайде главной»); links and photo descriptions still use the title */
+  /** Name left off the slide (Главная → «Показывать название на слайде главной»); links and photo descriptions still use the title */
   hideName?: boolean
   /** The project page; placeholders have none and are not links */
   href?: string
@@ -28,21 +29,27 @@ export async function getHomeSlides(): Promise<{ left: Slide[]; right: Slide[] }
   const t = dictionaries[locale]
   try {
     const payload = await getPayload({ config })
-    const { docs } = await payload.find({
-      collection: 'projects',
-      locale,
-      where: { onHome: { equals: true }, kind: { in: ['public', 'residential'] } },
-      sort: 'homeOrder',
-      limit: 40,
-      depth: 1,
-    })
+    const [{ docs }, home] = await Promise.all([
+      payload.find({
+        ...asVisitor,
+        collection: 'projects',
+        locale,
+        where: { onHome: { equals: true }, kind: { in: ['public', 'residential'] } },
+        sort: 'homeOrder',
+        limit: 40,
+        depth: 1,
+      }),
+      payload.findGlobal({ ...asVisitor, slug: 'home', depth: 0 }),
+    ])
+    // One switch for all slides (Ewan, 2026-11-05)
+    const hideName = home.showSlideNames === false
     const toSlide = (d: (typeof docs)[number]): Slide => {
       const cover = typeof d.cover === 'object' && d.cover ? d.cover : undefined
       const img = cover?.sizes?.panorama?.url ? cover.sizes.panorama : cover
       return {
         key: String(d.id),
         title: d.title ?? '',
-        hideName: d.homeShowName === false,
+        hideName,
         href: projectPath(d.kind as ProjectKind, d.slug),
         image: img?.url ? { url: img.url, alt: cover?.alt?.trim() || d.title || '', width: img.width ?? undefined, height: img.height ?? undefined } : undefined,
       }

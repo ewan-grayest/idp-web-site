@@ -1,7 +1,17 @@
 #!/bin/sh
-# Builds and starts the site in Docker on this computer, then opens it at http://localhost:3000
+# Builds and starts the site in Docker on this computer, at http://localhost:3000
+# Usage: ./start.sh [--open-browser]
+#   --open-browser  open the site in the browser once it is ready
 set -e
 cd "$(dirname "$0")"
+
+open_browser=
+for arg in "$@"; do
+  case "$arg" in
+    --open-browser) open_browser=1 ;;
+    *) echo "Unknown option: $arg"; echo "Usage: ./start.sh [--open-browser]"; exit 1 ;;
+  esac
+done
 
 if ! docker info >/dev/null 2>&1; then
   echo "Docker isn't running. Open Docker Desktop, wait until it says it's running, then run ./start.sh again."
@@ -48,13 +58,21 @@ done
 
 docker compose up -d --build
 
+# Rebuilds leave old image versions and build cache behind. Remove only those:
+# never volumes, which hold the database and photos, and never images still tagged or layers still in use.
+echo "Freeing Docker storage:"
+docker image prune -f | tail -1
+docker builder prune -f | tail -1
+
 printf "Waiting for the site"
 for i in $(seq 1 60); do
   if curl -fs -o /dev/null http://localhost:3000/; then
     echo " ready."
     echo "Site:  http://localhost:3000"
     echo "Admin: http://localhost:3000/admin (first visit asks you to create an account)"
-    # command -v open >/dev/null && open http://localhost:3000
+    if [ -n "$open_browser" ]; then
+      open http://localhost:3000 || echo "Couldn't open the browser. Open http://localhost:3000 yourself."
+    fi
     exit 0
   fi
   printf "."

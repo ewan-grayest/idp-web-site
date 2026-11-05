@@ -377,7 +377,7 @@ export interface Partner {
   createdAt: string;
 }
 /**
- * Team members: the strip on the «Our team» page (3.2) and each person's own page (4). The mission and «Our history» of the «Our team» page are in «Our team: mission, history, contacts».
+ * Team members: the strip on the «Our team» page and each person's own page. The mission and «Our history» of the «Our team» page are in «Our team: mission, history, contacts».
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "people".

@@ -287,5 +287,5 @@ The verifier creates marked fixtures only in that database and exercises page ro
 - “Up to seven” in `5.1` means at most seven visible presentation frames on desktop, with horizontal scrolling for the unlimited `5.1.1` items. Mobile shows fewer frames.
 - Feed and review sections need approved CMS content. Missing studio photos/text are editorial content to fill in the CMS; development fixtures are clearly marked and are not production content.
 - ID Lab design/content remains TBD and its footer label is intentionally inactive. Checkout, job application forms and reward accounting are out of scope.
-- Admin tabs carry no spec numbers, so «Миссия», not «Миссия 3.1» (Ewan, 2026-11-05). Field labels and hints keep theirs.
+- The admin carries no spec numbers anywhere: tabs, field labels and hints, so «Миссия», not «Миссия 3.1», and «Показывать в слайдере на главной», not «… (1.2 / 1.3)» (Ewan, 2026-11-05).
 - The site must start on any Docker host (Ewan, 2026-11-05), so one image takes all its settings at start, including `NEXT_PUBLIC_*`, which are no longer build arguments. Hosts that keep no files between deploys stay unsupported, because uploads live on disk and foreign storage services are avoided.

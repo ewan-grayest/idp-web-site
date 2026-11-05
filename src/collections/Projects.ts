@@ -150,7 +150,7 @@ export const Projects: CollectionConfig = {
             {
               name: 'gallery',
               type: 'array',
-              label: tr('Кадры: сколько угодно; на экране видно', 'Frames: any number; 7 are visible at once', '画面，数量不限；一屏显示 7 张'),
+              label: tr('Кадры: сколько угодно; на экране видно 7', 'Frames: any number; 7 are visible at once', '画面：数量不限；一屏显示 7 张'),
               labels: { singular: tr('Кадр', 'Frame', '画面'), plural: tr('Кадры', 'Frames', '画面') },
               fields: photoFields,
             },
@@ -161,7 +161,7 @@ export const Projects: CollectionConfig = {
           fields: [
             { name: 'leadAuthor', type: 'relationship', relationTo: 'people', label: tr('Автор', 'Author', '作者') },
             // No default role: an empty one shows "Ведущий архитектор" in the page's language
-            { name: 'leadRole', type: 'text', localized: true, label: tr('Роль: если не «Ведущий архитектор»', 'Role: if not «Ведущий архитектор» (lead architect)', '角色，如果不是“首席建筑师”') },
+            { name: 'leadRole', type: 'text', localized: true, label: tr('Роль: если не «Ведущий архитектор»', 'Role: if not «Ведущий архитектор» (lead architect)', '角色：如果不是“首席建筑师”') },
             { name: 'summary', type: 'textarea', localized: true, label: tr('О проекте', 'About the project', '项目简介') },
             { name: 'quote', type: 'textarea', localized: true, label: tr('Цитата автора', 'Author\'s quote', '作者语录') },
             { name: 'authors', type: 'relationship', relationTo: 'people', hasMany: true, label: tr('Команда проекта', 'Project team', '项目团队') },
@@ -170,9 +170,9 @@ export const Projects: CollectionConfig = {
         {
           label: tr('Этапы', 'Stages', '阶段'),
           fields: [
-            stage('concept', tr('Концепт (5.4)', 'Concept (5.4)', '概念 (5.4)')),
-            stage('preview', tr('Превью (5.5)', 'Preview (5.5)', '预览 (5.5)')),
-            stage('process', tr('Процесс (5.6)', 'Process (5.6)', '过程 (5.6)')),
+            stage('concept', tr('Концепт', 'Concept', '概念')),
+            stage('preview', tr('Превью', 'Preview', '预览')),
+            stage('process', tr('Процесс', 'Process', '过程')),
           ],
         },
         {
@@ -200,7 +200,7 @@ export const Projects: CollectionConfig = {
               name: 'nextStage',
               type: 'relationship',
               relationTo: 'projects',
-              label: tr('Следующий этап этого проекта (5.11.2 «Скоро»)', 'Next stage of this project (5.11.2 «Скоро»: coming soon)', '本项目的下一阶段（5.11.2“即将推出”）'),
+              label: tr('Следующий этап этого проекта («Скоро»)', 'Next stage of this project («Скоро»: coming soon)', '本项目的下一阶段（“即将推出”）'),
             },
           ],
         },

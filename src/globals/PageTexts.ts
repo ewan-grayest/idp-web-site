@@ -17,17 +17,17 @@ export const PageTexts: GlobalConfig = {
         {
           label: tr('Партнёры', 'Partners', '合作伙伴'),
           description: tr('/partners, под заголовком «Бонусная система Get-Together»', '/partners, under «Бонусная система Get-Together»', '/partners，“Get-Together 积分计划”标题下'),
-          fields: [body('gt', tr('Описание бонусной системы Get-Together (6.1.2)', 'Get-Together bonus scheme (6.1.2)', 'Get-Together 积分计划介绍 (6.1.2)'))],
+          fields: [body('gt', tr('Описание бонусной системы Get-Together', 'Get-Together bonus scheme', 'Get-Together 积分计划介绍'))],
         },
         {
           label: tr('Оплата', 'Payment', '付款'),
           description: '/payment',
-          fields: [body('payment', tr('Способы оплаты (12.1)', 'Payment options (12.1)', '付款方式 (12.1)'))],
+          fields: [body('payment', tr('Способы оплаты', 'Payment options', '付款方式'))],
         },
         {
           label: tr('СМИ и PR', 'Media and PR', '媒体与公关'),
           description: '/media',
-          fields: [body('media', tr('Работа со СМИ и PR (15.1)', 'Media and PR (15.1)', '媒体与公关 (15.1)'))],
+          fields: [body('media', tr('Работа со СМИ и PR', 'Media and PR', '媒体与公关'))],
         },
       ],
     },

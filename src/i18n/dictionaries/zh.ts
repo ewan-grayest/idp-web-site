@@ -22,8 +22,8 @@ const zh: Dictionary = {
     13: '加入我们',
     14: '法律信息',
     15: '媒体与公关',
-    16: '往期项目',
-    17: '往期项目',
+    16: 'ID Lab',
+    17: 'ID Lab',
   },
   common: {
     close: '关闭',
@@ -39,7 +39,7 @@ const zh: Dictionary = {
   kinds: {
     residential: '住宅项目',
     public: '公共空间项目',
-    archive: '往期项目',
+    product: '产品设计',
   },
   header: {
     home: 'ID project，返回首页',
@@ -89,7 +89,6 @@ const zh: Dictionary = {
       terms: '协议与规则',
       privacy: '个人数据处理政策',
       copyright: '版权',
-      archive: '归档项目',
     },
     languages: '语言',
   },
@@ -139,6 +138,7 @@ const zh: Dictionary = {
     moreTitle: '更多室内设计',
     moreHeading: '更多设计与室内作品',
     badges: { soon: '即将推出', similar: '相似项目', public: '公共空间', residential: '住宅' },
+    unpublished: '此项目尚未发布，访客看不到。请在后台开启“Публиковать на сайте”（在网站上发布）。',
   },
   studio: {
     label: 'ID project 工作室',

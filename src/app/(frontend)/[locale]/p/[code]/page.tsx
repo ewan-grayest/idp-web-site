@@ -5,12 +5,14 @@ import config from '@payload-config'
 import { localePath } from '@/i18n/locales'
 import { getLocale } from '@/i18n/server'
 import { projectPath } from '@/lib/routes'
+import { asVisitor } from '@/lib/published'
 
 /** 5.7.4 short links: /p/<code> → the project's permanent address, in the link's language (/en/p/<code> → English). */
 export default async function ShortLink({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params
   const payload = await getPayload({ config })
   const { docs } = await payload.find({
+    ...asVisitor,
     collection: 'projects',
     where: { shortCode: { equals: code } },
     limit: 1,

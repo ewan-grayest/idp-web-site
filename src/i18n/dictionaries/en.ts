@@ -21,8 +21,8 @@ const en: Dictionary = {
     13: 'Work with us',
     14: 'Legal',
     15: 'Media and PR',
-    16: 'Archive projects',
-    17: 'Archive projects',
+    16: 'ID Lab',
+    17: 'ID Lab',
   },
   common: {
     close: 'Close',
@@ -38,7 +38,7 @@ const en: Dictionary = {
   kinds: {
     residential: 'Residential project',
     public: 'Public project',
-    archive: 'Archive project',
+    product: 'Product design',
   },
   header: {
     home: 'ID project, home',
@@ -88,7 +88,6 @@ const en: Dictionary = {
       terms: 'Terms and policies',
       privacy: 'Personal data policy',
       copyright: 'Copyright',
-      archive: 'Archive projects',
     },
     languages: 'Language',
   },
@@ -138,6 +137,7 @@ const en: Dictionary = {
     moreTitle: 'More interiors',
     moreHeading: 'More design and interiors',
     badges: { soon: 'Coming soon', similar: 'Similar', public: 'Public', residential: 'Residential' },
+    unpublished: 'This project is not published: visitors cannot see it. Turn on «Публиковать на сайте» (publish on site) in the admin.',
   },
   studio: {
     label: 'ID project studio',

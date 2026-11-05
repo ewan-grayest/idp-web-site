@@ -1,5 +1,6 @@
 import type { CollectionConfig, Field } from 'payload'
 
+import { publishedOnly } from '../lib/published'
 import { makeShortCode } from '../lib/shortCode'
 import { requiredInRussian } from './localized'
 import { groups, tr } from './labels'
@@ -52,14 +53,15 @@ const stage = (name: string, label: Record<string, string>): Field => ({
 })
 
 /**
- * Projects: residential (pages 5/7), public (8/9), archive (16/17).
- * All three detail pages share one template.
+ * Projects: residential (pages 5/7), public (8/9), product design (16/17, the ID Lab page; it replaced archive,
+ * Ewan, 2026-11-05). All three detail pages share one template.
+ * «Публиковать на сайте» off: only signed-in staff read the project, in /admin and in its preview (Ewan, 2026-11-05).
  */
 export const Projects: CollectionConfig = {
   slug: 'projects',
   labels: { singular: { ru: 'Проект', en: 'Project', zh: '项目' }, plural: { ru: 'Проекты', en: 'Projects', zh: '项目' } },
-  admin: { group: groups.projects, useAsTitle: 'title', defaultColumns: ['title', 'kind', 'onHome', 'homeOrder', 'homeShowName', 'updatedAt'], preview: previewProject },
-  access: { read: () => true },
+  admin: { group: groups.projects, useAsTitle: 'title', defaultColumns: ['title', 'kind', 'publishOnSite', 'onHome', 'homeOrder', 'updatedAt'], preview: previewProject },
+  access: { read: ({ req }) => Boolean(req.user) || publishedOnly },
   hooks: {
     beforeChange: [
       ({ data, originalDoc }) => {
@@ -86,8 +88,15 @@ export const Projects: CollectionConfig = {
               options: [
                 { label: tr('Жилой', 'Residential', '住宅'), value: 'residential' },
                 { label: tr('Общественный', 'Public', '公共空间'), value: 'public' },
-                { label: tr('Архивный', 'Archive', '归档'), value: 'archive' },
+                { label: tr('Предметный дизайн (ID Lab)', 'Product design (ID Lab)', '产品设计 (ID Lab)'), value: 'product' },
               ],
+              admin: {
+                description: tr(
+                  'Предметный дизайн показывается на странице ID Lab (/id-lab), а не в разделе «Проекты».',
+                  'Product design shows on the ID Lab page (/id-lab), not under «Проекты» (projects).',
+                  '产品设计显示在 ID Lab 页面 (/id-lab)，不在“项目”栏目中。',
+                ),
+              },
             },
             {
               name: 'cover',
@@ -124,19 +133,6 @@ export const Projects: CollectionConfig = {
                   'Меньше число — раньше в слайдере; без числа — в конце.',
                   'Lower numbers come first in the slider; no number means last.',
                   '数字越小越靠前；不填则排在最后。',
-                ),
-              },
-            },
-            {
-              name: 'homeShowName',
-              type: 'checkbox',
-              defaultValue: true,
-              label: tr('Показывать название на слайде главной', 'Show the name on the Home slide', '在首页幻灯片上显示名称'),
-              admin: {
-                description: tr(
-                  'Снимите галочку, чтобы на слайде остались только фото и «Смотреть проект». Само название нужно и дальше: оно есть на странице проекта и в списках.',
-                  'Untick to leave only the photo and «Смотреть проект» (view project) on the slide. The title itself is still needed: the project page and lists use it.',
-                  '取消勾选后，幻灯片上只保留照片和“Смотреть проект”（查看项目）。名称本身仍需填写：项目页面和列表会用到它。',
                 ),
               },
             },
@@ -205,6 +201,20 @@ export const Projects: CollectionConfig = {
           ],
         },
       ],
+    },
+    {
+      name: 'publishOnSite',
+      type: 'checkbox',
+      defaultValue: true,
+      label: tr('Публиковать на сайте', 'Publish on site', '在网站上发布'),
+      admin: {
+        position: 'sidebar',
+        description: tr(
+          'Снимите галочку, и проект останется только в админке: на сайте его нет ни в списках, ни на главной, ни в поиске, ни в ссылках, а его адрес ведёт на «Страница не найдена». «Предпросмотр» показывает его вошедшим сотрудникам.',
+          'Untick to keep the project in the admin only: the site leaves it out of lists, Home, search and links, and its address shows «Страница не найдена» (page not found). «Предпросмотр» (preview) still shows it to signed-in staff.',
+          '取消勾选后，项目只保留在后台：网站的列表、首页、搜索和链接中都不显示，其网址显示“Страница не найдена”（页面未找到）。已登录的员工仍可通过“Предпросмотр”（预览）查看。',
+        ),
+      },
     },
     {
       name: 'shortCode',

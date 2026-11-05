@@ -114,9 +114,10 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
     }
     const ctrl = new AbortController()
     const timer = setTimeout(async () => {
-      const find = async <T extends { id: number }>(collection: string, field: string, fields: string[]): Promise<T[]> => {
+      // `only`: more conditions; projects keep to published ones even for signed-in staff (Ewan, 2026-11-05)
+      const find = async <T extends { id: number }>(collection: string, field: string, fields: string[], only: Record<string, string> = {}): Promise<T[]> => {
         const search = async (matchIn: string) => {
-          const q = new URLSearchParams({ [`where[${field}][like]`]: query.trim(), limit: '8', depth: '0', locale: matchIn })
+          const q = new URLSearchParams({ ...only, [`where[${field}][like]`]: query.trim(), limit: '8', depth: '0', locale: matchIn })
           for (const f of fields) q.set(`select[${f}]`, 'true')
           const res = await fetch(`/api/v1/${collection}?${q}`, { signal: ctrl.signal })
           return res.ok ? (((await res.json()).docs ?? []) as T[]) : []
@@ -132,7 +133,7 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
       }
       try {
         const [projects, people, partners, lifestyle, careers, legal, press] = await Promise.all([
-          find<ProjectDoc>('projects', 'title', ['title', 'slug', 'kind']),
+          find<ProjectDoc>('projects', 'title', ['title', 'slug', 'kind'], { 'where[publishOnSite][not_equals]': 'false' }),
           find<PersonDoc>('people', 'name', ['name', 'slug', 'role']),
           find<PartnerDoc>('partners', 'name', ['name', 'slug']),
           find<EntryDoc>('lifestyle', 'title', ['title', 'slug']),

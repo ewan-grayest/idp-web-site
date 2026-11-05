@@ -1,5 +1,6 @@
 import { getPayload, type Where } from 'payload'
 import config from '@payload-config'
+import { headers } from 'next/headers'
 
 import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
@@ -7,6 +8,7 @@ import type { Media, Partner, Person, Project, Tag } from '@/payload-types'
 import { pages, personPath, projectKinds, projectPath, type ProjectKind } from './routes'
 import { getSettings } from './settings'
 import { selectTags } from './limits'
+import { asVisitor } from './published'
 
 /** A photo ready for the page: the image plus its shopping hotspots (5.1.3). */
 export type Photo = {
@@ -67,17 +69,26 @@ export const tagPath = (kind: ProjectKind, tag: Tag) =>
 
 export { personPath, projectPath }
 
-/** Texts come in the page's language; untranslated ones fall back to Russian. */
+/**
+ * Texts come in the page's language; untranslated ones fall back to Russian.
+ * An unpublished project opens only for signed-in staff, so «Предпросмотр» in the admin still works (Ewan, 2026-11-05).
+ */
 export async function getProject(kind: ProjectKind, slug: string): Promise<Project | null> {
   const payload = await getPayload({ config })
-  const { docs } = await payload.find({
+  const query = {
+    ...asVisitor,
     collection: 'projects',
     locale: await getLocale(),
     where: { slug: { equals: slug }, kind: { equals: kind } },
     depth: 2,
     limit: 1,
-  })
-  return docs[0] ?? null
+  } as const
+  const { docs } = await payload.find(query)
+  if (docs[0]) return docs[0]
+  // Only a miss pays for reading the session
+  const { user } = await payload.auth({ headers: await headers() })
+  if (!user) return null
+  return (await payload.find({ ...query, user })).docs[0] ?? null
 }
 
 /** `ratio`: the cover's height to width, so the salon grid (7.2) gives an upright photo an upright frame */
@@ -109,6 +120,7 @@ export async function getCollection(kind: ProjectKind, tagsParam: string | strin
   const { limits } = await getSettings()
   const payload = await getPayload({ config })
   const { docs } = await payload.find({
+    ...asVisitor,
     collection: 'projects',
     locale: await getLocale(),
     where: { kind: { equals: kind } },
@@ -154,7 +166,7 @@ export async function getRecommendations(p: Project): Promise<Recommendation[]> 
   async function pick(kind: ProjectKind): Promise<Project | undefined> {
     const base: Where[] = [{ kind: { equals: kind } }, { id: { not_in: [...taken] } }]
     for (const where of tagIds.length ? [[...base, { tags: { in: tagIds } }], base] : [base]) {
-      const { docs } = await payload.find({ collection: 'projects', locale, where: { and: where }, sort: '-updatedAt', limit: 1, depth: 1 })
+      const { docs } = await payload.find({ ...asVisitor, collection: 'projects', locale, where: { and: where }, sort: '-updatedAt', limit: 1, depth: 1 })
       if (docs[0]) {
         taken.add(docs[0].id)
         return docs[0]

@@ -123,9 +123,9 @@ export const Consents: CollectionConfig = {
       admin: {
         ...readOnly,
         description: tr(
-          'Документы из «Юридические документы (14)», показанные посетителю: дата изменения и отпечаток текста (SHA-256). Прежние тексты хранятся в истории версий документа.',
-          'Documents from «Legal documents (14)» shown to the visitor: last change and text fingerprint (SHA-256). Earlier texts are kept in each document’s version history.',
-          '向访客展示的「法律文件 (14)」：修改日期和文本指纹 (SHA-256)。旧文本保存在文件的版本历史中。',
+          'Документы из «Юридические документы», показанные посетителю: дата изменения и отпечаток текста (SHA-256). Прежние тексты хранятся в истории версий документа.',
+          'Documents from «Legal documents» shown to the visitor: last change and text fingerprint (SHA-256). Earlier texts are kept in each document’s version history.',
+          '向访客展示的「法律文件」：修改日期和文本指纹 (SHA-256)。旧文本保存在文件的版本历史中。',
         ),
       },
     },

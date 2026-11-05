@@ -9,9 +9,13 @@ import { Partners } from '@/collections/Partners'
 import { People } from '@/collections/People'
 import { Press } from '@/collections/Press'
 import { Projects } from '@/collections/Projects'
+import { Reviews } from '@/collections/Reviews'
+import { SocialPosts } from '@/collections/SocialPosts'
 import { Tags } from '@/collections/Tags'
 import { Users } from '@/collections/Users'
+import { Home } from '@/globals/Home'
 import { PageTexts } from '@/globals/PageTexts'
+import { SiteSettings } from '@/globals/SiteSettings'
 import { Studio } from '@/globals/Studio'
 
 type Node = {
@@ -46,7 +50,7 @@ function adminText(nodes: Node[], out: string[] = []): string[] {
   return out
 }
 
-const all = [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, Leads, Consents, Media, Users, Studio, PageTexts] as unknown as Node[]
+const all = [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, SocialPosts, Reviews, Leads, Consents, Media, Users, Home, Studio, PageTexts, SiteSettings] as unknown as Node[]
 
 describe('admin field names', () => {
   // Payload lists the fields that failed to save as one comma-separated line and splits it on every comma,

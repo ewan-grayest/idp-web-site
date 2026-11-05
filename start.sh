@@ -54,7 +54,7 @@ for i in $(seq 1 60); do
     echo " ready."
     echo "Site:  http://localhost:3000"
     echo "Admin: http://localhost:3000/admin (first visit asks you to create an account)"
-    command -v open >/dev/null && open http://localhost:3000
+    # command -v open >/dev/null && open http://localhost:3000
     exit 0
   fi
   printf "."

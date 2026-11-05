@@ -158,27 +158,27 @@ Full database and media backups, as one `.tar` format shared by the admin page a
 
 | Variable | Used by | Notes |
 |---|---|---|
-| `DATABASE_URI` | App | Required |
+| `DATABASE_URI` | App | Required. `entrypoint.sh` also accepts `DATABASE_URL`, which many hosts set |
 | `PAYLOAD_SECRET` | App | Required |
-| `NEXT_PUBLIC_SITE_URL` | App | **Build time.** Absolute links, metadata base |
-| `NEXT_PUBLIC_STUDIO_PHONE` | App | **Build time.** Phone fallback |
-| `NEXT_PUBLIC_PROMO_VIDEO_URL` | App | **Build time.** Used when no video is uploaded |
-| `MEDIA_DIR` | App, compose | Upload folder. Empty: `./media` in dev, a Docker volume in compose |
+| `NEXT_PUBLIC_SITE_URL` | App | Absolute links, metadata base. Read at run time through `lib/hosting.ts` |
+| `NEXT_PUBLIC_STUDIO_PHONE` | App | Phone fallback. Read at run time |
+| `NEXT_PUBLIC_PROMO_VIDEO_URL` | App | Used when no video is uploaded. Read at run time |
+| `MEDIA_DIR` | App, compose | Upload folder. Empty: `./media` in dev, a Docker volume in compose, `/app/media` in the image alone |
 | `PGDATA_DIR` | Compose | Database folder; empty folder on first use |
 | `BACKUPS_DIR`, `BACKUP_MODE`, `KEEP_LAST`, `KEEP_MONTHLY`, `PG_BIN_DIR`, `BACKUPS_HOST_LABEL` | Backups | See `lib/backups.ts` |
-| `SITE_DOMAIN`, `POSTGRES_PASSWORD` | `deploy/` | Production only |
+| `SITE_DOMAIN`, `POSTGRES_PASSWORD`, `APP_BIND` | `deploy/` | Production only |
 | `CONTENT_DIR` | Import scripts | Path to `content-source` |
 | `BASE_URL`, `PW_CHROMIUM`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD` | Playwright | Optional |
 
-Changing a build-time value requires a rebuild.
+No setting is baked into the image: `src/lib/hosting.ts` looks up the `NEXT_PUBLIC_*` names through a variable, which `next build` does not inline. Write `process.env.NEXT_PUBLIC_X` literally and it freezes at build time.
 
 ## Deployment
 
 **Local**: `./start.sh` runs `docker-compose.yml`, with `app` and `db`. Postgres binds to `127.0.0.1`; the app binds to `0.0.0.0:3000`.
 
-**Image**: three stages in the `Dockerfile`: build with Node, copy PostgreSQL 16 client tools for backups, run standalone. `entrypoint.sh` starts as root only to hand `/app/media` and others to the `app` user, then drops privileges.
+**Image**: three stages in the `Dockerfile`: build with Node, copy PostgreSQL 16 client tools for backups, run standalone. `entrypoint.sh` stops early if a required setting is empty, forces `HOSTNAME=0.0.0.0`, starts as root only to hand `/app/media` and others to the `app` user, then drops privileges. It also runs as an arbitrary non-root user. `GET /api/health` backs the image's `HEALTHCHECK`. `scripts/check-image.sh` builds the image and tests these cases against a throwaway database.
 
-**Production**: `deploy/` has one Yandex Cloud VM with app, Postgres and Caddy for HTTPS. Required settings and troubleshooting: "Server hosting" in the README. `deploy/Caddyfile` sends `X-Robots-Tag: noindex`; delete that line to go public.
+**Production**: `deploy/docker-compose.prod.yml` is one VM with app, Postgres and Caddy for HTTPS. `deploy/docker-compose.behind-proxy.yml` is the same without Caddy, for hosts with their own proxy; keep the two in step. Required settings and troubleshooting: "Server hosting" in the README. `deploy/Caddyfile` sends `X-Robots-Tag: noindex`; delete that line to go public.
 
 ## Schema changes
 
@@ -191,7 +191,7 @@ Production applies `prodMigrations` on start. The backup restore also checks tha
 
 ## Testing
 
-**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels.
+**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels, hosting settings.
 
 **End to end** (`tests/e2e`): needs the database; starts `npm run dev` unless `BASE_URL` is set. The browser locale is `ru-RU`, otherwise the proxy would redirect to `/en`. `global-setup.ts` creates one admin per Playwright project, because Payload keeps sessions on the user row and concurrent logins as one user would drop each other.
 
@@ -213,6 +213,7 @@ Run TypeScript ones with `npx payload run <file>`. All import scripts are additi
 | `scripts/import-studio.ts` | Real studio content from `../content-source` |
 | `scripts/import-archive.ts`, `run-archive-import.sh` | Archived id-proekt.com and get-together.ru content |
 | `scripts/backup.sh`, `restore.sh`, `verify-backup.sh`, `schedule-backup.sh` | See BACKUP.md |
+| `scripts/check-image.sh` | Builds the image and checks it starts the way hosts run it. Needs Docker |
 
 ## Known gaps
 

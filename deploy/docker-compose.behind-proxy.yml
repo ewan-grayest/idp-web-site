@@ -1,0 +1,48 @@
+# The site and PostgreSQL for a host that already has its own proxy and HTTPS: a hosting panel, or nginx on a shared server.
+# docker-compose.prod.yml without Caddy, needing no settings file: values come from the panel's variables or from deploy/.env.
+# Run from the site folder: docker compose -f deploy/docker-compose.behind-proxy.yml --env-file deploy/.env up -d --build
+services:
+  app:
+    build: ..
+    restart: unless-stopped
+    environment:
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET to a long random string}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?Set NEXT_PUBLIC_SITE_URL to the site address, e.g. https://example.ru}
+      NEXT_PUBLIC_STUDIO_PHONE: ${NEXT_PUBLIC_STUDIO_PHONE:-}
+      NEXT_PUBLIC_PROMO_VIDEO_URL: ${NEXT_PUBLIC_PROMO_VIDEO_URL:-}
+      DATABASE_URI: postgres://idp:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD to a long random string}@db:5432/idp
+      # Inside the container uploads always live here; MEDIA_DIR picks where that is on the server
+      MEDIA_DIR: /app/media
+      BACKUPS_DIR: /app/backups
+      BACKUP_MODE: prod
+    ports:
+      - '${APP_BIND:-127.0.0.1:3000}:3000'
+    volumes:
+      # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR
+      - ${MEDIA_DIR:-media}:/app/media
+      # Backups: deploy/backups on the server
+      - ./backups:/app/backups
+      - nextcache:/app/.next/cache
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: idp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD to a long random string}
+      POSTGRES_DB: idp
+    volumes:
+      # Database files: the Docker volume "pgdata", or the folder set as PGDATA_DIR
+      - ${PGDATA_DIR:-pgdata}:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U idp']
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  media:
+  nextcache:

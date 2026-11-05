@@ -8,6 +8,7 @@ import type { Media, Project } from '@/payload-types'
 import type { ProjectKind } from './routes'
 import { coverOf, mediaUrl, toCard, type CollectionCard } from './projects'
 import type { Rich } from './rich'
+import { studioPhoneSetting } from './hosting'
 import { partnersEmail, partnersPhone, social, studioEmail, studioPhone } from './site'
 
 const isObj = <T extends object>(v: number | T | null | undefined): v is T => typeof v === 'object' && v !== null
@@ -22,7 +23,7 @@ export const getContacts = cache(async () => {
     select: { phone: true, email: true, partnersPhone: true, partnersEmail: true, social: true, address: true, lat: true, lng: true, zoom: true },
   })
   return {
-    phone: s.phone || process.env.NEXT_PUBLIC_STUDIO_PHONE || studioPhone,
+    phone: s.phone || studioPhoneSetting() || studioPhone,
     email: s.email || studioEmail,
     partnersPhone: s.partnersPhone || partnersPhone,
     partnersEmail: s.partnersEmail || partnersEmail,

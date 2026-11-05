@@ -1,6 +1,7 @@
 # Deploying to Yandex Cloud
 
 Required settings, host requirements and troubleshooting: "Server hosting" in the [site README](../README.md#server-hosting).
+That section also covers hosts with their own proxy and HTTPS, and container platforms.
 
 One VM runs everything: the site (Next.js + Payload admin), PostgreSQL 16 and Caddy, which gets a free HTTPS certificate.
 Media uploads and the database live on the VM disk (or the folders set as `MEDIA_DIR` / `PGDATA_DIR` in `deploy/.env`, see the site README "Where the data is kept"). Backups: a daily disk snapshot plus a nightly full backup of the database and media, turned on once with `scripts/schedule-backup.sh on --prod` (see `BACKUP.md`).

@@ -11,7 +11,7 @@ Stack decisions: "Tools and tech stack" doc. Design: "IDP Site design" canvas.
 | 17 page roles and permalinks | `src/lib/routes.ts` |
 | 0.1 Header: logo, section title, phone, enquiry + consent, search | `src/components/shell/Header.tsx` |
 | 0.3 Footer | `src/components/shell/Footer.tsx`, links in `src/lib/site.ts` |
-| 1 Home: opposing sliders 1.2/1.3 of the projects ticked for Home (name, «Смотреть проект», ‹ ›, one progress segment per project, «Пауза» on hover, swipe on phones), floating logo 1.1 (opens the Team page); the promo video plays over Home on a visitor's first visit (`/?intro` replays it) | `src/components/home/HomeSliders.tsx`, `src/app/(frontend)/[locale]/page.tsx` |
+| 1 Home: opposing sliders 1.2/1.3 of the projects ticked for Home (name unless switched off per project, «Смотреть проект», ‹ ›, one progress segment per project, «Пауза» on hover, swipe on phones), floating logo 1.1 (opens the Team page); the promo video plays over Home on a visitor's first visit (`/?intro` replays it) | `src/components/home/HomeSliders.tsx`, `src/app/(frontend)/[locale]/page.tsx` |
 | 2 Promo video: uploaded in the admin (Студия → Промо-видео), a wordless placeholder clip until then | `src/components/promo/PromoVideo.tsx`, `public/promo-placeholder.*` |
 | 3 Studio and team: mission, team strip with an open card (photo, quote, link to Person), history timeline, online journal, map and address, company enquiry, partner tiles | `src/app/(frontend)/[locale]/studio`, `src/components/studio/`, `src/globals/Studio.ts`, `src/collections/Issues.ts` |
 | 4 Person: wide photo, role, name (header title), quote, interests, achievements timeline, their projects and tags, "ask me" enquiry | `src/app/(frontend)/[locale]/team/[slug]`, `src/components/person/`, `src/lib/person.ts` |
@@ -94,7 +94,7 @@ npm run dev                   # http://localhost:3000, admin at /admin
 The first visit to `/admin` asks you to create the first editor account.
 For sample content (clearly marked [Пример], grey placeholder photos): `npx payload run scripts/seed.ts`,
 then open `/projects/residential/sample-loft` and `/projects/public/sample-cafe` (and `/en/…`, `/zh/…` for the sample translations).
-Tick «Показывать в слайдере на главной» on projects (Проекты in the admin) to replace the numbered placeholder slides: public projects go left, residential right, ordered by «Порядок на главной».
+Tick «Показывать в слайдере на главной» on projects (Проекты in the admin) to replace the numbered placeholder slides: public projects go left, residential right, ordered by «Порядок на главной». Untick «Показывать название на слайде главной» to leave a project's name off its slide (on by default); the title stays required, since the project page and lists use it.
 
 ## Checks
 

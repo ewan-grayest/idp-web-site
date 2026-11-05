@@ -8,7 +8,7 @@ export const Issues: CollectionConfig = {
   slug: 'issues',
   labels: {
     singular: { ru: 'Выпуск журнала', en: 'Journal issue', zh: '杂志期刊' },
-    plural: { ru: 'Online журнал (3)', en: 'Online journal (3)', zh: '在线杂志 (3)' },
+    plural: { ru: 'Online журнал', en: 'Online journal', zh: '在线杂志' },
   },
   admin: { group: groups.pages, useAsTitle: 'title', defaultColumns: ['title', 'number', 'date'] },
   access: { read: () => true },

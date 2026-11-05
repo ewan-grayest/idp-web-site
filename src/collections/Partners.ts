@@ -10,7 +10,7 @@ import { previewPartner } from './preview'
  */
 export const Partners: CollectionConfig = {
   slug: 'partners',
-  labels: { singular: { ru: 'Партнёр', en: 'Partner', zh: '合作伙伴' }, plural: { ru: 'Партнёры (6)', en: 'Partners (6)', zh: '合作伙伴 (6)' } },
+  labels: { singular: { ru: 'Партнёр', en: 'Partner', zh: '合作伙伴' }, plural: { ru: 'Партнёры', en: 'Partners', zh: '合作伙伴' } },
   admin: {
     group: groups.pages,
     useAsTitle: 'name',

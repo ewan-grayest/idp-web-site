@@ -187,7 +187,7 @@ No setting is baked into the image: `src/lib/hosting.ts` looks up the `NEXT_PUBL
 
 **Local**: `./start.sh` runs `docker-compose.yml`, with `app` and `db`. Postgres binds to `127.0.0.1`; the app binds to `0.0.0.0:3000`.
 
-**Image**: three stages in the `Dockerfile`: build with Node, copy PostgreSQL 16 client tools for backups, run standalone. `entrypoint.sh` stops early if a required setting is empty, forces `HOSTNAME=0.0.0.0`, starts as root only to hand `/app/media` and others to the `app` user, then drops privileges. It also runs as an arbitrary non-root user. `GET /api/health` backs the image's `HEALTHCHECK`. `scripts/check-image.sh` builds the image and tests these cases against a throwaway database.
+**Image**: three stages in the `Dockerfile`: build with Node, copy PostgreSQL 16 client tools for backups, run standalone. `entrypoint.sh` stops early if a required setting is empty, forces `HOSTNAME=0.0.0.0`, starts as root only to hand `/app/media` and others to the `app` user, then drops privileges. It also runs as an arbitrary non-root user. `GET /api/health` backs the image's `HEALTHCHECK`. `scripts/check-image.sh` builds the image and tests these cases against a throwaway database with TLS, then uploads a photo and makes, checks and restores a backup through the API.
 
 **Production**: `deploy/docker-compose.prod.yml` is one VM with app, Postgres and Caddy for HTTPS. `deploy/docker-compose.behind-proxy.yml` is the same without Caddy, for hosts with their own proxy; keep the two in step. Required settings and troubleshooting: "Server hosting" in the README. `deploy/Caddyfile` sends `X-Robots-Tag: noindex`; delete that line to go public.
 

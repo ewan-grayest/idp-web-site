@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT()).pages[12] }
 }
 
-/** Page 12 · Payment options: the text from «Тексты страниц» → «Оплата 12». */
+/** Page 12 · Payment options: the text from «Тексты страниц» → «Оплата». */
 export default function PaymentPage() {
   return <TextPage page={12} text="payment" />
 }

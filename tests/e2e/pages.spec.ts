@@ -103,7 +103,7 @@ test('Payment 12 shows the admin text; «Вернуться» goes back', async 
 
 test('Media 15 says where its text is written until it is', async ({ page }) => {
   await page.goto('/media')
-  await expect(page.locator('[data-spec="15.1"]')).toContainText('Тексты страниц → СМИ и PR 15')
+  await expect(page.locator('[data-spec="15.1"]')).toContainText('Тексты страниц → СМИ и PR')
 })
 
 test('Lifestyle 11 has sharing, Careers 13 does not; newest entry first', async ({ page }) => {
@@ -135,5 +135,5 @@ test('The admin edits every page: a section for each, grouped in the side menu',
     await expect(nav.locator(`a[href="/admin/${path}"]`)).toBeAttached()
   }
   await page.goto('/admin/globals/studio')
-  await expect(page.getByText(/^(Реквизиты 14|Company details 14|公司信息 14)$/).first()).toBeVisible()
+  await expect(page.getByText(/^(Реквизиты|Company details|公司信息)$/).first()).toBeVisible()
 })

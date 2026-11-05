@@ -330,7 +330,7 @@ export interface Tag {
   createdAt: string;
 }
 /**
- * Page 6 (/partners). The Get-Together bonus scheme description is in «Тексты страниц» (Page texts) → «Партнёры 6».
+ * Page 6 (/partners). The Get-Together bonus scheme description is in «Тексты страниц» (Page texts) → «Партнёры».
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "partners".

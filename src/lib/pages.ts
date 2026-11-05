@@ -57,7 +57,7 @@ export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'):
   }))
 }
 
-/** Company details for the Legal page 14 (Студия → Реквизиты 14); only the filled ones. */
+/** Company details for the Legal page 14 (Студия → Реквизиты); only the filled ones. */
 export async function getCompany() {
   const payload = await getPayload({ config })
   const s = await payload.findGlobal({

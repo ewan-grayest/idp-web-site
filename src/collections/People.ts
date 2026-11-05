@@ -41,7 +41,7 @@ export const People: CollectionConfig = {
           ],
         },
         {
-          label: tr('Достижения 4.2', 'Achievements 4.2', '成就 4.2'),
+          label: tr('Достижения', 'Achievements', '成就'),
           description: tr(
             'Показываются на личной странице сотрудника (/team/адрес), раздел «Мои достижения», и ссылкой из его карточки на странице «Наша команда». Кнопка «Предпросмотр» вверху открывает эту страницу.',
             'Shown on the person\'s own page (/team/address) under «My achievements», and linked from their card on the «Our team» page. The «Preview» button at the top opens that page.',

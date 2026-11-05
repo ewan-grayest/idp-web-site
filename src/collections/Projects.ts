@@ -144,7 +144,7 @@ export const Projects: CollectionConfig = {
           ],
         },
         {
-          label: tr('Презентация 5.1', 'Presentation 5.1', '展示 5.1'),
+          label: tr('Презентация', 'Presentation', '展示'),
           fields: [
             {
               name: 'gallery',
@@ -156,7 +156,7 @@ export const Projects: CollectionConfig = {
           ],
         },
         {
-          label: tr('Автор 5.2', 'Author 5.2', '作者 5.2'),
+          label: tr('Автор', 'Author', '作者'),
           fields: [
             { name: 'leadAuthor', type: 'relationship', relationTo: 'people', label: tr('Автор (5.2.1 и 5.2.3)', 'Author (5.2.1 and 5.2.3)', '作者 (5.2.1、5.2.3)') },
             // No default role: an empty one shows "Ведущий архитектор" in the page's language
@@ -167,7 +167,7 @@ export const Projects: CollectionConfig = {
           ],
         },
         {
-          label: tr('Этапы 5.4–5.6', 'Stages 5.4–5.6', '阶段 5.4–5.6'),
+          label: tr('Этапы', 'Stages', '阶段'),
           fields: [
             stage('concept', tr('Концепт (5.4)', 'Concept (5.4)', '概念 (5.4)')),
             stage('preview', tr('Превью (5.5)', 'Preview (5.5)', '预览 (5.5)')),
@@ -175,7 +175,7 @@ export const Projects: CollectionConfig = {
           ],
         },
         {
-          label: tr('Достижения 5.8', 'Achievements 5.8', '成就 5.8'),
+          label: tr('Достижения', 'Achievements', '成就'),
           fields: [
             {
               name: 'achievements',
@@ -193,7 +193,7 @@ export const Projects: CollectionConfig = {
           ],
         },
         {
-          label: tr('Связи 5.11', 'Links 5.11', '关联 5.11'),
+          label: tr('Связи', 'Links', '关联'),
           fields: [
             {
               name: 'nextStage',

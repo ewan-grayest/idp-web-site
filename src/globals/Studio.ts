@@ -27,7 +27,7 @@ export const Studio: GlobalConfig = {
       type: 'tabs',
       tabs: [
         {
-          label: tr('Промо-видео 2', 'Promo video 2', '宣传视频 2'),
+          label: tr('Промо-видео', 'Promo video', '宣传视频'),
           fields: [
             {
               name: 'promoVideo',
@@ -79,18 +79,18 @@ export const Studio: GlobalConfig = {
           ],
         },
         {
-          label: tr('Миссия 3.1', 'Mission 3.1', '使命 3.1'),
+          label: tr('Миссия', 'Mission', '使命'),
           fields: [
             { name: 'mission', type: 'textarea', localized: true, label: tr('Миссия (крупный текст)', 'Mission (large text)', '使命（大字）') },
             { name: 'vision', type: 'textarea', localized: true, label: tr('Видение', 'Vision', '愿景') },
           ],
         },
         {
-          label: tr('Наша история 3.3', 'Our history 3.3', '我们的历史 3.3'),
+          label: tr('Наша история', 'Our history', '我们的历史'),
           description: tr(
-            'Шкала «Наша история» на странице «Наша команда» (/studio). Личные достижения сотрудников — в «Команда» → сотрудник → «Достижения 4.2».',
-            'The «Our history» timeline on the «Our team» page (/studio). Each person\'s own achievements are in «People» → the person → «Achievements 4.2».',
-            '“我们的团队”页面 (/studio) 上的“我们的历史”时间轴。成员个人成就在“团队成员”→成员→“成就 4.2”中编辑。',
+            'Шкала «Наша история» на странице «Наша команда» (/studio). Личные достижения сотрудников — в «Команда» → сотрудник → «Достижения».',
+            'The «Our history» timeline on the «Our team» page (/studio). Each person\'s own achievements are in «People» → the person → «Achievements».',
+            '“我们的团队”页面 (/studio) 上的“我们的历史”时间轴。成员个人成就在“团队成员”→成员→“成就”中编辑。',
           ),
           fields: [
             {
@@ -109,7 +109,7 @@ export const Studio: GlobalConfig = {
           ],
         },
         {
-          label: tr('Контакты 3.5', 'Contacts 3.5', '联系方式 3.5'),
+          label: tr('Контакты', 'Contacts', '联系方式'),
           fields: [
             {
               name: 'address',
@@ -157,7 +157,7 @@ export const Studio: GlobalConfig = {
           ],
         },
         {
-          label: tr('Реквизиты 14', 'Company details 14', '公司信息 14'),
+          label: tr('Реквизиты', 'Company details', '公司信息'),
           description: tr(
             'Показываются первыми на странице «Юридические аспекты» (/legal#details). Пустые поля не выводятся.',
             'Shown first on the Legal page (/legal#details). Empty fields are left out.',

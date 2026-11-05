@@ -13,6 +13,9 @@ next-env.d.ts
 /deploy/backup.env
 .env.before-restore
 
+# Temporary, development-only and other non-production code
+/extras/
+
 # Mac and local Claude Code settings
 .DS_Store
 /.claude/

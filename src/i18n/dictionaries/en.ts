@@ -221,7 +221,7 @@ const en: Dictionary = {
     gtLink: 'Discounts and special terms from our partners for studio clients',
     learnGt: 'Learn more about the Get-Together bonus scheme',
     empty: 'Partners will appear here once they are added in the admin: Partners.',
-    gtEmpty: '[The bonus scheme description is written in the admin: Page texts → Partners 6]',
+    gtEmpty: '[The bonus scheme description is written in the admin: Page texts → Partners]',
     noProjects: 'Projects with this partner will appear here once they are marked in the admin.',
   },
   press: {
@@ -243,10 +243,10 @@ const en: Dictionary = {
     ogrn: 'OGRN (registration number)',
     address: 'Registered address',
     bank: 'Bank details',
-    detailsEmpty: '[Company details are filled in the admin: Studio, contacts, company details → Company details 14]',
+    detailsEmpty: '[Company details are filled in the admin: Studio, contacts, company details → Company details]',
   },
   textEmpty: (where) => `[This text is written in the admin: Page texts → ${where}]`,
-  textTabs: { payment: 'Payment 12', media: 'Media and PR 15' },
+  textTabs: { payment: 'Payment', media: 'Media and PR' },
 }
 
 export default en

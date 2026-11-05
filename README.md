@@ -37,11 +37,11 @@ Every component carries its spec ID in a `data-spec` attribute; add `?ids=1` to 
 1. Install and open **Docker Desktop** (free for personal use and small businesses) and wait until it says it's running.
 2. In Terminal, in this folder: `./start.sh`
 
-The first start builds the site, which takes a few minutes. It then opens http://localhost:3000.
+The first start builds the site, which takes a few minutes. It then answers at http://localhost:3000; run `./start.sh --open-browser` to have it opened for you.
 The admin panel is at http://localhost:3000/admin, and the first visit asks you to create an account.
 Your data (database and uploaded photos) is kept between restarts, in Docker volumes unless you pick folders (see "Where the data is kept").
 
-- Stop: `docker compose stop`. Start again: `./start.sh`, which also rebuilds after code changes.
+- Stop: `docker compose stop`. Start again: `./start.sh`, which also rebuilds after code changes and then removes the old image versions and build cache this leaves behind, to keep disk space free. Volumes are never touched.
 - Logs: `docker compose logs -f app`
 - Settings live in `.env` (created on first start). After changing the phone number or site address there, run `./start.sh` again.
 - The site only answers on this computer (localhost), not on your network.

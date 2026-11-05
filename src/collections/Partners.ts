@@ -27,7 +27,7 @@ export const Partners: CollectionConfig = {
   fields: [
     { name: 'name', type: 'text', ...requiredInRussian, label: tr('Бренд', 'Brand', '品牌') },
     { name: 'slug', type: 'text', required: true, unique: true, index: true, label: tr('Адрес (slug)', 'Address (slug)', '网址 (slug)') },
-    { name: 'logo', type: 'upload', relationTo: 'media', label: tr('Логотип: лучше SVG или PNG на прозрачном фоне', 'Logo: ideally SVG or PNG on a transparent background', '标志，最好是透明背景的 SVG 或 PNG') },
+    { name: 'logo', type: 'upload', relationTo: 'media', label: tr('Логотип: лучше SVG или PNG на прозрачном фоне', 'Logo: ideally SVG or PNG on a transparent background', '标志：最好是透明背景的 SVG 或 PNG') },
     { name: 'text', type: 'richText', localized: true, label: tr('О партнёре', 'About the partner', '合作伙伴介绍') },
     {
       name: 'link',

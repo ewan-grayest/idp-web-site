@@ -154,7 +154,7 @@ Search (`Header.tsx`) queries `projects.title` and `people.name` through REST wi
 
 **Log lines** are kept in memory, up to 500 since the last start (`lib/logBuffer.ts`): `instrumentation.ts` copies `console` into it, and Payload's logger is configured with a Pino `logMethod` hook that does the same while still writing Payload's usual readable output. `PAYLOAD_SECRET`, the database password and any password in an address are replaced by `***` before a line is kept. Older lines, and anything printed before Node starts (`entrypoint.sh`), are only in the host's log.
 
-Field labels name the page and component ID, so editors and the spec line up. `tests/unit/adminLabels.test.ts` constrains them. «Предпросмотр» opens the live page in the content language being edited (`collections/preview.ts`).
+Admin tabs, field labels and hints carry plain names, with no spec numbers (Ewan, 2026-11-05); the IDs stay in code comments and `data-spec`. `tests/unit/adminLabels.test.ts` constrains them. «Предпросмотр» opens the live page in the content language being edited (`collections/preview.ts`).
 
 ## Backups
 

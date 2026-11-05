@@ -42,7 +42,7 @@ dc() {
 
 need_docker() {
   command -v docker >/dev/null 2>&1 || die "docker is not installed"
-  docker info >/dev/null 2>&1 || die "Docker isn't running. Start Docker (Docker Desktop on a Mac) and try again."
+  docker info >/dev/null 2>&1 || die "Docker isn't running. Start Docker (Docker Desktop in the local environment) and try again."
 }
 
 sha256_of() {

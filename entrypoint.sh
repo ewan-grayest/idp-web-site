@@ -1,6 +1,6 @@
 #!/bin/sh
 # Starts as root only to hand the upload folder to the app user, then runs the site as that user.
-# A host folder set as MEDIA_DIR usually belongs to someone else (the Mac user, root on a server),
+# A host folder set as MEDIA_DIR usually belongs to someone else (the local user, root on a server),
 # and the app could not write uploads there otherwise.
 set -e
 if [ "$(id -u)" = 0 ]; then

@@ -36,7 +36,7 @@ src/
   proxy.ts                   language routing
 scripts/                     content import, seed, backup and restore
 tests/unit, tests/e2e
-deploy/                      production compose, Caddy; not in use yet
+deploy/                      production compose, Caddy
 ```
 
 Path aliases: `@/*` → `src/*`, `@payload-config` → `src/payload.config.ts`.
@@ -178,7 +178,7 @@ Changing a build-time value requires a rebuild.
 
 **Image**: three stages in the `Dockerfile`: build with Node, copy PostgreSQL 16 client tools for backups, run standalone. `entrypoint.sh` starts as root only to hand `/app/media` and others to the `app` user, then drops privileges.
 
-**Production**: `deploy/` has one Yandex Cloud VM with app, Postgres and Caddy for HTTPS. **Not live yet.** `deploy/Caddyfile` sends `X-Robots-Tag: noindex`; delete that line to go public.
+**Production**: `deploy/` has one Yandex Cloud VM with app, Postgres and Caddy for HTTPS. Required settings and troubleshooting: "Server hosting" in the README. `deploy/Caddyfile` sends `X-Robots-Tag: noindex`; delete that line to go public.
 
 ## Schema changes
 
@@ -226,5 +226,4 @@ Run TypeScript ones with `npx payload run <file>`. All import scripts are additi
 Trust the code. Fix these in the README when convenient.
 
 - "No automatic redirect by browser language": `src/proxy.ts` does redirect, since Ewan's 2026-10-26 decision.
-- "The site only answers on this computer": `docker-compose.yml` binds `0.0.0.0:3000`, so the local network can reach it.
 - "the header's last button opens every section": the header logo button opens the site menu.

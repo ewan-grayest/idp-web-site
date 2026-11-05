@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds and starts the site in Docker on this computer, at http://localhost:3000
+# Builds and starts the site in Docker in the local environment, at http://localhost:3000
 # Usage: ./start.sh [--open-browser]
 #   --open-browser  open the site in the browser once it is ready
 set -e

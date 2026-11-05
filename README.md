@@ -32,7 +32,7 @@ All 17 page roles are built; `/team` alone still shows the "in progress" stand-i
 Legal drafts and the press articles found online load with `npx payload run scripts/fill-pages.ts` (safe to re-run).
 Every component carries its spec ID in a `data-spec` attribute; add `?ids=1` to any URL to see them as badges.
 
-## Run the site on this Mac (Docker)
+## Run the site in the local environment (Docker)
 
 1. Install and open **Docker Desktop** (free for personal use and small businesses) and wait until it says it's running.
 2. In Terminal, in this folder: `./start.sh`
@@ -44,7 +44,7 @@ Your data (database and uploaded photos) is kept between restarts, in Docker vol
 - Stop: `docker compose stop`. Start again: `./start.sh`, which also rebuilds after code changes and then removes the old image versions and build cache this leaves behind, to keep disk space free. Volumes are never touched.
 - Logs: `docker compose logs -f app`
 - Settings live in `.env` (created on first start). After changing the phone number or site address there, run `./start.sh` again.
-- The site only answers on this computer (localhost), not on your network.
+- The site answers at localhost and on the local network. To keep it to localhost, change the port in `docker-compose.yml` to `'127.0.0.1:3000:3000'`.
 
 ## Where the data is kept
 
@@ -58,7 +58,7 @@ Two settings in `.env` (on the server: `deploy/.env`) choose where the content l
 Use full paths, for example `MEDIA_DIR=/Users/<you>/IDP data/media` or a mounted disk on the server (`/srv/idp/media`).
 Then run `./start.sh` again (server: the same `up -d --build`). Removing the settings switches back to the volumes, which are never deleted.
 
-- On a Mac, Docker Desktop must be allowed to use the folders: Settings > Resources > File sharing, add the folder
+- In the local environment, Docker Desktop must be allowed to use the folders: Settings > Resources > File sharing, add the folder
   (or one above it, e.g. `/Users/<you>/IDP data`), Apply & restart. `./start.sh` checks this and says so if it is missing;
   without it Docker would quietly keep the data inside its own disk instead of in your folder.
 - `PGDATA_DIR` must point to an empty folder the first time: PostgreSQL creates its files there.
@@ -123,7 +123,77 @@ Before deploying a change, run `npx payload migrate:create <name>`; the producti
 
 ## Server hosting
 
-Not in use: the site runs locally for now. `deploy/` holds a ready setup for one server (site, database, HTTPS) for later.
+`deploy/` holds a setup for one server (site, PostgreSQL 16, HTTPS through Caddy); install steps are in [deploy/README.md](deploy/README.md).
+On any other Docker host, give the image the same settings and storage.
+
+### Required settings
+
+Values marked "build" are baked into the image: pass them as build arguments and rebuild after changing them. Setting them only as container variables has no effect.
+
+| Setting | When | Value | If it is wrong |
+| --- | --- | --- | --- |
+| `PAYLOAD_SECRET` | run | Long random string (`openssl rand -hex 32`). Keep it unchanged | Empty: every page fails. Changed: everyone must sign in again |
+| `DATABASE_URI` | run | `postgres://user:password@host:5432/idp`, with special characters in the password URL-encoded. `deploy/` builds it from `POSTGRES_PASSWORD` | Every page fails |
+| `POSTGRES_PASSWORD` | run, `deploy/` only | `openssl rand -hex 32`. PostgreSQL reads it only when it creates the database, so changing it later also needs `ALTER USER` in the database | Every page fails with `password authentication failed` |
+| `NEXT_PUBLIC_SITE_URL` | build | Full address with the scheme: `https://example.ru` | No `https://`: every page fails with `Invalid URL`. Empty: links and share addresses point to `localhost` |
+| `SITE_DOMAIN` | run, `deploy/` only | Domain without the scheme: `example.ru` | Caddy can't get a certificate |
+| `NEXT_PUBLIC_STUDIO_PHONE` | build | Optional fallback phone | |
+| `NEXT_PUBLIC_PROMO_VIDEO_URL` | build | Optional, used when no video is uploaded | |
+| `MEDIA_DIR`, `PGDATA_DIR` | run, compose | Optional server folders, see "Where the data is kept" | |
+
+Set by the image or by `deploy/docker-compose.prod.yml`. Keep these values if the host runs the image another way:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | Any other value skips migrations and lets the app change the database schema by itself |
+| `PORT`, `HOSTNAME` | `3000`, `0.0.0.0` | Without `HOSTNAME`, Next.js listens on the container's name only, so health checks to `localhost` fail |
+| `MEDIA_DIR` | `/app/media` | Upload folder inside the container |
+| `BACKUPS_DIR`, `BACKUP_MODE` | `/app/backups`, `prod` | Backups made from the admin |
+
+Run every Compose command from the site folder with both `-f deploy/docker-compose.prod.yml` and `--env-file deploy/.env`. Without `--env-file` the build arguments and the database password come through empty.
+
+### What the host must provide
+
+- **Storage that survives redeploys:** `/app/media`, `/app/backups` and `/var/lib/postgresql/data`. `/app/.next/cache` is optional and only holds resized images.
+- **PostgreSQL 16:** the backup tools in the image are version 16 and refuse a newer server. With a managed database, the role must be able to create tables. Restoring from the admin also needs `CREATEDB` and access to the `postgres` database.
+- **Automatic restart** (`restart: unless-stopped` or the host's equivalent): a restore from the admin ends the process and relies on the restart.
+- **Starting as root:** the image starts as root to give the upload folder to its own user (uid 100, gid 101), then drops to that user. If the host forbids root, make the folders writable by the user it runs as.
+- **Proxy:** forward to port 3000 and keep the original `Host`, or set `X-Forwarded-Host` and `X-Forwarded-Proto`. A mismatch breaks saving in the admin. Allow large request bodies for video and backup uploads. Caddy in `deploy/` already does this.
+- **Network:** ports 80 and 443 open and the domain's DNS pointing at the server, so Caddy can get its certificate.
+- **Disk and memory:** keep about 20 GB free beyond the database and media, and about 2 GB of memory (or swap) for the build. These are rules of thumb: rebuild leftovers filled about 21 GB in the local environment.
+- **Clean-up after each rebuild:** `docker image prune -f && docker builder prune -f`. Volumes are not touched. `./start.sh` does this locally, `deploy/` does not.
+
+### "A server error occurred. Reload to try again."
+
+This is the generic Next.js page for any exception on the server. The root layout reads the CMS on every page, so a problem with the settings or the database takes down the whole site, and the reason appears only in the logs:
+
+```bash
+docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env logs --tail=100 app db
+```
+
+```bash
+df -h && docker system df
+```
+
+In the local environment, use `docker compose logs --tail=100 app db`.
+
+| In the log | Cause | Fix |
+| --- | --- | --- |
+| `missing secret key` | `PAYLOAD_SECRET` is empty, or the settings file is empty or wasn't loaded | Set it and recreate the container. `up -d` is enough, no rebuild |
+| `cannot connect to Postgres` | Wrong `DATABASE_URI`, or the database is down or still starting | Check the address and the `db` log |
+| `password authentication failed` | `POSTGRES_PASSWORD` changed after the database was created | Restore the old value or run `ALTER USER` |
+| `No space left on device`, `PANIC` in the `db` log | Disk full, which stops PostgreSQL | Run the clean-up above, then restart. Never prune volumes |
+| `Invalid URL` | `NEXT_PUBLIC_SITE_URL` has no scheme | Fix it and rebuild |
+| `Error running migration` (the app keeps restarting), `relation` or `column ... does not exist` | The database doesn't match the code, often after pushing a schema in dev mode | Restore a backup, or repair the failed migration. See below |
+| `Invalid Server Actions request` | The proxy changes `Host` | Fix the proxy headers |
+
+**No error, pages just hang:** the database was used by `npm run dev`, or restored from a backup of one. Dev mode leaves a marker row, and production then waits for a terminal answer that can never come. Check for it, and take a backup before changing anything:
+
+```sql
+select name, batch from payload_migrations where batch = -1;
+```
+
+Deleting that row lets production run, but any migration not yet recorded then runs against a schema dev mode may already have changed, and can fail with `Error running migration`. Avoid this by never pointing `npm run dev` at the hosted database. Local `npm run dev` and `./start.sh` share one database, so check a local backup for the row before restoring it on the host.
 
 ## Open assumptions
 

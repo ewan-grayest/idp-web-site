@@ -23,11 +23,12 @@ RUN mkdir -p /opt/pg/bin /opt/pg/lib \
 
 FROM node:22-alpine AS run
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
+# HOSTNAME: Docker sets it to the container name, and the standalone server would then not listen on localhost
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 RUN addgroup -S app && adduser -S app -G app && apk add --no-cache su-exec
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
-# Owned by the app user: files copied from a Mac can arrive readable by their owner only
+# Owned by the app user: files copied from a local environment can arrive readable by their owner only
 COPY --from=build --chown=app:app /app/public ./public
 COPY --from=pgtools /opt/pg /opt/pg
 # Uploaded media, the image cache and backups live on volumes the app user must write to

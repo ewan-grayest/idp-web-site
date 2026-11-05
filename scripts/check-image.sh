@@ -102,7 +102,7 @@ if wait_for_site 3000; then
   check "can write uploads" docker exec "$app" test -w /app/media
   check "can write the image cache" docker exec "$app" test -w /app/.next/cache
   check "can write backups" docker exec "$app" test -w /app/backups
-  check "the backup tools reach the database" docker exec "$app" sh -c 'LD_LIBRARY_PATH=/opt/pg/lib /opt/pg/bin/pg_dump -d "$DATABASE_URI" -Fc -f /dev/null'
+  check "the backup tools reach the database" docker exec "$app" sh -c 'LD_LIBRARY_PATH=/opt/pg/lib /opt/pg/bin/pg_dump -d "$DATABASE_URI" -Fc -f "$BACKUPS_DIR/check.dump"'
 else
   echo "  FAIL  the site didn't answer"; failures=$((failures + 1))
 fi

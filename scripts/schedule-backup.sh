@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Turn the nightly backup on or off (cron, on a Mac or a Linux server).
+# Turn the nightly backup on or off (cron, in the local environment or on a Linux server).
 #
 #   scripts/schedule-backup.sh on [--prod] [--at 03:30]   back up every night, then check the new backup
 #   scripts/schedule-backup.sh off [--prod]               stop the nightly backup
@@ -7,7 +7,7 @@
 #
 # The output of each night's run goes to backup.log in the backup folder.
 # Settings such as KEEP_LAST or BACKUP_UPLOAD_CMD go in backup.env (see backup.sh).
-# On a Mac the job only runs while the computer is awake and Docker Desktop is running.
+# In the local environment the job only runs while the computer is awake and Docker Desktop is running.
 
 . "$(dirname "$0")/backup-common.sh"
 
@@ -23,7 +23,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 use_mode "$mode"
-command -v crontab >/dev/null 2>&1 || die "cron is not available on this computer"
+command -v crontab >/dev/null 2>&1 || die "cron is not available here"
 
 tag="# idp-site-backup:$MODE:$SITE_DIR"
 current=$(crontab -l 2>/dev/null | grep -vF "$tag" || true)

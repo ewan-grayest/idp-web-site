@@ -1,5 +1,7 @@
 # Deploying to Yandex Cloud
 
+Required settings, host requirements and troubleshooting: "Server hosting" in the [site README](../README.md#server-hosting).
+
 One VM runs everything: the site (Next.js + Payload admin), PostgreSQL 16 and Caddy, which gets a free HTTPS certificate.
 Media uploads and the database live on the VM disk (or the folders set as `MEDIA_DIR` / `PGDATA_DIR` in `deploy/.env`, see the site README "Where the data is kept"). Backups: a daily disk snapshot plus a nightly full backup of the database and media, turned on once with `scripts/schedule-backup.sh on --prod` (see `BACKUP.md`).
 
@@ -11,7 +13,7 @@ sudo usermod -aG docker $USER   # then log out and back in
 sudo mkdir -p /opt/idp && sudo chown $USER /opt/idp
 ```
 
-Copy the `site` folder to `/opt/idp/site` (rsync from the Mac, or git clone once the repo exists), then:
+Copy the `site` folder to `/opt/idp/site` (rsync from the local environment, or git clone once the repo exists), then:
 
 ```bash
 cd /opt/idp/site
@@ -25,6 +27,11 @@ Open `https://<SITE_DOMAIN>/admin` and create the first editor account straight 
 ## Updating
 
 Copy the new code over, then run the same `up -d --build`. Database migrations apply on start.
+Then free the disk, because leftovers from rebuilds can fill it and stop PostgreSQL (volumes are not touched):
+
+```bash
+docker image prune -f && docker builder prune -f
+```
 
 ## Before a domain exists
 

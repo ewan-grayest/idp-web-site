@@ -43,8 +43,9 @@ export default buildConfig({
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: ' · ID project' },
-    // Built-in initials avatar: Gravatar is a foreign service and often unreachable from Russia
-    avatar: 'default',
+    // The account button opens a menu with "Account" and "Log out" (Payload's only links to the account page).
+    // It draws Payload's built-in icon: Gravatar is a foreign service and often unreachable from Russia
+    avatar: { Component: '/components/admin/AccountMenu#AccountMenu' },
     // «25 октября 2026, 11:39» instead of the default «октября 25-е 2026, 11:39 ДП»
     dateFormat: 'd MMMM yyyy, HH:mm',
     components: {

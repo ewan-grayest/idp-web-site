@@ -39,3 +39,15 @@
 @media (max-width: 768px) {
   .site, .compact .caption { display: none; }
 }
+
+/* Account button (top right) and its menu: see AccountMenu.tsx */
+.account { display: flex; }
+.avatar { display: flex; }
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

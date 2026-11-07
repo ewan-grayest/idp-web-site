@@ -1,6 +1,6 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { buildConfig } from 'payload'
+import { buildConfig, defaultLoggerOptions } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { en } from '@payloadcms/translations/languages/en'
@@ -28,6 +28,8 @@ import { defaultLocale, locales } from './i18n/locales'
 import { tr } from './collections/labels'
 import { migrations } from './migrations'
 import { backupEndpoints } from './endpoints/backups'
+import { diagnosticsEndpoints } from './endpoints/diagnostics'
+import { payloadLogHooks } from './lib/logBuffer'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -55,18 +57,22 @@ export default buildConfig({
       // Interface language switch on the login page, and a note on the two language switches on the dashboard
       beforeLogin: ['/components/admin/LanguageSwitch#LoginLanguages'],
       beforeDashboard: ['/components/admin/AdminGuide#AdminGuide'],
-      // «Резервные копии»: make, download, upload, check and restore full backups (database and media)
-      afterNavLinks: ['/components/admin/backups/BackupsNavLink#BackupsNavLink'],
+      // «Обслуживание» in the side menu: «Резервные копии» (make, download, upload, check and restore full backups)
+      // and «Диагностика» (settings, live checks and the latest log lines)
+      afterNavLinks: ['/components/admin/MaintenanceNav#MaintenanceNav'],
       views: {
         backups: { Component: '/components/admin/backups/BackupsView#BackupsView', path: '/backups', exact: true },
+        diagnostics: { Component: '/components/admin/diagnostics/DiagnosticsView#DiagnosticsView', path: '/diagnostics', exact: true },
       },
     },
   },
   // Admin side menu order: projects and team, then each page's section, then enquiries, files and users
   collections: [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, SocialPosts, Reviews, Leads, Consents, Media, Users],
   globals: [Studio, PageTexts, SiteSettings],
-  // /api/v1/backups: see src/endpoints/backups.ts
-  endpoints: backupEndpoints,
+  // /api/v1/backups and /api/v1/diagnostics: see src/endpoints/
+  endpoints: [...backupEndpoints, ...diagnosticsEndpoints],
+  // Payload's usual readable log, with each line also kept for the «Диагностика» page (src/lib/logBuffer.ts)
+  logger: { options: { level: 'info', hooks: payloadLogHooks }, destination: defaultLoggerOptions },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

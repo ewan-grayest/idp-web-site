@@ -27,7 +27,8 @@ src/
   app/(payload)/             admin, REST and GraphQL; has its own root layout
   collections/ globals/      Payload schema; labels.ts, localized.ts, preview.ts are helpers
   components/                admin collection home person project promo shared shell studio pages
-  endpoints/backups.ts       /api/v1/backups
+  endpoints/                 /api/v1/backups, /api/v1/diagnostics
+  instrumentation.ts         keeps recent log lines for the diagnostics page
   i18n/                      locales, dictionaries, Link, server and client helpers
   lib/                       data access and pure logic
   migrations/                committed Payload migrations
@@ -136,6 +137,7 @@ Base `/api/v1`, chosen so a client area can be added later without breaking URLs
 
 - **`POST /api/v1/leads`**: the public enquiry endpoint. Body: `email`, `consent`, `originUrl`, optional `context`, `entity`, `locale`. No rate limiting or captcha.
 - **`/api/v1/backups`**: signed-in admins only (`guarded` in `src/endpoints/backups.ts`). Long tasks run in the background and the page polls for their steps.
+- **`GET /api/v1/diagnostics`**: signed-in admins only. Settings with secrets blanked out, live checks and the kept log lines (`src/endpoints/diagnostics.ts`).
 
 Search (`Header.tsx`) queries `projects.title` and `people.name` through REST with `like`, in the visitor's language and Russian. It does not cover partners, articles or entries.
 
@@ -146,7 +148,11 @@ Search (`Header.tsx`) queries `projects.title` and `people.name` through REST wi
 - `AdminActions`: "Open site" and "Log out" in the top bar.
 - `LanguageSwitch`, `AdminGuide`: login page and dashboard language help.
 - `HotspotPicker`: click and drag products on a photo.
-- `backups/*`: the `/admin/backups` view and its menu link.
+- `MaintenanceNav`: the «Обслуживание» menu group with «Резервные копии» and «Диагностика».
+- `backups/*`: the `/admin/backups` view.
+- `diagnostics/*`: the `/admin/diagnostics` view: server facts, live checks (database and its version, pending migrations, upload and backup folders writable with free space, `pg_dump`, age of the latest backup), every setting the site reads with what is missing or wrong (`lib/diagnostics.ts`, pure), and the latest log lines. «Скопировать отчёт» puts it all in one text, secrets hidden, for the developer.
+
+**Log lines** are kept in memory, up to 500 since the last start (`lib/logBuffer.ts`): `instrumentation.ts` copies `console` into it, and Payload's logger is configured with a Pino `logMethod` hook that does the same while still writing Payload's usual readable output. `PAYLOAD_SECRET`, the database password and any password in an address are replaced by `***` before a line is kept. Older lines, and anything printed before Node starts (`entrypoint.sh`), are only in the host's log.
 
 Field labels name the page and component ID, so editors and the spec line up. `tests/unit/adminLabels.test.ts` constrains them. «Предпросмотр» opens the live page in the content language being edited (`collections/preview.ts`).
 
@@ -191,7 +197,7 @@ Production applies `prodMigrations` on start. The backup restore also checks tha
 
 ## Testing
 
-**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels, hosting settings.
+**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels, hosting settings, the diagnostics settings check and log buffer.
 
 **End to end** (`tests/e2e`): needs the database; starts `npm run dev` unless `BASE_URL` is set. The browser locale is `ru-RU`, otherwise the proxy would redirect to `/en`. `global-setup.ts` creates one admin per Playwright project, because Payload keeps sessions on the user row and concurrent logins as one user would drop each other.
 

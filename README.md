@@ -209,6 +209,10 @@ Run every Compose command from the site folder with `-f` and the compose file, a
 - **Disk and memory:** keep about 20 GB free beyond the database and media, and about 2 GB of memory (or swap) for the build. A smaller host can run an image built elsewhere. These are rules of thumb: rebuild leftovers filled about 21 GB in the local environment.
 - **Clean-up after each rebuild:** `docker image prune -f && docker builder prune -f`. Volumes are not touched. `./start.sh` does this locally, `deploy/` does not.
 
+### Diagnostics page
+
+Admin → «Обслуживание» → «Диагностика» (`/admin/diagnostics`) shows in one place what usually takes a look at the host's panel: every setting above with what is missing or wrong, whether the database answers and its migrations are applied, whether the upload and backup folders are writable and how much disk is free, whether the backup tools work, how old the latest backup is, and the site's latest log lines. «Скопировать отчёт» copies all of it as text, with the secret and passwords hidden, ready to send to the developer. Log lines are kept since the last start only; when the site doesn't start at all, the host's log is still the place to look.
+
 ### "A server error occurred. Reload to try again."
 
 This is the generic Next.js page for any exception on the server. The root layout reads the CMS on every page, so a problem with the settings or the database takes down the whole site, and the reason appears only in the logs:

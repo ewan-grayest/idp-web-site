@@ -168,8 +168,7 @@ Full database and media backups, as one `.tar` format shared by the admin page a
 | `NEXT_PUBLIC_SITE_URL` | App | Absolute links, metadata base. Read at run time through `lib/hosting.ts` |
 | `NEXT_PUBLIC_STUDIO_PHONE` | App | Phone fallback. Read at run time |
 | `NEXT_PUBLIC_PROMO_VIDEO_URL` | App | Used when no video is uploaded. Read at run time |
-| `DATA_DIR` | Compose, dev, `scripts/` | Host folder holding `media/`, `backup/`, `db/`. Default `./data` beside the compose file (`deploy/data` on the server). `npm run dev` reads it through `lib/dataDirs.ts` |
-| `MEDIA_DIR` | App | Upload folder. `/data/media` in every container; empty in dev, so `DATA_DIR/media` |
+| `MEDIA_DIR` | App | Upload folder. `/data/media` in every container; empty in dev, so `media/` (`lib/dataDirs.ts`) |
 | `BACKUPS_DIR`, `BACKUP_MODE`, `KEEP_LAST`, `KEEP_MONTHLY`, `PG_BIN_DIR`, `BACKUPS_HOST_LABEL` | Backups | See `lib/backups.ts` |
 | `SITE_DOMAIN`, `POSTGRES_PASSWORD`, `APP_BIND` | `deploy/` | Production only |
 | `CONTENT_DIR` | Import scripts | Path to `content-source` |
@@ -179,7 +178,7 @@ No setting is baked into the image: `src/lib/hosting.ts` looks up the `NEXT_PUBL
 
 ## Deployment
 
-**Data locations**: one layout everywhere. Inside the containers: `/data/media` and `/data/backup` (app), `/data/db` (db, as `PGDATA`). Outside: `media/`, `backup/`, `db/` in `DATA_DIR`, bind-mounted by every compose file. The app and PostgreSQL are always separate containers. `scripts/move-data.sh` copies data from the pre-2026-11-08 places (named volumes `media`/`pgdata`, `MEDIA_DIR`/`PGDATA_DIR` folders, `backups/`).
+**Data locations**: one layout everywhere. Inside the containers: `/data/media` and `/data/backup` (app), `/data/db` (db, as `PGDATA`). Each is a persistent named volume (`media`, `backup`, `db`) in every compose file; the scripts reach `backup` through a throwaway container (`bk` in `scripts/backup-common.sh`). `npm run dev` uses `media/` and `backups/` in the site folder. The app and PostgreSQL are always separate containers. `scripts/move-data.sh` copies data from the pre-2026-11-08 places (volume `pgdata`, `MEDIA_DIR`/`PGDATA_DIR` folders, `backups/`).
 
 **Local**: `./start.sh` runs `docker-compose.yml`, with `app` and `db`. Postgres binds to `127.0.0.1`; the app binds to `0.0.0.0:3000`.
 

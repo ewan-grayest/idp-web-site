@@ -26,48 +26,23 @@ if [ ! -f .env ]; then
   echo "Created .env with a new secret."
 fi
 
-# The data folder ("Data locations" in CLAUDE.md): media/, backup/ and db/ in DATA_DIR from .env, default ./data
+# Data lives in the persistent Docker volumes site_media, site_backup and site_db ("Data locations" in CLAUDE.md).
+# Data still in the places used before 2026-11-08 would look like an empty site: move it first
 setting() { sed -n "s/^$1=//p" .env | tail -1 | sed "s/^[\"']//; s/[\"']\$//"; }
-dir=${DATA_DIR:-$(setting DATA_DIR)}
-dir=${dir:-./data}
-case "$dir" in /*) ;; *) dir="$PWD/${dir#./}" ;; esac
-# On Linux the database container makes db/ readable by itself only: a folder this user can't open holds a database
-has_db() { [ -f "$dir/db/PG_VERSION" ] || { [ -d "$dir/db" ] && ! ls "$dir/db" >/dev/null 2>&1; }; }
-
-# Data still in the places used before 2026-11-08 would look like an empty site here: move it first
-if ! has_db; then
-  old=
-  [ -z "$(setting MEDIA_DIR)$(setting PGDATA_DIR)" ] || old="the folders set as MEDIA_DIR or PGDATA_DIR in .env"
-  [ -n "$old" ] || ! docker volume inspect site_pgdata >/dev/null 2>&1 || old="the Docker volume site_pgdata"
-  if [ -n "$old" ]; then
-    echo "Your content is still in $old, and $dir/db has no database yet."
-    echo "Move it with scripts/move-data.sh, then run ./start.sh again."
-    exit 1
-  fi
-fi
-
-mkdir -p "$dir/media" "$dir/backup" "$dir/db"
-# Docker Desktop silently uses a folder inside its own disk for paths it isn't sharing, so check a file written there appears here
-docker run --rm -v "$dir":/data postgres:16 touch /data/.idp-docker-check >/dev/null 2>&1 || true
-if [ ! -f "$dir/.idp-docker-check" ]; then
-  echo "Docker can't use the folder $dir (DATA_DIR)."
-  echo "In Docker Desktop open Settings > Resources > File sharing, add that folder (or one above it), click Apply & restart, then run ./start.sh again."
+old=
+[ -z "$(setting MEDIA_DIR)$(setting PGDATA_DIR)" ] || old="the folders set as MEDIA_DIR or PGDATA_DIR in .env"
+if docker volume inspect site_pgdata >/dev/null 2>&1 && ! docker volume inspect site_db >/dev/null 2>&1; then old="${old:+$old, and }the Docker volume site_pgdata"; fi
+if [ -n "$(ls backups/*.tar 2>/dev/null)" ] && ! docker volume inspect site_backup >/dev/null 2>&1; then old="${old:+$old, and }the backups folder"; fi
+if [ -n "$old" ]; then
+  echo "Your content is still in $old."
+  echo "Move it into the Docker volumes with scripts/move-data.sh, then run ./start.sh again."
   exit 1
-fi
-rm -f "$dir/.idp-docker-check"
-# PostgreSQL only creates a database in an empty folder; Finder's hidden .DS_Store would block it
-if ! has_db; then
-  rm -f "$dir/db/.DS_Store"
-  if [ -n "$(ls -A "$dir/db")" ]; then
-    echo "$dir/db has files but no database in it. Empty it, or put a copy of the database files there."
-    exit 1
-  fi
 fi
 
 docker compose up -d --build
 
 # Rebuilds leave old image versions and build cache behind. Remove only those:
-# never the data folder or volumes, and never images still tagged or layers still in use.
+# never volumes, which hold the data, and never images still tagged or layers still in use.
 echo "Freeing Docker storage:"
 docker image prune -f | tail -1
 docker builder prune -f | tail -1

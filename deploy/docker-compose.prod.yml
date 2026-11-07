@@ -1,5 +1,5 @@
 # Production on one Yandex Cloud VM: site, PostgreSQL and Caddy (free HTTPS from Let's Encrypt), each in its own container.
-# Data: deploy/data/{media,backup,db} on the server (DATA_DIR in deploy/.env), at /data/{media,backup,db} inside the containers.
+# Data: the persistent Docker volumes media, backup and db, mounted at /data/media, /data/backup and /data/db.
 # Run from the site folder: docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
 services:
   app:
@@ -13,9 +13,9 @@ services:
       BACKUPS_DIR: /data/backup
       BACKUP_MODE: prod
     volumes:
-      # Uploaded photos and videos, and backups: the folders media and backup in DATA_DIR (default deploy/data)
-      - ${DATA_DIR:-./data}/media:/data/media
-      - ${DATA_DIR:-./data}/backup:/data/backup
+      # Persistent Docker volumes, the same in every setup ("Data locations" in CLAUDE.md)
+      - media:/data/media
+      - backup:/data/backup
       - nextcache:/app/.next/cache
     depends_on:
       db:
@@ -30,8 +30,8 @@ services:
       POSTGRES_DB: idp
       PGDATA: /data/db
     volumes:
-      # Database files: the folder db in DATA_DIR (default deploy/data)
-      - ${DATA_DIR:-./data}/db:/data/db
+      # Database files: the persistent Docker volume "db"
+      - db:/data/db
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U idp']
       interval: 5s
@@ -52,6 +52,9 @@ services:
       - app
 
 volumes:
+  media:
+  backup:
+  db:
   # Resized images only, rebuilt when missing
   nextcache:
   caddydata:

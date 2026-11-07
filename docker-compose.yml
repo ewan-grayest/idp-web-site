@@ -3,11 +3,10 @@
 #   docker compose stop   stop; data is kept
 # For development with live reload, start only the database: docker compose up -d db
 #
-# Data locations, the same in every setup ("Data locations" in CLAUDE.md). Inside the containers:
+# Data locations, the same in every setup ("Data locations" in CLAUDE.md): persistent Docker volumes mounted at
 #   /data/media   uploaded photos and videos (app)
-#   /data/backup  backups (app; the scripts use the same folder)
+#   /data/backup  backups (app; the scripts reach it through Docker)
 #   /data/db      database files (db)
-# In the local environment they are the folders media, backup and db in DATA_DIR (default: ./data beside this file).
 services:
   app:
     build: .
@@ -22,8 +21,9 @@ services:
     ports:
       - '0.0.0.0:3000:3000' # other devices on this network can open the site; '127.0.0.1:3000:3000' = localhost only
     volumes:
-      - ${DATA_DIR:-./data}/media:/data/media
-      - ${DATA_DIR:-./data}/backup:/data/backup
+      # Persistent Docker volumes
+      - media:/data/media
+      - backup:/data/backup
       - nextcache:/app/.next/cache
     depends_on:
       db:
@@ -40,12 +40,15 @@ services:
     ports:
       - '127.0.0.1:5432:5432' # for `npm run dev` in the local environment
     volumes:
-      - ${DATA_DIR:-./data}/db:/data/db
+      - db:/data/db
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U idp']
       interval: 5s
       retries: 10
 
 volumes:
+  media:
+  backup:
+  db:
   # Resized images only, rebuilt when missing
   nextcache:

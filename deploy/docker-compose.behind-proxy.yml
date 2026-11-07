@@ -1,5 +1,5 @@
 # The site and PostgreSQL for a host that already has its own proxy and HTTPS: a hosting panel, or nginx on a shared server.
-# Data: deploy/data/{media,backup,db} on the server (DATA_DIR), at /data/{media,backup,db} inside the containers.
+# Data: the persistent Docker volumes media, backup and db, mounted at /data/media, /data/backup and /data/db.
 # docker-compose.prod.yml without Caddy, needing no settings file: values come from the panel's variables or from deploy/.env.
 # Run from the site folder: docker compose -f deploy/docker-compose.behind-proxy.yml --env-file deploy/.env up -d --build
 services:
@@ -19,9 +19,9 @@ services:
     ports:
       - '${APP_BIND:-127.0.0.1:3000}:3000'
     volumes:
-      # Uploaded photos and videos, and backups: the folders media and backup in DATA_DIR (default deploy/data)
-      - ${DATA_DIR:-./data}/media:/data/media
-      - ${DATA_DIR:-./data}/backup:/data/backup
+      # Persistent Docker volumes, the same in every setup ("Data locations" in CLAUDE.md)
+      - media:/data/media
+      - backup:/data/backup
       - nextcache:/app/.next/cache
     depends_on:
       db:
@@ -36,13 +36,16 @@ services:
       POSTGRES_DB: idp
       PGDATA: /data/db
     volumes:
-      # Database files: the folder db in DATA_DIR (default deploy/data)
-      - ${DATA_DIR:-./data}/db:/data/db
+      # Database files: the persistent Docker volume "db"
+      - db:/data/db
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U idp']
       interval: 5s
       retries: 10
 
 volumes:
+  media:
+  backup:
+  db:
   # Resized images only, rebuilt when missing
   nextcache:

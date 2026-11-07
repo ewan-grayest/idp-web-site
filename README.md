@@ -39,36 +39,34 @@ Every component carries its spec ID in a `data-spec` attribute; add `?ids=1` to 
 
 The first start builds the site, which takes a few minutes. It then answers at http://localhost:3000; run `./start.sh --open-browser` to have it opened for you.
 The admin panel is at http://localhost:3000/admin, and the first visit asks you to create an account.
-Your data (database, uploaded photos, backups) is kept between restarts in the `data` folder beside this file (see "Where the data is kept").
+Your data (database, uploaded photos, backups) is kept between restarts in persistent Docker volumes (see "Where the data is kept").
 
-- Stop: `docker compose stop`. Start again: `./start.sh`, which also rebuilds after code changes and then removes the old image versions and build cache this leaves behind, to keep disk space free. The data folder is never touched.
+- Stop: `docker compose stop`. Start again: `./start.sh`, which also rebuilds after code changes and then removes the old image versions and build cache this leaves behind, to keep disk space free. Volumes are never touched.
 - Logs: `docker compose logs -f app`
 - Settings live in `.env` (created on first start). After changing the phone number or site address there, run `./start.sh` again.
 - The site answers at localhost and on the local network. To keep it to localhost, change the port in `docker-compose.yml` to `'127.0.0.1:3000:3000'`.
 
 ## Where the data is kept
 
-Every setup, local or on a server, keeps the same three folders, and the containers always see them at the same paths:
+Every setup, local or on a server, keeps its data in three persistent Docker volumes, mounted at the same paths in the containers:
 
-| Folder | Holds | Inside the containers |
+| Volume | Holds | Inside the containers |
 | --- | --- | --- |
-| `media/` | Uploaded photos and videos | `/data/media` (site) |
-| `backup/` | Backups, from the admin and from `scripts/` | `/data/backup` (site) |
-| `db/` | Database files (PostgreSQL 16) | `/data/db` (database) |
+| `media` | Uploaded photos and videos | `/data/media` (site) |
+| `backup` | Backups, from the admin and from `scripts/` | `/data/backup` (site) |
+| `db` | Database files (PostgreSQL 16) | `/data/db` (database) |
 
-They live in one data folder: `data/` beside `docker-compose.yml` in the local environment, `deploy/data/` on the server.
-To keep it elsewhere, for example on another disk, set `DATA_DIR` to a full path in `.env` (on the server: `deploy/.env`),
-such as `DATA_DIR=/Users/<you>/IDP data` or `/srv/idp/data`, then run `./start.sh` again (server: the same `up -d --build`).
-`npm run dev` uses the same `DATA_DIR`, so it sees the same photos as the Docker site.
+Docker names them after the compose file's folder: `site_media`, `site_backup`, `site_db` in the local environment,
+`deploy_media`, `deploy_backup`, `deploy_db` on the server (`docker volume ls` lists them). They survive stopping, rebuilding
+and `docker compose down`, and are never deleted unless you delete them. They need no folder shared with Docker Desktop.
 
-- In the local environment, Docker Desktop must be allowed to use the folder: Settings > Resources > File sharing, add it
-  (or one above it), Apply & restart. `./start.sh` checks this and says so if it is missing;
-  without it Docker would quietly keep the data inside its own disk instead of in your folder.
-- `db/` must be empty the first time: PostgreSQL creates its files there.
-- The site gives `media/` and `backup/` to its own user (uid 100) when it starts, so no `chown` is needed by hand.
+- Backups: make, download and restore them in the admin («Резервные копии»), or with the scripts in [BACKUP.md](BACKUP.md).
+  `scripts/get-backup.sh --latest` copies the newest one out of the volume into the current folder.
+- `npm run dev` runs outside Docker and can't open the volumes: it keeps uploads in `media/` and backups in `backups/` in
+  the site folder, and uses the database container through `DATABASE_URI`.
 
-**Data from before 2026-11-08** sits in the Docker volumes `media` and `pgdata` (or the folders once set as `MEDIA_DIR` and `PGDATA_DIR`) and in `backups/`.
-`./start.sh` notices and stops. Copy it into the data folder, then start again; the old copies stay until you delete them:
+**Data from before 2026-11-08** sits in the volume `pgdata` (or the folders once set as `MEDIA_DIR` and `PGDATA_DIR`) and in
+`backups/`. `./start.sh` notices and stops. Copy it into the volumes, then start again; the old copies stay until you delete them:
 
 ```bash
 scripts/move-data.sh
@@ -80,7 +78,7 @@ On the server: `scripts/move-data.sh --prod`.
 
 Full backup (database and uploaded media) and restore, for the local dev site and production: see [BACKUP.md](BACKUP.md).
 In the admin: «Резервные копии» (`/admin/backups`) makes, checks, downloads, uploads, restores and deletes backups.
-In Terminal: `scripts/backup.sh`, `scripts/restore.sh data/backup/<file>.tar`; nightly: `scripts/schedule-backup.sh on` (add `--prod` on the server).
+In Terminal: `scripts/backup.sh`, `scripts/restore.sh <backup name>.tar`; nightly: `scripts/schedule-backup.sh on` (add `--prod` on the server).
 
 ## Develop with live reload
 
@@ -137,9 +135,9 @@ One image runs on any Docker host. Everything specific to a host comes in as set
 
 ### Containers on a hosting platform
 
-1. **Database:** a container of its own from the image `postgres:16`, with persistent storage mounted at `/data/db` and the settings `PGDATA=/data/db`, `POSTGRES_USER=idp`, `POSTGRES_DB=idp` and `POSTGRES_PASSWORD` (`openssl rand -hex 32`). Or the host's managed PostgreSQL 16. The database disk must keep file owners and permissions and support file locks, such as a block volume; a shared network folder often doesn't, and PostgreSQL then refuses to start.
+1. **Database:** a container of its own from the image `postgres:16`, with a persistent volume mounted at `/data/db` and the settings `PGDATA=/data/db`, `POSTGRES_USER=idp`, `POSTGRES_DB=idp` and `POSTGRES_PASSWORD` (`openssl rand -hex 32`). Or the host's managed PostgreSQL 16. The database disk must keep file owners and permissions and support file locks, such as a block volume; a shared network folder often doesn't, and PostgreSQL then refuses to start.
 2. **Site source:** connect the GitHub repository `ewan-grayest/idp-web-site`. The `Dockerfile` is at its root and needs no build arguments.
-3. **Site storage:** persistent storage at `/data/media` (uploads) and `/data/backup` (backups). One disk mounted at `/data` works too.
+3. **Site storage:** persistent volumes at `/data/media` (uploads) and `/data/backup` (backups).
 4. **Site settings:** `DATABASE_URI` pointing at the database container (`postgres://idp:<password>@<its name>:5432/idp`), `PAYLOAD_SECRET` and `NEXT_PUBLIC_SITE_URL`; see "Required settings".
 5. **Port and health check:** the site listens on 3000, or on `PORT` if the host sets one. The health check path is `/api/health`. Allow 2 minutes for the first start.
 6. **Deploys:** one copy of the site; it applies migrations on start. Open `/admin` and create the first editor account straight away.
@@ -187,7 +185,6 @@ All are read when the container starts: change one and recreate the container (`
 | `SITE_DOMAIN` | `docker-compose.prod.yml` only. Domain without the scheme: `example.ru` | Caddy can't get a certificate |
 | `NEXT_PUBLIC_STUDIO_PHONE` | Optional fallback phone | |
 | `NEXT_PUBLIC_PROMO_VIDEO_URL` | Optional, used when no video is uploaded | |
-| `DATA_DIR` | Compose only. The server folder holding `media/`, `backup/` and `db/`, default `deploy/data`. See "Where the data is kept" | |
 | `APP_BIND` | `docker-compose.behind-proxy.yml` only. Where the proxy reaches the site, default `127.0.0.1:3000` | |
 
 The image already sets the rest, so leave these alone unless the host needs otherwise:
@@ -204,7 +201,7 @@ Run every Compose command from the site folder with `-f` and the compose file, a
 
 ### What the host must provide
 
-- **Storage that survives redeploys:** `/data/media` and `/data/backup` for the site, `/data/db` for the database. `/app/.next/cache` is optional and only holds resized images.
+- **Storage that survives redeploys:** persistent volumes at `/data/media` and `/data/backup` for the site, `/data/db` for the database. `/app/.next/cache` is optional and only holds resized images.
 - **PostgreSQL 16,** in its own container or the host's. The backup tools in the image are version 16 and refuse a newer server. With a managed database, the role must be able to create tables. Restoring from the admin also needs `CREATEDB` and access to the `postgres` database. If its certificate is the provider's own, add `?sslmode=no-verify` to the address, or `self-signed certificate` appears in the log. Traffic stays encrypted, but the certificate isn't checked.
 - **Automatic restart:** not needed for a restore from the admin, which ends the site's process on purpose: the container starts it again by itself. Still worth turning on in case the whole container fails.
 - **One running copy:** uploads are on one disk and migrations run at start, so don't scale the site to several copies.
@@ -284,5 +281,5 @@ Deleting that row lets production run, but any migration not yet recorded then r
 - Archive projects became product design («Предметный дизайн») and the archive kind is gone (Ewan, 2026-11-05). Product design projects are listed on the ID Lab page, `/id-lab` (pages 16/17), linked from the footer's ID Lab 0.3.7 but not from the menu; old `/projects/archive` addresses redirect there. They never appear on the Home sliders.
 - Every project has «Публиковать на сайте», on by default (Ewan, 2026-11-05). Off, it stays in the admin only: the site, its search and the public API leave it out, links and cards pointing to it disappear, and its address and short link give a 404. Signed-in staff still open it through «Предпросмотр», with a note that it is unpublished.
 - «Показывать название на слайде главной» is one switch for all Home slides, under Главная in the admin; it replaced the tick on each project (Ewan, 2026-11-05). It starts on, so slides whose project had the name switched off show it again until the switch is turned off.
-- Data has one layout in every setup, local or remote, compose or a hosting platform (Ewan, 2026-11-08): `/data/media`, `/data/backup` and `/data/db` inside the containers, and `media/`, `backup/` and `db/` in one data folder outside them (`DATA_DIR`, default `data/` or `deploy/data/`). The site and PostgreSQL always run in separate containers; this replaced the database built into the image (2026-11-06). The site's container still starts the site again by itself after a restore.
+- Data has one layout in every setup, local or remote, compose or a hosting platform (Ewan, 2026-11-08): `/data/media`, `/data/backup` and `/data/db` inside the containers, each a persistent Docker volume (`media`, `backup`, `db`), with no folder on the host. Only `npm run dev`, outside Docker, keeps `media/` and `backups/` in the site folder. The site and PostgreSQL always run in separate containers; this replaced the database built into the image (2026-11-06). The site's container still starts the site again by itself after a restore.
 - The site must start on any Docker host (Ewan, 2026-11-05), so one image takes all its settings at start, including `NEXT_PUBLIC_*`, which are no longer build arguments. Hosts that keep no files between deploys stay unsupported, because uploads live on disk and foreign storage services are avoided.

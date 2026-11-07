@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Restore the site from a backup made by backup.sh: replaces the whole database and all uploaded files.
 #
-#   scripts/restore.sh data/backup/idp-local-2026-10-25_030000.tar         the local dev site
-#   scripts/restore.sh --prod deploy/data/backup/idp-prod-....tar          production
+#   scripts/restore.sh idp-local-2026-10-25_030000.tar           the local dev site, from a backup in the backup volume
+#   scripts/restore.sh --prod idp-prod-....tar                    production
+#   scripts/restore.sh ~/Downloads/idp-prod-....tar               a backup file anywhere (its .sha256 beside it, if any)
 #
 # Options:
 #   --yes               don't ask for confirmation (for scripts)
@@ -27,16 +28,16 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ -n "$archive" ] || die "which backup? Example: scripts/restore.sh data/backup/idp-local-2026-10-25_030000.tar"
-archive=$(cd "$(dirname "$archive")" && pwd)/$(basename "$archive")
+[ -n "$archive" ] || die "which backup? Example: scripts/restore.sh idp-local-2026-10-25_030000.tar (scripts/get-backup.sh --list)"
 
 use_mode "$mode"
 need_docker
 
 # 1. Check the archive before touching anything
-log "Checking $(basename "$archive")"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/idp-restore.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT INT TERM
+archive=$(resolve_archive "$archive" "$WORK/from")
+log "Checking $(basename "$archive")"
 unpack_and_check "$archive" "$WORK"
 from_mode=$(manifest_get "$WORK" mode)
 created=$(manifest_get "$WORK" created)
@@ -55,7 +56,7 @@ if [ "$with_env" = yes ] && [ ! -d "$WORK/env" ]; then die "this backup has no s
 if [ "$yes" != yes ]; then
   say ""
   say "This REPLACES the $MODE site's database and uploaded files with the backup from $created."
-  [ "$safety" = yes ] && say "A backup of the current state is taken first (in $BACKUP_DIR, name contains 'pre-restore')."
+  [ "$safety" = yes ] && say "A backup of the current state is taken first (in the backup volume, name contains 'pre-restore')."
   if [ ! -t 0 ]; then die "no terminal to confirm on; run again with --yes"; fi
   printf 'Type "restore" to continue: '
   read -r answer
@@ -69,10 +70,7 @@ if [ "$safety" = yes ] && [ "$(db_sql -c "select count(*) from information_schem
   bash "$SITE_DIR/scripts/backup.sh" $( [ "$MODE" = prod ] && echo --prod ) --label pre-restore
 fi
 
-mkdir -p "$BACKUP_DIR"
-LOCK="$BACKUP_DIR/.lock"
-mkdir "$LOCK" 2>/dev/null || die "a backup or restore is running (if not, remove $LOCK)"
-trap 'rm -rf "$WORK" "$LOCK"' EXIT INT TERM
+take_lock
 
 # 4. Stop the site so nothing writes while we restore
 log "Stopping the site"

@@ -4,7 +4,7 @@ Required settings, host requirements and troubleshooting: "Server hosting" in th
 That section also covers hosts with their own proxy and HTTPS, and container platforms.
 
 One VM runs everything: the site (Next.js + Payload admin), PostgreSQL 16 and Caddy, which gets a free HTTPS certificate.
-The site, PostgreSQL and Caddy run in separate containers. Uploads, backups and the database live in `deploy/data/` on the VM (`media/`, `backup/`, `db/`; set `DATA_DIR` in `deploy/.env` to put them elsewhere, see the site README "Where the data is kept"). Backups: a daily disk snapshot plus a nightly full backup of the database and media, turned on once with `scripts/schedule-backup.sh on --prod` (see `BACKUP.md`).
+The site, PostgreSQL and Caddy run in separate containers. Uploads, backups and the database live in the persistent Docker volumes `deploy_media`, `deploy_backup` and `deploy_db`, mounted at `/data/media`, `/data/backup` and `/data/db` (see the site README "Where the data is kept"). Backups: a daily disk snapshot plus a nightly full backup of the database and media, turned on once with `scripts/schedule-backup.sh on --prod` (see `BACKUP.md`).
 
 ## First install on the VM (Ubuntu 24.04)
 
@@ -19,7 +19,6 @@ Copy the `site` folder to `/opt/idp/site` (rsync from the local environment, or 
 ```bash
 cd /opt/idp/site
 cp deploy/.env.example deploy/.env    # fill in; use `openssl rand -hex 32` for the two secrets
-mkdir -p deploy/data/media deploy/data/backup deploy/data/db
 docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
 ```
 
@@ -28,8 +27,8 @@ Open `https://<SITE_DOMAIN>/admin` and create the first editor account straight 
 ## Updating
 
 Copy the new code over, then run the same `up -d --build`. Database migrations apply on start.
-A server set up before 2026-11-08 keeps its data in Docker volumes and `deploy/backups/`: after copying the new code and before `up`, run `scripts/move-data.sh --prod` once, or the site starts empty.
-Then free the disk, because leftovers from rebuilds can fill it and stop PostgreSQL (the data folder is not touched):
+A server set up before 2026-11-08 keeps its database in the volume `deploy_pgdata` and backups in `deploy/backups/`: after copying the new code and before `up`, run `scripts/move-data.sh --prod` once, or the site starts empty.
+Then free the disk, because leftovers from rebuilds can fill it and stop PostgreSQL (volumes are not touched):
 
 ```bash
 docker image prune -f && docker builder prune -f

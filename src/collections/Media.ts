@@ -9,7 +9,7 @@ export const Media: CollectionConfig = {
   admin: { group: groups.service },
   access: { read: () => true },
   upload: {
-    // /data/media in every container; data/media in the site folder for `npm run dev` (lib/dataDirs.ts)
+    // /data/media in every container; media/ in the site folder for `npm run dev` (lib/dataDirs.ts)
     staticDir: dataDirs().media,
     mimeTypes: ['image/*', 'video/mp4', 'video/webm'],
     imageSizes: [

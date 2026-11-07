@@ -4,8 +4,9 @@ node_modules
 *.tsbuildinfo
 next-env.d.ts
 /media
-/data
-/deploy/data
+/logs
+/backup.log
+/deploy/backup.log
 /test-results
 /playwright-report
 /deploy/.env

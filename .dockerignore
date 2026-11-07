@@ -22,8 +22,7 @@ node_modules
 **/id_ecdsa*
 **/id_ed25519*
 media
-data
-deploy/data
+logs
 deploy/backups
 backups
 .git

@@ -3,6 +3,9 @@
 Next.js 16 + Payload CMS 3 + PostgreSQL, one app and one Docker image.
 Source: https://github.com/ewan-grayest/idp-web-site. Requirements and component coverage: [SPEC-COMPLIANCE.md](SPEC-COMPLIANCE.md).
 Personal data law (152-ФЗ) and what is left to do outside the code: [PERSONAL-DATA.md](PERSONAL-DATA.md).
+Architecture overview: [docs/architecture.svg](docs/architecture.svg).
+
+![Architecture](docs/architecture.svg)
 
 ## Specification implementation (v0.2.0)
 

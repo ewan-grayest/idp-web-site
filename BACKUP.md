@@ -9,19 +9,9 @@ restores either way:
 - **In the admin**: «Резервные копии» in the side menu (`/admin/backups`). No Terminal needed.
 - **With scripts** in Terminal, from the site folder (below). They also run the nightly backup.
 
-## Docker Desktop folder-sharing fallback
+## Backups from before 2026-11-08
 
-The usual setup shares `./backups` with the app. If Docker Desktop refuses that folder, set `BACKUPS_MOUNT=backups` in `.env` and restart with `docker compose up -d app`. This uses the named volume `site_backups` without changing Docker Desktop's sharing permissions.
-
-On this Mac the fallback was enabled during the v0.1.1 update. Existing backup files were copied to the volume; their original host copies are preserved. Use the admin's backup/download/restore controls with this setting. Terminal scripts still write to the host `backups/` folder, so the two stores do not automatically share files or a lock in fallback mode. Avoid running them concurrently with admin backup/restore operations.
-
-To export the volume's files to the host:
-
-```bash
-docker compose cp app:/app/backups/. ./backups/
-```
-
-To resume one shared folder, allow the site backup folder in Docker Desktop → Resources → File Sharing, export any newer volume backups, then set `BACKUPS_MOUNT=./backups` and restart the app. The named volume remains intact.
+On this Mac, backups made from the admin went to the Docker volume `site_backups` (`BACKUPS_MOUNT=backups`, because Docker Desktop refused the `backups/` folder), and those from Terminal to `backups/`. Both now live in the volume `site_backup`, which the admin and the scripts share. `scripts/move-data.sh` copies both old places into it without overwriting anything, and `./start.sh` stops until that is done.
 
 ## In the admin
 
@@ -43,15 +33,17 @@ A restore from the admin:
 3. Loads the backup into a new database beside the live one and checks every table's rows,
    and unpacks the media beside the live files. The live site is untouched until both are ready.
 4. Switches the site to the restored database and files within a second.
-5. Restarts the site (Docker starts it again by itself; about half a minute). The page waits and then
+5. Restarts the site, which its container starts again by itself (about half a minute). The page waits and then
    opens the sign-in page: sign in with an account from the backup.
 
-The backups the admin makes live in the same folder as the scripts' (`backups/`, or `deploy/backups/` in production),
-mounted into the app container at `/app/backups`. The app's database tools are PostgreSQL 16, copied into the image from
+The admin and the scripts keep backups in the same place: the persistent Docker volume `backup` (`site_backup`, or
+`deploy_backup` in production; see "Where the data is kept" in the README), mounted in the site's container at
+`/data/backup`. The scripts reach it through Docker. `scripts/get-backup.sh --list` lists the backups, and
+`scripts/get-backup.sh --latest [folder]` copies the newest one out. The app's database tools are PostgreSQL 16, copied into the image from
 `postgres:16-alpine` (see `Dockerfile`). In `npm run dev` the page works too when `pg_dump`, `pg_restore` and `psql` 16
 are installed in the local environment (on the PATH, or set `PG_BIN_DIR` to their folder), but after a restore restart the dev server by hand.
 
-Only one backup or restore runs at a time: the admin and the scripts share a lock (`backups/.lock`).
+Only one backup or restore runs at a time: the admin and the scripts share a lock (`.lock` in the backup folder).
 If a task was cut off by a crash, the next one from the admin clears the leftover lock itself.
 
 ## With scripts
@@ -65,22 +57,22 @@ On a Linux server, run them with `sudo` so the admin page can read the backups t
 |---|---|---|
 | Back up now | `scripts/backup.sh` | `scripts/backup.sh --prod` |
 | Check a backup | `scripts/verify-backup.sh --deep --latest` | `scripts/verify-backup.sh --deep --latest --prod` |
-| Restore | `scripts/restore.sh backups/<file>.tar` | `scripts/restore.sh --prod deploy/backups/<file>.tar` |
+| Restore | `scripts/restore.sh <name>.tar` | `scripts/restore.sh --prod <name>.tar` |
 | Nightly backup on / off | `scripts/schedule-backup.sh on` / `off` | `scripts/schedule-backup.sh on --prod` / `off --prod` |
 
 ## What a backup contains
 
 Each backup is one file, `idp-<local|prod>-<date>_<time>.tar`, with a `.sha256` checksum file beside it,
-in `backups/` (local) or `deploy/backups/` (production). Inside:
+in the backup volume. Inside:
 
 - `db.dump`: the whole database (`pg_dump` custom format, compressed)
-- `media.tar`: everything in the media storage (`/app/media` in the app container, wherever `MEDIA_DIR` points on the host)
+- `media.tar`: everything in the media storage (`/data/media` in the site's container)
 - `db-counts.txt`: the number of rows in every table, used to prove a restore is complete
 - `manifest.txt`: when and where it was made, PostgreSQL version, last database migration, number of media files
 - `SHA256SUMS`: a checksum for each of the files above
 
-The scripts reach the data through Docker, so they work the same whether `MEDIA_DIR` and `PGDATA_DIR` are
-left empty (Docker volumes) or set to folders on the host.
+The scripts reach the database, media and backups through Docker, so no folder needs sharing with Docker Desktop.
+`restore.sh` and `verify-backup.sh` take a backup's name in the volume, or a path to a backup file anywhere.
 
 Backups hold enquiries (emails, names), so they are created readable by your user only. Treat them as private.
 
@@ -110,7 +102,6 @@ Optional settings, as environment variables or one `NAME=value` per line in `bac
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `BACKUP_DIR` | `backups/`, `deploy/backups/` | Where backups go. Put them on another disk if you can. |
 | `KEEP_LAST` | `14` | How many newest backups to keep |
 | `KEEP_MONTHLY` | `6` | Also keep the newest backup of each of this many months |
 | `BACKUP_UPLOAD_CMD` | empty | Off-site copy, run after each backup with the file as `$1` |
@@ -136,7 +127,7 @@ spoil the local backup. Rotation does not delete remote copies; set a lifecycle 
 scripts/verify-backup.sh --latest           # checksums, the dump opens, the media list matches
 scripts/verify-backup.sh --deep --latest    # also restores the database into a throwaway PostgreSQL
                                             # container and compares the rows of every table
-scripts/verify-backup.sh --deep backups/idp-local-2026-10-25_033000.tar   # a specific file
+scripts/verify-backup.sh --deep idp-local-2026-10-25_033000.tar   # a specific backup
 ```
 
 The site is not touched. Any damaged or incomplete file stops the check with an error.
@@ -144,8 +135,9 @@ The site is not touched. Any damaged or incomplete file stops the check with an 
 ## Restore
 
 ```bash
-scripts/restore.sh backups/idp-local-2026-10-25_033000.tar               # local dev site
-scripts/restore.sh --prod deploy/backups/idp-prod-2026-10-25_033000.tar  # production
+scripts/restore.sh idp-local-2026-10-25_033000.tar                 # local dev site
+scripts/restore.sh --prod idp-prod-2026-10-25_033000.tar           # production
+scripts/restore.sh ~/Downloads/idp-prod-2026-10-25_033000.tar      # a backup file copied out earlier
 ```
 
 What it does, in order:
@@ -165,8 +157,8 @@ If anything goes wrong, restore the `pre-restore` backup the same way.
 1. Install Docker (Docker Desktop in a local environment) and copy the site folder there.
 2. Put the saved settings file back: `.env` (local) or `deploy/.env` (production). Without a saved one, copy
    `.env.example` and set a new `PAYLOAD_SECRET`.
-3. Copy the backup `.tar` and `.tar.sha256` files into `backups/` (or `deploy/backups/`).
-4. `scripts/restore.sh backups/<file>.tar` (add `--prod` for production). It creates the database and builds the
+3. Copy the backup `.tar` and `.tar.sha256` files onto the computer, side by side.
+4. `scripts/restore.sh <path to the .tar>` (add `--prod` for production). It creates the database and builds the
    site image if they don't exist yet; the first build takes a few minutes.
 5. Open the site and sign in to `/admin` with the accounts from the backup.
 

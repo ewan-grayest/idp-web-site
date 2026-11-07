@@ -1,7 +1,12 @@
-# Runs the whole site in the local environment: the website/admin and its PostgreSQL database.
+# Runs the whole site in the local environment: the website/admin and its PostgreSQL database, in separate containers.
 #   ./start.sh            build and start (first time and after code changes)
 #   docker compose stop   stop; data is kept
 # For development with live reload, start only the database: docker compose up -d db
+#
+# Data locations, the same in every setup ("Data locations" in CLAUDE.md): persistent Docker volumes mounted at
+#   /data/media   uploaded photos and videos (app)
+#   /data/backup  backups (app; the scripts reach it through Docker)
+#   /data/db      database files (db)
 services:
   app:
     build: .
@@ -9,19 +14,16 @@ services:
     env_file: .env
     environment:
       DATABASE_URI: postgres://idp:idp@db:5432/idp
-      # Inside the container uploads always live here; MEDIA_DIR in .env picks where that is in the local environment
-      MEDIA_DIR: /app/media
-      # Backups made from the admin («Резервные копии»), in the same folder and format as scripts/backup.sh
-      BACKUPS_DIR: /app/backups
+      # Fixed inside the container, whatever .env says for `npm run dev`
+      MEDIA_DIR: /data/media
+      BACKUPS_DIR: /data/backup
       BACKUP_MODE: local
     ports:
       - '0.0.0.0:3000:3000' # other devices on this network can open the site; '127.0.0.1:3000:3000' = localhost only
     volumes:
-      # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR in .env
-      - ${MEDIA_DIR:-media}:/app/media
-      # Backups: the "backups" folder beside this file (the scripts use it too)
-      # Set BACKUPS_MOUNT=backups when Docker Desktop cannot share the host folder.
-      - ${BACKUPS_MOUNT:-./backups}:/app/backups
+      # Persistent Docker volumes
+      - media:/data/media
+      - backup:/data/backup
       - nextcache:/app/.next/cache
     depends_on:
       db:
@@ -34,18 +36,19 @@ services:
       POSTGRES_USER: idp
       POSTGRES_PASSWORD: idp
       POSTGRES_DB: idp
+      PGDATA: /data/db
     ports:
       - '127.0.0.1:5432:5432' # for `npm run dev` in the local environment
     volumes:
-      # Database files: the Docker volume "pgdata", or the folder set as PGDATA_DIR in .env
-      - ${PGDATA_DIR:-pgdata}:/var/lib/postgresql/data
+      - db:/data/db
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U idp']
       interval: 5s
       retries: 10
 
 volumes:
-  pgdata:
   media:
+  backup:
+  db:
+  # Resized images only, rebuilt when missing
   nextcache:
-  backups:

@@ -34,21 +34,21 @@ work through `docker compose` on a machine you control (see `BACKUP.md`).
 ## Self-hosted alternative: one server with Docker Compose (not in use)
 
 The other files in this folder run everything on one server you control: the site, PostgreSQL 16 and Caddy, which gets
-a free HTTPS certificate. Media uploads and the database live on the server disk (or the folders set as `MEDIA_DIR` /
-`PGDATA_DIR` in `deploy/.env`, see the site README "Where the data is kept"). Nightly backups: `scripts/schedule-backup.sh on --prod` (see `BACKUP.md`).
+a free HTTPS certificate. Uploads, backups and the database live in the persistent Docker volumes `deploy_media`, `deploy_backup` and `deploy_db`,
+mounted at `/data/media`, `/data/backup` and `/data/db` (see the site README "Where the data is kept"). Nightly backups: `scripts/schedule-backup.sh on --prod` (see `BACKUP.md`).
 `docker-compose.behind-proxy.yml` is the same without Caddy, for a server that already has its own proxy and HTTPS.
 
 Get the code onto the server (`git clone`), then:
 
 ```bash
 cp deploy/.env.example deploy/.env    # fill in; use `openssl rand -hex 32` for the two secrets
-mkdir -p deploy/backups
 docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
 ```
 
 Open `https://<SITE_DOMAIN>/admin` and create the first editor account straight away.
 
 **Updating:** `git pull`, then the same `up -d --build`. Database migrations apply on start.
+A server set up before 2026-11-08 keeps its database in the volume `deploy_pgdata` and backups in `deploy/backups/`: after `git pull` and before `up`, run `scripts/move-data.sh --prod` once, or the site starts empty.
 Then free the disk, because leftovers from rebuilds can fill it and stop PostgreSQL (volumes are not touched):
 
 ```bash

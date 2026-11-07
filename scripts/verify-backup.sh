@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Check that backups are complete and restorable, without touching the site.
 #
-#   scripts/verify-backup.sh backups/idp-local-....tar     checksums, readable dump and media list
-#   scripts/verify-backup.sh --deep backups/idp-....tar    also restores the database into a throwaway
+#   scripts/verify-backup.sh idp-local-....tar         checksums, readable dump and media list (a name in the
+#                                                      backup volume, or a path to a backup file)
+#   scripts/verify-backup.sh --deep idp-....tar        also restores the database into a throwaway
 #                                                          PostgreSQL container and compares every table's rows
-#   scripts/verify-backup.sh --latest [--prod] [--deep]    the newest backup in the backup folder
+#   scripts/verify-backup.sh --latest [--prod] [--deep]    the newest backup in the backup volume
 
 . "$(dirname "$0")/backup-common.sh"
 
@@ -14,23 +15,26 @@ while [ $# -gt 0 ]; do
     --prod) mode=prod ;;
     --deep) deep=yes ;;
     --latest) latest=yes ;;
-    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     -*) die "unknown option: $1 (see --help)" ;;
     *) archive=$1 ;;
   esac
   shift
 done
 use_mode "$mode"
+need_docker
 if [ "$latest" = yes ]; then
-  archive=$(ls -1 "$BACKUP_DIR"/idp-"$MODE"-[0-9]*.tar 2>/dev/null | sort | tail -n 1)
-  [ -n "$archive" ] || die "no backups in $BACKUP_DIR"
+  compose_volume backup
+  archive=$(bk_list | tail -n 1)
+  [ -n "$archive" ] || die "no $MODE backups in the backup volume"
 fi
 [ -n "$archive" ] || die "which backup? Example: scripts/verify-backup.sh --latest"
 
-say "Checking $(basename "$archive")"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/idp-verify.XXXXXX")
 pg=""
 trap 'rm -rf "$WORK"; [ -n "$pg" ] && docker rm -f -v "$pg" >/dev/null 2>&1; true' EXIT INT TERM
+archive=$(resolve_archive "$archive" "$WORK/from")
+say "Checking $(basename "$archive")"
 unpack_and_check "$archive" "$WORK"
 
 media_files=$(manifest_get "$WORK" media_files)

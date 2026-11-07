@@ -1,6 +1,6 @@
 # Shared helpers for backup.sh, restore.sh, verify-backup.sh and schedule-backup.sh. Not run on its own.
-# Works with bash 3.2 (macOS) and Linux. Reaches the data through Docker, so the database and media
-# can be named volumes or host folders.
+# Works with bash 3.2 (macOS) and Linux. Reaches the database, media and backups through Docker: they are
+# persistent Docker volumes ("Data locations" in CLAUDE.md).
 
 set -eu
 
@@ -18,17 +18,55 @@ use_mode() {
   if [ "$MODE" = prod ]; then
     [ -f "$SITE_DIR/deploy/.env" ] || die "deploy/.env not found: production settings are missing"
     COMPOSE_HINT="docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env"
-    DEFAULT_BACKUP_DIR="$SITE_DIR/deploy/backups"
+    compose_dir="$SITE_DIR/deploy"
+    LOG_FILE="$SITE_DIR/deploy/backup.log"
   else
     COMPOSE_HINT="docker compose"
-    DEFAULT_BACKUP_DIR="$SITE_DIR/backups"
+    compose_dir="$SITE_DIR"
+    LOG_FILE="$SITE_DIR/backup.log"
   fi
-  # Optional settings for backups (BACKUP_DIR, KEEP_LAST, KEEP_MONTHLY, BACKUP_UPLOAD_CMD), one NAME=value per line
+  # Compose's own project name: the compose file's folder, lowercased, other characters dropped ("site", "deploy").
+  # Its volumes are <project>_media, <project>_backup and <project>_db
+  PROJECT=${COMPOSE_PROJECT_NAME:-$(basename "$compose_dir" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9_-')}
+  BACKUP_VOLUME="${PROJECT}_backup"
+  # Optional settings for backups (KEEP_LAST, KEEP_MONTHLY, BACKUP_UPLOAD_CMD), one NAME=value per line
   settings="$SITE_DIR/backup.env"; [ "$MODE" = prod ] && settings="$SITE_DIR/deploy/backup.env"
   if [ -f "$settings" ]; then set -a; . "$settings"; set +a; fi
-  BACKUP_DIR=${BACKUP_DIR:-$DEFAULT_BACKUP_DIR}
   # Where the app keeps uploads inside its container
-  APP_MEDIA_PATH=${APP_MEDIA_PATH:-/app/media}
+  APP_MEDIA_PATH=${APP_MEDIA_PATH:-/data/media}
+}
+
+# A volume of this compose project, created with compose's labels when missing so `docker compose` adopts it
+compose_volume() {
+  docker volume inspect "${PROJECT}_$1" >/dev/null 2>&1 ||
+    docker volume create --label com.docker.compose.project="$PROJECT" --label com.docker.compose.volume="$1" "${PROJECT}_$1" >/dev/null
+}
+
+# Backups live in the persistent volume mounted at /data/backup in the site's container ("Data locations" in CLAUDE.md).
+# bk runs a shell command in a throwaway container on that volume, in /data/backup; extra arguments become $1, $2...
+# Through Docker, so no folder needs sharing with Docker Desktop
+bk() {
+  cmd=$1; shift
+  docker run --rm -i -v "$BACKUP_VOLUME":/data/backup -w /data/backup --entrypoint sh postgres:16 -c "$cmd" sh "$@"
+}
+# Copy a local file into the volume under its own name, readable by the site's user (uid 100) only
+bk_put() { bk 'cat > "$1.part" && chown 100:101 "$1.part" && chmod 600 "$1.part" && mv "$1.part" "$1"' "$(basename "$1")" < "$1"; }
+# The backups of this site in the volume, oldest first
+bk_list() { bk 'ls -1' | grep -E "^idp-$MODE-[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{6}\.tar\$" | sort || true; }
+
+# A backup given as a file path, or by name from the backup volume (then copied into the folder $2). Prints its path
+resolve_archive() {
+  if [ -f "$1" ]; then
+    printf '%s/%s\n' "$(cd "$(dirname "$1")" && pwd)" "$(basename "$1")"
+    return
+  fi
+  name=$(basename "$1")
+  compose_volume backup
+  bk 'test -f "$1"' "$name" || die "no backup $name, neither as a file nor in the backup volume (scripts/get-backup.sh --list)"
+  mkdir -p "$2"
+  bk 'cat "$1"' "$name" > "$2/$name"
+  if bk 'test -f "$1.sha256"' "$name"; then bk 'cat "$1.sha256"' "$name" > "$2/$name.sha256"; fi
+  printf '%s\n' "$2/$name"
 }
 
 # docker compose for the chosen setup (paths quoted: the site folder may contain spaces)
@@ -82,14 +120,17 @@ app_sh() {
   fi
 }
 
-# Only one backup or restore at a time
+# Only one backup or restore at a time: the lock is .lock in the backup volume, shared with the admin page
+LOCKED=
+release() {
+  [ -z "$LOCKED" ] || bk 'rm -rf .lock' 2>/dev/null || true
+  [ -z "${WORK:-}" ] || rm -rf "$WORK"
+}
 take_lock() {
-  mkdir -p "$BACKUP_DIR"
-  LOCK="$BACKUP_DIR/.lock"
-  if ! mkdir "$LOCK" 2>/dev/null; then
-    die "another backup or restore is running (if not, remove $LOCK)"
-  fi
-  trap 'rm -rf "$LOCK" ${WORK:+"$WORK"}' EXIT INT TERM
+  compose_volume backup
+  bk 'mkdir .lock' 2>/dev/null || die "another backup or restore is running (if not: docker run --rm -v $BACKUP_VOLUME:/b alpine rm -rf /b/.lock)"
+  LOCKED=1
+  trap release EXIT INT TERM
 }
 
 # Check an archive's outer checksum, unpack it into $1 and check the checksum of every file inside

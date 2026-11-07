@@ -9,8 +9,8 @@ const good = {
   PAYLOAD_SECRET: 'a'.repeat(64),
   DATABASE_URI: 'postgres://idp:s3cr3t-pass@db:5432/idp',
   NEXT_PUBLIC_SITE_URL: 'https://example.ru',
-  MEDIA_DIR: '/app/media',
-  BACKUPS_DIR: '/app/backups',
+  MEDIA_DIR: '/data/media',
+  BACKUPS_DIR: '/data/backup',
 } as NodeJS.ProcessEnv
 
 const row = (env: NodeJS.ProcessEnv, id: string, openedAt?: string) => checkSettings(env, { openedAt }).find((c) => c.id === id)

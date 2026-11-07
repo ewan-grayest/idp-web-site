@@ -1,9 +1,11 @@
 #!/bin/sh
 # Checks the image starts and works on a host it knows nothing about. Builds it with no build arguments, then runs it
-# the way hosting platforms do: settings as variables only, with the port, HOSTNAME and user chosen by the host, and a
-# database that wants TLS with its own certificate, as managed databases often do. Then works the site like an editor:
-# uploads a photo, makes, checks and restores a backup, and waits for the site to come back by itself.
-# Uses a throwaway database and volume and removes everything it made, so it touches no real data. Needs Docker and curl.
+# the way hosting platforms do: settings as variables only, the port, HOSTNAME and user chosen by the host.
+# The main case is the layout every setup uses: the site and PostgreSQL 16 in separate containers, with storage at
+# /data/media and /data/backup in the site's and /data/db in the database's. On it the check works the site like an
+# editor (uploads a photo, makes, checks and restores a backup), then redeploys both containers on the same storage.
+# Then a managed-style database that wants TLS, and a host that forbids root.
+# Uses throwaway containers and volumes and removes everything it made, so it touches no real data. Needs Docker and curl.
 # Usage: scripts/check-image.sh [--platform linux/amd64]   (the host's platform, when it differs from the local environment)
 set -eu
 cd "$(dirname "$0")/.."
@@ -20,8 +22,13 @@ image="idp-site-check:$id"
 net="idp-check-$id"
 db="idp-check-db-$id"
 app="idp-check-app-$id"
-data="idp-check-data-$id"
+tls="idp-check-tls-$id"
+vol_media="idp-check-media-$id"
+vol_db="idp-check-db-$id"
+vol_backup="idp-check-backup-$id"
+vol_data="idp-check-data-$id"
 db_url="postgres://idp:check@$db:5432/idp"
+tls_url="postgres://idp:check@$tls:5432/idp"
 secret="check-secret-$id"
 email="check-$id@example.com"
 password="check-password-$id"
@@ -30,8 +37,8 @@ failures=0
 base= token= media_id= file= backup=
 
 cleanup() {
-  docker rm -f "$app" "$db" >/dev/null 2>&1 || true
-  docker volume rm "$data" >/dev/null 2>&1 || true
+  docker rm -f "$app" "$db" "$tls" >/dev/null 2>&1 || true
+  docker volume rm "$vol_media" "$vol_db" "$vol_backup" "$vol_data" >/dev/null 2>&1 || true
   docker network rm "$net" >/dev/null 2>&1 || true
   docker rmi "$image" >/dev/null 2>&1 || true
   rm -rf "$tmp"
@@ -43,9 +50,9 @@ check() {
   desc=$1; shift
   if "$@"; then echo "  ok    $desc"; else echo "  FAIL  $desc"; failures=$((failures + 1)); fi
 }
+fail() { echo "  FAIL  $1"; failures=$((failures + 1)); }
 
-# Waits for the health check through the published port, which can change when the container restarts.
-# A container that stopped ends the wait
+# Waits for the health check through the published port. A container that stopped ends the wait
 wait_for_site() {
   i=0
   while [ $i -lt 90 ]; do
@@ -80,10 +87,11 @@ wait_for_job() {
   done
   return 1
 }
+logs_say() { docker logs "$1" 2>&1 | grep -q "$2"; }
 
-stops_with_message() {
-  out=$(docker run --rm $platform "$image" 2>&1) && return 1
-  echo "$out" | grep -q PAYLOAD_SECRET
+stops_with() {
+  out=$(docker run --rm $platform "$@" 2>&1) && return 1
+  echo "$out" | grep -q "$want"
 }
 page_mentions() { curl -fsS "$base$1" | grep -q "$2"; }
 page_opens() { curl -fsSL -o /dev/null "$base$1"; }
@@ -99,7 +107,7 @@ docker_says_healthy() {
   return 1
 }
 uses_tls() {
-  n=$(docker exec "$db" psql -U idp -d idp -Atc "select count(*) from pg_stat_ssl s join pg_stat_activity a using (pid) where s.ssl and a.client_addr is not null")
+  n=$(docker exec "$tls" psql -U idp -d idp -Atc "select count(*) from pg_stat_ssl s join pg_stat_activity a using (pid) where s.ssl and a.client_addr is not null")
   [ "$n" -gt 0 ]
 }
 
@@ -119,56 +127,73 @@ upload_photo() {
 make_backup() {
   api POST /api/v1/backups >/dev/null && wait_for_job || return 1
   backup=$(api GET /api/v1/backups | json job.result)
-  [ -n "$backup" ] && docker exec "$app" test -f "/data/backups/$backup"
+  [ -n "$backup" ] && docker exec "$app" test -f "/data/backup/$backup"
 }
 check_backup() { api POST "/api/v1/backups/$backup/verify" >/dev/null && wait_for_job; }
 delete_photo() { api DELETE "/api/v1/media/$media_id" >/dev/null && page_gone "/api/v1/media/file/$file"; }
-# A restore ends the site's process; the host's restart policy must start it again
+# A restore ends the site's process on purpose; the container starts it again by itself
 restore_backup() {
   api POST "/api/v1/backups/$backup/restore" -H 'Content-Type: application/json' -d "{\"confirm\":\"$backup\"}" >/dev/null || return 1
   i=0
   while [ $i -lt 120 ]; do
-    [ "$(docker inspect -f '{{.RestartCount}}' "$app")" -gt 0 ] && return 0
+    logs_say "$app" 'The site process ended; starting it again' && return 0
     [ "$(job_state)" = failed ] && { show_job_error; return 1; }
     i=$((i + 1))
     sleep 2
   done
   return 1
 }
+docker_did_not_restart_it() {
+  [ "$(docker inspect -f '{{.RestartCount}}' "$app")" = 0 ] && [ "$(docker inspect -f '{{.State.Running}}' "$app")" = true ]
+}
+
+# A PostgreSQL 16 container as every setup runs it: its files at /data/db. Extra arguments go to the server
+start_db() {
+  name=$1; shift
+  docker run -d --name "$name" --network "$net" -e POSTGRES_USER=idp -e POSTGRES_PASSWORD=check -e POSTGRES_DB=idp \
+    -e PGDATA=/data/db "$@" >/dev/null
+  i=0
+  until docker exec "$name" pg_isready -q -h 127.0.0.1 -U idp 2>/dev/null; do
+    i=$((i + 1))
+    if [ $i -gt 90 ] || [ "$(docker inspect -f '{{.State.Running}}' "$name")" != true ]; then
+      echo "The test database didn't start:"
+      docker logs --tail 20 "$name" 2>&1 | sed 's/^/        /'
+      exit 1
+    fi
+    sleep 1
+  done
+}
+# The site as the README's hosts run it: the host's port and HOSTNAME, storage at /data/media and /data/backup,
+# the database in its own container, no restart policy
+run_site() {
+  docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::8080 -e PORT=8080 -e HOSTNAME=some-pod-name \
+    -e DATABASE_URI="$db_url" -e PAYLOAD_SECRET="$secret" -e NEXT_PUBLIC_SITE_URL=check.example \
+    -v "$vol_media":/data/media -v "$vol_backup":/data/backup "$image" >/dev/null
+}
+stops_cleanly() {
+  docker stop -t 30 "$app" >/dev/null && [ "$(docker inspect -f '{{.State.ExitCode}}' "$app")" = 0 ]
+}
 
 echo "Building with no build arguments"
 docker build $platform -t "$image" .
 
-# PostgreSQL with TLS on and a certificate no one vouches for, like a managed database with the provider's own
+echo "Missing settings"
+want=PAYLOAD_SECRET
+check "no secret: stops and names the setting" stops_with "$image"
+want=DATABASE_URI
+check "no database address: stops and names the setting" stops_with -e PAYLOAD_SECRET="$secret" "$image"
+
+echo "Every setup: the site and PostgreSQL in separate containers, storage at /data/media, /data/backup and /data/db"
 docker network create "$net" >/dev/null
-docker run -d --name "$db" --network "$net" -e POSTGRES_USER=idp -e POSTGRES_PASSWORD=check -e POSTGRES_DB=idp postgres:16 \
-  -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key >/dev/null
-i=0
-until docker exec "$db" pg_isready -q -h 127.0.0.1 -U idp 2>/dev/null; do
-  i=$((i + 1))
-  if [ $i -gt 90 ] || [ "$(docker inspect -f '{{.State.Running}}' "$db")" != true ]; then
-    echo "The test database didn't start:"
-    docker logs --tail 20 "$db" 2>&1 | sed 's/^/        /'
-    exit 1
-  fi
-  sleep 1
-done
-
-echo "No settings at all"
-check "stops and names the missing setting" stops_with_message
-
-echo "A platform: its own port, HOSTNAME and DATABASE_URL, one disk, a TLS database, a bare domain as the address"
-docker volume create "$data" >/dev/null
-docker run -d --name "$app" --network "$net" $platform --restart unless-stopped -p 127.0.0.1::8080 \
-  -e PORT=8080 -e HOSTNAME=some-pod-name -e DATABASE_URL="$db_url?sslmode=no-verify" -e PAYLOAD_SECRET="$secret" \
-  -e NEXT_PUBLIC_SITE_URL=check.example -e MEDIA_DIR=/data/media -e BACKUPS_DIR=/data/backups -v "$data":/data "$image" >/dev/null
+for v in "$vol_media" "$vol_db" "$vol_backup"; do docker volume create "$v" >/dev/null; done
+start_db "$db" -v "$vol_db":/data/db postgres:16
+run_site
 if wait_for_site 8080; then
   echo "  ok    answers on the host's port, migrations applied"
   check "uses the address set when it started, not at build" page_mentions / 'https://check.example'
   check "admin opens" page_opens /admin
   check "drops root and runs as the app user" site_user_is 100
-  check "the app user can write to the one disk" docker exec --user app "$app" test -w /data/media
-  check "talks to the database over TLS" uses_tls
+  check "the database keeps its files at /data/db" docker exec "$db" test -s /data/db/PG_VERSION
   check "Docker reports it healthy" docker_says_healthy
 
   echo "Editor's work: an upload, then a backup made, checked and restored"
@@ -176,42 +201,74 @@ if wait_for_site 8080; then
     echo "  ok    creates the first admin"
     check "uploads a photo" upload_photo
     check "serves the photo" page_opens "/api/v1/media/file/$file"
-    check "keeps the photo on the disk" docker exec "$app" test -f "/data/media/$file"
-    check "makes a backup" make_backup
+    check "keeps the photo at /data/media" docker exec "$app" test -f "/data/media/$file"
+    check "makes a backup at /data/backup" make_backup
     check "the backup checks out, including a trial restore" check_backup
     check "deletes the photo" delete_photo
-    if restore_backup; then
-      echo "  ok    restores the backup and restarts by itself"
-      if wait_for_site 8080; then
-        echo "  ok    answers again after the restart"
-        check "the photo's record is back" page_opens "/api/v1/media/$media_id"
-        check "the photo itself is back" page_opens "/api/v1/media/file/$file"
-      else
-        echo "  FAIL  didn't come back after the restore"; failures=$((failures + 1))
-      fi
+    if restore_backup && wait_for_site 8080; then
+      echo "  ok    restores the backup and starts the site again by itself"
+      check "the container itself kept running" docker_did_not_restart_it
+      check "the photo's record is back" page_opens "/api/v1/media/$media_id"
+      check "the photo itself is back" page_opens "/api/v1/media/file/$file"
     else
-      echo "  FAIL  restore"; failures=$((failures + 1))
+      fail "restore"
     fi
   else
-    echo "  FAIL  creates the first admin, so the editor's checks were skipped"; failures=$((failures + 1))
+    fail "creates the first admin, so the editor's checks were skipped"
+  fi
+
+  echo "Redeploy: both containers are replaced, on the same storage"
+  check "the site stops cleanly" stops_cleanly
+  docker rm -f "$app" "$db" >/dev/null
+  start_db "$db" -v "$vol_db":/data/db postgres:16
+  run_site
+  if wait_for_site 8080; then
+    echo "  ok    starts again"
+    check "the photo is still there" page_opens "/api/v1/media/file/$file"
+    check "its record is still there" page_opens "/api/v1/media/$media_id"
+    check "the backup is still there" docker exec "$app" test -f "/data/backup/$backup"
+  else
+    fail "didn't start again on the same storage"
   fi
 else
-  echo "  FAIL  the site didn't answer"; failures=$((failures + 1))
+  fail "the site didn't answer"
 fi
 docker rm -f "$app" >/dev/null
 
-echo "A host that forbids root: an arbitrary user, default folders and port, plain database connection"
+# PostgreSQL with TLS on and a certificate no one vouches for, like a managed database with the provider's own
+start_db "$tls" postgres:16 \
+  -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+
+echo "A managed-style database with TLS and its own certificate, given as DATABASE_URL, one disk at /data"
+docker volume create "$vol_data" >/dev/null
+docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::3000 \
+  -e DATABASE_URL="$tls_url?sslmode=no-verify" -e PAYLOAD_SECRET="$secret" -e NEXT_PUBLIC_SITE_URL=https://check.example \
+  -v "$vol_data":/data "$image" >/dev/null
+if wait_for_site 3000; then
+  echo "  ok    starts and answers"
+  check "talks to the database over TLS" uses_tls
+  if first_admin; then
+    check "makes a backup over TLS" make_backup
+  else
+    fail "creates the first admin, so the backup check was skipped"
+  fi
+else
+  fail "the site didn't answer"
+fi
+docker rm -f "$app" >/dev/null
+
+echo "A host that forbids root: an arbitrary user, no storage"
 docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::3000 --user 12345:0 \
   -e DATABASE_URI="$db_url" -e PAYLOAD_SECRET="$secret" -e NEXT_PUBLIC_SITE_URL=https://check.example "$image" >/dev/null
 if wait_for_site 3000; then
   echo "  ok    starts and answers"
   check "home page opens" page_opens /
-  check "can write uploads" docker exec "$app" test -w /app/media
+  check "can write uploads" docker exec "$app" test -w /data/media
   check "can write the image cache" docker exec "$app" test -w /app/.next/cache
-  check "can write backups" docker exec "$app" test -w /app/backups
+  check "can write backups" docker exec "$app" test -w /data/backup
   check "the backup tools reach the database" docker exec "$app" sh -c 'LD_LIBRARY_PATH=/opt/pg/lib /opt/pg/bin/pg_dump -d "$DATABASE_URI" -Fc -f "$BACKUPS_DIR/check.dump"'
 else
-  echo "  FAIL  the site didn't answer"; failures=$((failures + 1))
+  fail "the site didn't answer"
 fi
 
 if [ "$failures" -gt 0 ]; then

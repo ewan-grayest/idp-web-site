@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Check that backups are complete and restorable, without touching the site.
 #
-#   scripts/verify-backup.sh backups/idp-local-....tar     checksums, readable dump and media list
-#   scripts/verify-backup.sh --deep backups/idp-....tar    also restores the database into a throwaway
+#   scripts/verify-backup.sh data/backup/idp-local-....tar     checksums, readable dump and media list
+#   scripts/verify-backup.sh --deep data/backup/idp-....tar    also restores the database into a throwaway
 #                                                          PostgreSQL container and compares every table's rows
 #   scripts/verify-backup.sh --latest [--prod] [--deep]    the newest backup in the backup folder
 

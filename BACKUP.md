@@ -29,15 +29,16 @@ A restore from the admin:
 3. Loads the backup into a new database beside the live one and checks every table's rows,
    and unpacks the media beside the live files. The live site is untouched until both are ready.
 4. Switches the site to the restored database and files within a second.
-5. Restarts the site (Docker starts it again by itself; about half a minute). The page waits and then
+5. Restarts the site, which its container starts again by itself (about half a minute). The page waits and then
    opens the sign-in page: sign in with an account from the backup.
 
-The backups the admin makes live in the same folder as the scripts' (`backups/`, or `deploy/backups/` in production),
-mounted into the app container at `/app/backups`. The app's database tools are PostgreSQL 16, copied into the image from
+The backups the admin makes live in the same folder as the scripts': `backup/` in the data folder (`data/backup/`, or
+`deploy/data/backup/` in production; see "Where the data is kept" in the README), which every setup mounts into the
+site's container at `/data/backup`. The app's database tools are PostgreSQL 16, copied into the image from
 `postgres:16-alpine` (see `Dockerfile`). In `npm run dev` the page works too when `pg_dump`, `pg_restore` and `psql` 16
 are installed in the local environment (on the PATH, or set `PG_BIN_DIR` to their folder), but after a restore restart the dev server by hand.
 
-Only one backup or restore runs at a time: the admin and the scripts share a lock (`backups/.lock`).
+Only one backup or restore runs at a time: the admin and the scripts share a lock (`.lock` in the backup folder).
 If a task was cut off by a crash, the next one from the admin clears the leftover lock itself.
 
 ## With scripts
@@ -51,22 +52,21 @@ On a Linux server, run them with `sudo` so the admin page can read the backups t
 |---|---|---|
 | Back up now | `scripts/backup.sh` | `scripts/backup.sh --prod` |
 | Check a backup | `scripts/verify-backup.sh --deep --latest` | `scripts/verify-backup.sh --deep --latest --prod` |
-| Restore | `scripts/restore.sh backups/<file>.tar` | `scripts/restore.sh --prod deploy/backups/<file>.tar` |
+| Restore | `scripts/restore.sh data/backup/<file>.tar` | `scripts/restore.sh --prod deploy/data/backup/<file>.tar` |
 | Nightly backup on / off | `scripts/schedule-backup.sh on` / `off` | `scripts/schedule-backup.sh on --prod` / `off --prod` |
 
 ## What a backup contains
 
 Each backup is one file, `idp-<local|prod>-<date>_<time>.tar`, with a `.sha256` checksum file beside it,
-in `backups/` (local) or `deploy/backups/` (production). Inside:
+in `data/backup/` (local) or `deploy/data/backup/` (production). Inside:
 
 - `db.dump`: the whole database (`pg_dump` custom format, compressed)
-- `media.tar`: everything in the media storage (`/app/media` in the app container, wherever `MEDIA_DIR` points on the host)
+- `media.tar`: everything in the media storage (`/data/media` in the site's container, `media/` in the data folder)
 - `db-counts.txt`: the number of rows in every table, used to prove a restore is complete
 - `manifest.txt`: when and where it was made, PostgreSQL version, last database migration, number of media files
 - `SHA256SUMS`: a checksum for each of the files above
 
-The scripts reach the data through Docker, so they work the same whether `MEDIA_DIR` and `PGDATA_DIR` are
-left empty (Docker volumes) or set to folders on the host.
+The scripts reach the database and media through Docker, so they work wherever `DATA_DIR` puts the data folder.
 
 Backups hold enquiries (emails, names), so they are created readable by your user only. Treat them as private.
 
@@ -96,7 +96,7 @@ Optional settings, as environment variables or one `NAME=value` per line in `bac
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `BACKUP_DIR` | `backups/`, `deploy/backups/` | Where backups go. Put them on another disk if you can. |
+| `BACKUP_DIR` | `data/backup/`, `deploy/data/backup/` (follows `DATA_DIR`) | Where the scripts put backups. Elsewhere, the admin won't list them. |
 | `KEEP_LAST` | `14` | How many newest backups to keep |
 | `KEEP_MONTHLY` | `6` | Also keep the newest backup of each of this many months |
 | `BACKUP_UPLOAD_CMD` | empty | Off-site copy, run after each backup with the file as `$1` |
@@ -122,7 +122,7 @@ spoil the local backup. Rotation does not delete remote copies; set a lifecycle 
 scripts/verify-backup.sh --latest           # checksums, the dump opens, the media list matches
 scripts/verify-backup.sh --deep --latest    # also restores the database into a throwaway PostgreSQL
                                             # container and compares the rows of every table
-scripts/verify-backup.sh --deep backups/idp-local-2026-10-25_033000.tar   # a specific file
+scripts/verify-backup.sh --deep data/backup/idp-local-2026-10-25_033000.tar   # a specific file
 ```
 
 The site is not touched. Any damaged or incomplete file stops the check with an error.
@@ -130,8 +130,8 @@ The site is not touched. Any damaged or incomplete file stops the check with an 
 ## Restore
 
 ```bash
-scripts/restore.sh backups/idp-local-2026-10-25_033000.tar               # local dev site
-scripts/restore.sh --prod deploy/backups/idp-prod-2026-10-25_033000.tar  # production
+scripts/restore.sh data/backup/idp-local-2026-10-25_033000.tar                # local dev site
+scripts/restore.sh --prod deploy/data/backup/idp-prod-2026-10-25_033000.tar   # production
 ```
 
 What it does, in order:
@@ -151,8 +151,8 @@ If anything goes wrong, restore the `pre-restore` backup the same way.
 1. Install Docker (Docker Desktop in a local environment) and copy the site folder there.
 2. Put the saved settings file back: `.env` (local) or `deploy/.env` (production). Without a saved one, copy
    `.env.example` and set a new `PAYLOAD_SECRET`.
-3. Copy the backup `.tar` and `.tar.sha256` files into `backups/` (or `deploy/backups/`).
-4. `scripts/restore.sh backups/<file>.tar` (add `--prod` for production). It creates the database and builds the
+3. Copy the backup `.tar` and `.tar.sha256` files into `data/backup/` (or `deploy/data/backup/`).
+4. `scripts/restore.sh data/backup/<file>.tar` (add `--prod` for production). It creates the database and builds the
    site image if they don't exist yet; the first build takes a few minutes.
 5. Open the site and sign in to `/admin` with the accounts from the backup.
 

@@ -6,7 +6,7 @@
 #   scripts/backup.sh --with-env   also put the settings file (.env, holds passwords) into the archive
 #
 # Settings, all optional: environment variables, or lines in backup.env (deploy/backup.env with --prod):
-#   BACKUP_DIR         where archives go (default: backups/, or deploy/backups/ with --prod)
+#   BACKUP_DIR         where archives go (default: data/backup/, or deploy/data/backup/ with --prod; see DATA_DIR)
 #   KEEP_LAST          how many newest backups to keep (default 14)
 #   KEEP_MONTHLY       also keep the newest backup of each of this many past months (default 6)
 #   BACKUP_UPLOAD_CMD  optional off-site copy, run with the archive path as $1,

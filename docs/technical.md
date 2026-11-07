@@ -157,19 +157,19 @@ Admin tabs, field labels and hints carry plain names, with no spec numbers (Ewan
 
 ## Backups
 
-Full database and media backups, as one `.tar` format shared by the admin page and `scripts/`, with checksums, a verifying test restore, and rotation (`KEEP_LAST` 14, `KEEP_MONTHLY` 6). A lock file `backups/.lock` serialises them. Details in [BACKUP.md](../BACKUP.md).
+Full database and media backups, as one `.tar` format shared by the admin page and `scripts/`, with checksums, a verifying test restore, and rotation (`KEEP_LAST` 14, `KEEP_MONTHLY` 6). A lock file `.lock` in the backup folder serialises them. Details in [BACKUP.md](../BACKUP.md).
 
 ## Environment
 
 | Variable | Used by | Notes |
 |---|---|---|
-| `DATABASE_URI` | App | Required. `entrypoint.sh` also accepts `DATABASE_URL`, which many hosts set |
+| `DATABASE_URI` | App | Required: the database is always another container or the host's. `entrypoint.sh` also accepts `DATABASE_URL`, which many hosts set |
 | `PAYLOAD_SECRET` | App | Required |
 | `NEXT_PUBLIC_SITE_URL` | App | Absolute links, metadata base. Read at run time through `lib/hosting.ts` |
 | `NEXT_PUBLIC_STUDIO_PHONE` | App | Phone fallback. Read at run time |
 | `NEXT_PUBLIC_PROMO_VIDEO_URL` | App | Used when no video is uploaded. Read at run time |
-| `MEDIA_DIR` | App, compose | Upload folder. Empty: `./media` in dev, a Docker volume in compose, `/app/media` in the image alone |
-| `PGDATA_DIR` | Compose | Database folder; empty folder on first use |
+| `DATA_DIR` | Compose, dev, `scripts/` | Host folder holding `media/`, `backup/`, `db/`. Default `./data` beside the compose file (`deploy/data` on the server). `npm run dev` reads it through `lib/dataDirs.ts` |
+| `MEDIA_DIR` | App | Upload folder. `/data/media` in every container; empty in dev, so `DATA_DIR/media` |
 | `BACKUPS_DIR`, `BACKUP_MODE`, `KEEP_LAST`, `KEEP_MONTHLY`, `PG_BIN_DIR`, `BACKUPS_HOST_LABEL` | Backups | See `lib/backups.ts` |
 | `SITE_DOMAIN`, `POSTGRES_PASSWORD`, `APP_BIND` | `deploy/` | Production only |
 | `CONTENT_DIR` | Import scripts | Path to `content-source` |
@@ -179,9 +179,11 @@ No setting is baked into the image: `src/lib/hosting.ts` looks up the `NEXT_PUBL
 
 ## Deployment
 
+**Data locations**: one layout everywhere. Inside the containers: `/data/media` and `/data/backup` (app), `/data/db` (db, as `PGDATA`). Outside: `media/`, `backup/`, `db/` in `DATA_DIR`, bind-mounted by every compose file. The app and PostgreSQL are always separate containers. `scripts/move-data.sh` copies data from the pre-2026-11-08 places (named volumes `media`/`pgdata`, `MEDIA_DIR`/`PGDATA_DIR` folders, `backups/`).
+
 **Local**: `./start.sh` runs `docker-compose.yml`, with `app` and `db`. Postgres binds to `127.0.0.1`; the app binds to `0.0.0.0:3000`.
 
-**Image**: three stages in the `Dockerfile`: build with Node, copy PostgreSQL 16 client tools for backups, run standalone. `entrypoint.sh` stops early if a required setting is empty, forces `HOSTNAME=0.0.0.0`, starts as root only to hand `/app/media` and others to the `app` user, then drops privileges. It also runs as an arbitrary non-root user. `GET /api/health` backs the image's `HEALTHCHECK`. `scripts/check-image.sh` builds the image and tests these cases against a throwaway database with TLS, then uploads a photo and makes, checks and restores a backup through the API.
+**Image**: three stages in the `Dockerfile`: build with Node, copy the PostgreSQL 16 client tools for backups (with their libraries, into `/opt/pg`), run standalone. No database server is in it. `entrypoint.sh` stops early if `PAYLOAD_SECRET` or `DATABASE_URI` is empty, forces `HOSTNAME=0.0.0.0`, starts as root only to hand `/data/media`, `/data/backup` and the image cache to the `app` user, then drops privileges. It runs the site and starts it again whenever it ends, which a restore does on purpose. It also runs as an arbitrary non-root user. `GET /api/health` backs the image's `HEALTHCHECK`. `scripts/check-image.sh` builds the image and runs it beside a `postgres:16` container on the `/data` layout: uploads a photo, makes, checks and restores a backup through the API, and replaces both containers on the same storage. It also tests a managed-style database with TLS and a host that forbids root.
 
 **Production**: `deploy/docker-compose.prod.yml` is one VM with app, Postgres and Caddy for HTTPS. `deploy/docker-compose.behind-proxy.yml` is the same without Caddy, for hosts with their own proxy; keep the two in step. Required settings and troubleshooting: "Server hosting" in the README. `deploy/Caddyfile` sends `X-Robots-Tag: noindex`; delete that line to go public.
 

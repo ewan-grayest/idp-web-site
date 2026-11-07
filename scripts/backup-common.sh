@@ -1,6 +1,6 @@
 # Shared helpers for backup.sh, restore.sh, verify-backup.sh and schedule-backup.sh. Not run on its own.
-# Works with bash 3.2 (macOS) and Linux. Reaches the data through Docker, so the database and media
-# can be named volumes or host folders.
+# Works with bash 3.2 (macOS) and Linux. Reaches the database and media through Docker, so they work
+# wherever DATA_DIR puts them.
 
 set -eu
 
@@ -12,23 +12,37 @@ say() { printf '%s\n' "$*"; }
 log() { printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
 die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 
+# DATA_DIR from the environment or the settings file, as docker compose reads it: the folder holding media/, backup/
+# and db/ ("Data locations" in CLAUDE.md). Relative paths count from the compose file's folder, as in compose
+data_dir_for() {
+  compose_dir=$1; env_file=$2
+  dir=${DATA_DIR:-}
+  if [ -z "$dir" ] && [ -f "$env_file" ]; then
+    dir=$(sed -n 's/^DATA_DIR=//p' "$env_file" | tail -n 1 | sed "s/^[\"']//; s/[\"']\$//")
+  fi
+  dir=${dir:-./data}
+  case $dir in /*) ;; *) dir="$compose_dir/${dir#./}" ;; esac
+  printf '%s\n' "${dir%/}"
+}
+
 # Pick the compose setup: the local dev site (docker-compose.yml) or production (deploy/docker-compose.prod.yml)
 use_mode() {
   MODE=$1
   if [ "$MODE" = prod ]; then
     [ -f "$SITE_DIR/deploy/.env" ] || die "deploy/.env not found: production settings are missing"
     COMPOSE_HINT="docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env"
-    DEFAULT_BACKUP_DIR="$SITE_DIR/deploy/backups"
+    HOST_DATA_DIR=$(data_dir_for "$SITE_DIR/deploy" "$SITE_DIR/deploy/.env")
   else
     COMPOSE_HINT="docker compose"
-    DEFAULT_BACKUP_DIR="$SITE_DIR/backups"
+    HOST_DATA_DIR=$(data_dir_for "$SITE_DIR" "$SITE_DIR/.env")
   fi
   # Optional settings for backups (BACKUP_DIR, KEEP_LAST, KEEP_MONTHLY, BACKUP_UPLOAD_CMD), one NAME=value per line
   settings="$SITE_DIR/backup.env"; [ "$MODE" = prod ] && settings="$SITE_DIR/deploy/backup.env"
   if [ -f "$settings" ]; then set -a; . "$settings"; set +a; fi
-  BACKUP_DIR=${BACKUP_DIR:-$DEFAULT_BACKUP_DIR}
+  # The same folder the app container sees as /data/backup, so the admin lists the scripts' backups too
+  BACKUP_DIR=${BACKUP_DIR:-$HOST_DATA_DIR/backup}
   # Where the app keeps uploads inside its container
-  APP_MEDIA_PATH=${APP_MEDIA_PATH:-/app/media}
+  APP_MEDIA_PATH=${APP_MEDIA_PATH:-/data/media}
 }
 
 # docker compose for the chosen setup (paths quoted: the site folder may contain spaces)

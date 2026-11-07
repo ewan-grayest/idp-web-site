@@ -1,4 +1,5 @@
-# Production on one Yandex Cloud VM: site + PostgreSQL + Caddy (free HTTPS from Let's Encrypt).
+# Production on one Yandex Cloud VM: site, PostgreSQL and Caddy (free HTTPS from Let's Encrypt), each in its own container.
+# Data: deploy/data/{media,backup,db} on the server (DATA_DIR in deploy/.env), at /data/{media,backup,db} inside the containers.
 # Run from the site folder: docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
 services:
   app:
@@ -7,16 +8,14 @@ services:
     env_file: .env
     environment:
       DATABASE_URI: postgres://idp:${POSTGRES_PASSWORD}@db:5432/idp
-      # Inside the container uploads always live here; MEDIA_DIR in deploy/.env picks where that is on the server
-      MEDIA_DIR: /app/media
-      # Backups made from the admin («Резервные копии»), in the same folder and format as scripts/backup.sh
-      BACKUPS_DIR: /app/backups
+      # The same paths in every setup ("Data locations" in CLAUDE.md)
+      MEDIA_DIR: /data/media
+      BACKUPS_DIR: /data/backup
       BACKUP_MODE: prod
     volumes:
-      # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR in deploy/.env
-      - ${MEDIA_DIR:-media}:/app/media
-      # Backups: deploy/backups on the server (the scripts use it too)
-      - ./backups:/app/backups
+      # Uploaded photos and videos, and backups: the folders media and backup in DATA_DIR (default deploy/data)
+      - ${DATA_DIR:-./data}/media:/data/media
+      - ${DATA_DIR:-./data}/backup:/data/backup
       - nextcache:/app/.next/cache
     depends_on:
       db:
@@ -29,9 +28,10 @@ services:
       POSTGRES_USER: idp
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: idp
+      PGDATA: /data/db
     volumes:
-      # Database files: the Docker volume "pgdata", or the folder set as PGDATA_DIR in deploy/.env
-      - ${PGDATA_DIR:-pgdata}:/var/lib/postgresql/data
+      # Database files: the folder db in DATA_DIR (default deploy/data)
+      - ${DATA_DIR:-./data}/db:/data/db
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U idp']
       interval: 5s
@@ -52,7 +52,6 @@ services:
       - app
 
 volumes:
-  pgdata:
-  media:
+  # Resized images only, rebuilt when missing
   nextcache:
   caddydata:

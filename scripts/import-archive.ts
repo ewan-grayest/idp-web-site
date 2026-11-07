@@ -12,6 +12,7 @@ import sharp from 'sharp'
 import { getPayload } from 'payload'
 
 import config from '../src/payload.config'
+import { dataDirs } from '../src/lib/dataDirs'
 import { toLexical } from './lexical'
 
 type Img = { path: string | null; width: number | null; height: number | null; archived?: boolean; md5?: string | null }
@@ -43,7 +44,7 @@ type GtPartner = {
 }
 
 const dir = path.resolve(process.env.CONTENT_DIR || '../content-source')
-const mediaDir = path.resolve(process.env.MEDIA_DIR || 'media')
+const mediaDir = path.resolve(dataDirs().media)
 const read = <T>(file: string): T => JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'))
 const id = read<{ studio: any; people: { slug: string; name: string }[]; projects: SrcProject[]; awards: Award[] }>('idproekt/site.json')
 const gt = read<{ texts: Record<string, any>; partners: GtPartner[]; contacts: Record<string, string> }>('gettogether/site.json')

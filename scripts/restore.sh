@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Restore the site from a backup made by backup.sh: replaces the whole database and all uploaded files.
 #
-#   scripts/restore.sh backups/idp-local-2026-10-25_030000.tar           the local dev site
-#   scripts/restore.sh --prod deploy/backups/idp-prod-....tar            production
+#   scripts/restore.sh data/backup/idp-local-2026-10-25_030000.tar         the local dev site
+#   scripts/restore.sh --prod deploy/data/backup/idp-prod-....tar          production
 #
 # Options:
 #   --yes               don't ask for confirmation (for scripts)
@@ -27,7 +27,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ -n "$archive" ] || die "which backup? Example: scripts/restore.sh backups/idp-local-2026-10-25_030000.tar"
+[ -n "$archive" ] || die "which backup? Example: scripts/restore.sh data/backup/idp-local-2026-10-25_030000.tar"
 archive=$(cd "$(dirname "$archive")" && pwd)/$(basename "$archive")
 
 use_mode "$mode"
@@ -91,7 +91,7 @@ fi
 say "  row counts         match the backup ($(wc -l < "$WORK/db-counts.txt" | tr -d ' ') tables)"
 
 # 6. Media: empty the folder, unpack, give the files to the app user. Asked for as root; an image whose
-#    entrypoint drops to the app user (after handing it /app/media) runs this as app, which works too.
+#    entrypoint drops to the app user (after handing it /data/media) runs this as app, which works too.
 log "Restoring media files"
 app_sh root "find '$APP_MEDIA_PATH' -mindepth 1 -maxdepth 1 -exec rm -rf {} + && tar -xf - -C '$APP_MEDIA_PATH' && chown -R app:app '$APP_MEDIA_PATH'" < "$WORK/media.tar"
 now_files=$(app_sh root "find '$APP_MEDIA_PATH' -type f | wc -l" | tr -d ' \r')

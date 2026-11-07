@@ -29,6 +29,22 @@ npx payload run scripts/seed.ts          # sample content, safe to re-run
 
 Run one test with `npx vitest run tests/unit/routes.test.ts` or `npx playwright test tests/e2e/home.spec.ts --project=desktop`.
 
+## Data locations
+
+One layout in every setup: prod and dev, local and remote, `Dockerfile` and compose. Keep it that way in any code, script, compose file or doc you touch.
+
+| Data | Inside the containers | Outside, in the data folder (`DATA_DIR`) |
+|---|---|---|
+| Uploaded photos and videos | `/data/media` (site) | `media/` |
+| Backups, from the admin and `scripts/` | `/data/backup` (site) | `backup/` |
+| PostgreSQL 16 files | `/data/db` (database, `PGDATA=/data/db`) | `db/` |
+
+- The site and the database are always separate containers, on a hosting platform and in compose. Never put a database server in the site image; it only carries the PostgreSQL client tools for backups.
+- `DATA_DIR` defaults to `./data` beside the compose file: `data/` locally, `deploy/data/` on the server. Every compose file bind-mounts `${DATA_DIR:-./data}/{media,backup,db}`; no named volumes for data (only `nextcache`, which holds resized images).
+- The image sets `MEDIA_DIR=/data/media` and `BACKUPS_DIR=/data/backup`, and compose files set them again. `npm run dev` leaves them empty and uses `DATA_DIR`, through `src/lib/dataDirs.ts`. Read the folders through that helper, never `process.env.MEDIA_DIR` directly.
+- `scripts/backup-common.sh` finds the backup folder from `DATA_DIR` the same way compose does.
+- `scripts/move-data.sh [--prod]` moves data from the places used before 2026-11-08 (volumes `media`/`pgdata`, `MEDIA_DIR`/`PGDATA_DIR` folders, `backups/`). Don't reintroduce those names.
+
 ## Where things live
 
 | Area | Path |
@@ -76,5 +92,5 @@ Run one test with `npx vitest run tests/unit/routes.test.ts` or `npx playwright 
 **Repository.**
 - `site/` has its own git repo, and the parent `IDP Site/` folder holds a separate one that also tracks it. Commands here act on the inner repo.
 - `AGENTS.md` is rewritten by `next dev`: keep that block as it is.
-- Never commit `.env`, `deploy/.env`, `backups/` or `media/`. `.claude/` is ignored, so project docs for Claude go here or in `docs/`.
+- Never commit `.env`, `deploy/.env`, `data/`, `deploy/data/`, or the old `backups/` and `media/`. `.claude/` is ignored, so project docs for Claude go here or in `docs/`.
 - Temporary, development-only and other non-production code goes in `extras/`. Git, Docker and `tsc` ignore it, so it is never committed or shipped. `scripts/` is for tooling the project keeps.

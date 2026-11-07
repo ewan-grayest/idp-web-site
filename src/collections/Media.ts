@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { dataDirs } from '../lib/dataDirs'
 import { groups, tr } from './labels'
 
 /** Panoramic project photography and portraits. */
@@ -8,9 +9,8 @@ export const Media: CollectionConfig = {
   admin: { group: groups.service },
   access: { read: () => true },
   upload: {
-    // MEDIA_DIR: where uploads are kept (a folder or a mounted disk); by default "media" in the site folder.
-    // In Docker the app always writes to /app/media and the compose files map that to MEDIA_DIR on the host
-    staticDir: process.env.MEDIA_DIR || 'media',
+    // /data/media in every container; data/media in the site folder for `npm run dev` (lib/dataDirs.ts)
+    staticDir: dataDirs().media,
     mimeTypes: ['image/*', 'video/mp4', 'video/webm'],
     imageSizes: [
       { name: 'thumb', width: 640 },

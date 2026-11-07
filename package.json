@@ -15,9 +15,7 @@
     "generate:importmap": "payload generate:importmap",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
-    "version:major": "npm version major --no-git-tag-version",
-    "hooks:install": "git config core.hooksPath .githooks",
-    "version:check": "node scripts/check-version.mjs --staged"
+    "version:major": "npm version major --no-git-tag-version"
   },
   "engines": {
     "node": ">=20.9"

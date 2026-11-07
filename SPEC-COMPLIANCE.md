@@ -68,7 +68,7 @@ Feed limits are applied after entity and exact hashtag filtering. Anonymous visi
 
 ## Validation
 
-- TypeScript and 21 unit tests pass, including tag URL boundaries and semantic version ordering.
+- TypeScript and unit tests pass, including tag URL boundaries.
 - Production Next.js build passes with all frontend, admin, API, short-link and sitemap routes.
 - The additive migration passed upgrade, rollback and re-upgrade on an isolated copy of the existing database.
 - `scripts/verify-spec.ts` passes eight integration groups: every page role and language, shell/logo behavior, default caps, latest reviews/VK off, custom caps/maps/tag URLs, moderation/privacy, context-aware leads, and sitemap/404/short redirects.
@@ -78,4 +78,4 @@ Admin sidebar names and editing tabs omit specification numbers in Russian, Engl
 
 ## Version policy
 
-The project is versioned in `package.json` and `package-lock.json`; the footer displays the version. Before each commit, run `npm run version:patch` (or minor/major). The installed `.githooks/pre-commit` rejects a commit without an increased staged version and matching lockfile. GitHub Actions validates newly introduced commits. Source remote: `https://github.com/ewan-grayest/idp-web-site.git`.
+The project is versioned in `package.json` and `package-lock.json`; the footer displays the version. It is bumped only when deploying a release (`npm run version:patch`, or minor/major); individual commits need no version change. Source remote: `https://github.com/ewan-grayest/idp-web-site.git`.

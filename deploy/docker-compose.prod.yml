@@ -1,4 +1,4 @@
-# Production on one Yandex Cloud VM: site + PostgreSQL + Caddy (free HTTPS from Let's Encrypt).
+# Alternative to the Docker PaaS, not in use: everything on one server you run yourself: site + PostgreSQL + Caddy (free HTTPS from Let's Encrypt).
 # Run from the site folder: docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
 services:
   app:

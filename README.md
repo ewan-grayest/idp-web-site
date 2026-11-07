@@ -125,7 +125,7 @@ Before deploying a change, run `npx payload migrate:create <name>`; the producti
 
 ## Server hosting
 
-Not in use: the site runs locally for now. `deploy/` holds a ready setup for one server (site, database, HTTPS) for later.
+Development runs on the local Mac (`./start.sh`). Production is a Docker PaaS that builds the same `Dockerfile`; what it needs and the release steps are in [deploy/README.md](deploy/README.md).
 
 ## Settings, feeds and reviews
 
@@ -141,24 +141,9 @@ Project and blog sharing use stable `/p/<code>` redirects. Existing blog entries
 
 ## Versioning and source control
 
-Use the configured `origin`: `https://github.com/ewan-grayest/idp-web-site.git`.
+Use the configured `origin`: `https://github.com/ewan-grayest/idp-web-site.git`. Work is merged into `main`.
 
-After cloning, install the tracked commit hook once:
-
-```bash
-npm run hooks:install
-```
-
-Before **every commit**, increment the version, then stage both version files:
-
-```bash
-npm run version:patch        # or version:minor / version:major
-# stage the intended changes, including package.json and package-lock.json
-npm run version:check
-git commit
-```
-
-The hook checks the staged files, rejects unchanged/decreasing versions and requires the lockfile versions to match. GitHub Actions checks every new commit. Existing local history predates this policy; the initial push checks its tip. The current version appears in the footer. Tests for numerical version ordering are included.
+The version lives in `package.json` and shows in the site footer. Commits don't need a version change: bump it only when deploying a release (`npm run version:patch`, or `version:minor` / `version:major`), commit, then deploy as in [deploy/README.md](deploy/README.md).
 
 ## Verification against isolated data
 

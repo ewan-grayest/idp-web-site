@@ -5,7 +5,7 @@ import { groups, tr } from './labels'
 
 /**
  * Enquiries from header control 0.1.7–0.1.10 and entity-specific CTAs.
- * Stored in Russia (Yandex Cloud) per the hosting decision.
+ * Stored in Russia per the hosting decision.
  * Anyone may create a lead (with consent); only signed-in staff can read them.
  */
 export const Leads: CollectionConfig = {

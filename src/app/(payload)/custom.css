@@ -1,0 +1,10 @@
+/* Admin overrides, loaded after Payload's styles (which sit in the payload-default layer, so these win) */
+
+/* Phones: a long breadcrumb (a user's email, a project name) kept its full width and pushed
+   "Log out" and the account button past the right edge of the screen. Let it shrink and clip instead. */
+@media (max-width: 768px) {
+  .app-header__step-nav-wrapper {
+    min-width: 0;
+    overflow: hidden;
+  }
+}

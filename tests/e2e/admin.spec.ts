@@ -22,6 +22,36 @@ test('Log out in the admin header signs out, even with the side menu collapsed',
   await expect(page).toHaveURL(/\/admin\/login/)
 })
 
+test('The account button opens a menu with Account and Log out', async ({ page }, testInfo) => {
+  const email = accountFor(testInfo.project.name)
+  await page.goto('/admin/login')
+  await page.locator('#field-email').fill(email)
+  await page.locator('#field-password').fill(password)
+  await page.locator('button[type=submit]').click()
+  await expect(page).toHaveURL(/\/admin$/)
+
+  const accountButton = page.locator('.app-header__account [role=button]')
+  await accountButton.click()
+  // A menu, not a jump to the account page
+  await expect(page).toHaveURL(/\/admin$/)
+  await expect(page.locator('.popup__content')).toContainText(email)
+  await expect(accountButton).toHaveAttribute('aria-expanded', 'true')
+
+  // Clicking the button again closes it
+  await accountButton.click()
+  await expect(page.locator('#account-menu-sign-out')).toBeHidden()
+
+  await accountButton.click()
+  await page.locator('#account-menu-account').click()
+  await expect(page).toHaveURL(/\/admin\/account$/)
+
+  await accountButton.click()
+  await page.locator('#account-menu-sign-out').click()
+  await expect(page).toHaveURL(/\/admin\/login/)
+  const me = await page.evaluate(async () => (await fetch('/api/v1/users/me')).json())
+  expect(me.user).toBeNull()
+})
+
 test('Photo descriptions are optional; an empty one falls back to the project name', async ({ page, request }, testInfo) => {
   const email = accountFor(testInfo.project.name)
   await request.post('/api/v1/users/login', { data: { email, password } })

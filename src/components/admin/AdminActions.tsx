@@ -1,24 +1,18 @@
 'use client'
 /* Admin header (top right): always visible, unlike the nav's Log out icon,
    which is hidden while the side menu is collapsed (windows 1440px wide or less). */
-import { Button, useAuth, useConfig, useTranslation } from '@payloadcms/ui'
+import { Button, useTranslation } from '@payloadcms/ui'
 import React from 'react'
 
 import styles from './AdminActions.module.css'
 import { LanguageSwitch } from './LanguageSwitch'
 import { useAdminLabel } from './useAdminLabel'
+import { useSignOut } from './useSignOut'
 
 export function AdminActions() {
-  const { logOut } = useAuth()
-  const { config } = useConfig()
   const { t } = useTranslation()
   const label = useAdminLabel()
-
-  const signOut = async () => {
-    await logOut()
-    // Full page load: drops every cached admin view along with the session
-    window.location.assign(`${config.routes.admin}/login`)
-  }
+  const signOut = useSignOut()
 
   return (
     <div className={styles.actions}>

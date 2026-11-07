@@ -47,8 +47,8 @@ copy_in() {
   if [ "$kind" = volume ]; then
     in_volume "$vol" 'cp -a /from/. /v/' -v "$from":/from:ro || die "copying $what from $from failed; nothing was removed"
   else
-    # COPYFILE_DISABLE: macOS tar would add a ._ file for each file's extended attributes
-    COPYFILE_DISABLE=1 tar -C "$from" --exclude .DS_Store -cf - . | in_volume "$vol" 'tar -xf - -C /v' || die "copying $what from $from failed; nothing was removed"
+    # COPYFILE_DISABLE and --no-xattrs: leave out macOS file attributes, which add ._ files and warnings on the other side
+    COPYFILE_DISABLE=1 tar --no-xattrs -C "$from" --exclude .DS_Store -cf - . | in_volume "$vol" 'tar -xf - -C /v' || die "copying $what from $from failed; nothing was removed"
   fi
   say "  $what: copied from $from into the volume ${PROJECT}_$vol"
 }

@@ -104,7 +104,7 @@ test('Enquiry needs consent, which is unticked by default', async ({ page }) => 
   await expect(page.getByRole('status')).toContainText('Спасибо')
 })
 
-test('Consent is remembered once ticked', async ({ page }) => {
+test('Consent is never remembered between visits (152-ФЗ)', async ({ page }) => {
   await page.goto('/studio')
   await page.waitForLoadState('networkidle')
   await page.getByRole('button', { name: 'Написать нам' }).click()
@@ -113,5 +113,5 @@ test('Consent is remembered once ticked', async ({ page }) => {
   // Wait for the page to come alive, or the click lands before the button works
   await page.waitForLoadState('networkidle')
   await page.getByRole('button', { name: 'Написать нам' }).click()
-  await expect(page.locator('[data-spec="0.1.9"]')).toBeChecked()
+  await expect(page.locator('[data-spec="0.1.9"]')).not.toBeChecked()
 })

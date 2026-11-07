@@ -79,6 +79,7 @@ export interface Config {
     'social-posts': SocialPost;
     reviews: Review;
     leads: Lead;
+    consents: Consent;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -100,6 +101,7 @@ export interface Config {
     'social-posts': SocialPostsSelect<false> | SocialPostsSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
+    consents: ConsentsSelect<false> | ConsentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -577,6 +579,7 @@ export interface Review {
   sourceUrl?: string | null;
   date: string;
   consent: boolean;
+  publicationConsent?: boolean | null;
   originUrl: string;
   approved?: boolean | null;
   updatedAt: string;
@@ -601,6 +604,39 @@ export interface Lead {
   };
   locale?: ('ru' | 'en' | 'zh') | null;
   status?: ('new' | 'in-progress' | 'done') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Proof of visitors’ consent: time, IP address, browser, page, consent wording and document versions. Records cannot be edited and can be deleted only after a year.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consents".
+ */
+export interface Consent {
+  id: number;
+  purpose: 'personal-data' | 'publication' | 'cookies';
+  decision: 'agree' | 'necessary-only';
+  subject?: string | null;
+  source: 'lead' | 'review' | 'cookie-banner';
+  sourceId?: string | null;
+  wording?: string | null;
+  /**
+   * Documents from «Legal documents (14)» shown to the visitor: last change and text fingerprint (SHA-256). Earlier texts are kept in each document’s version history.
+   */
+  documents?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  originUrl?: string | null;
+  locale?: ('ru' | 'en' | 'zh') | null;
+  ip?: string | null;
+  userAgent?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -702,6 +738,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'leads';
         value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'consents';
+        value: number | Consent;
       } | null)
     | ({
         relationTo: 'media';
@@ -1015,6 +1055,7 @@ export interface ReviewsSelect<T extends boolean = true> {
   sourceUrl?: T;
   date?: T;
   consent?: T;
+  publicationConsent?: T;
   originUrl?: T;
   approved?: T;
   updatedAt?: T;
@@ -1037,6 +1078,25 @@ export interface LeadsSelect<T extends boolean = true> {
       };
   locale?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consents_select".
+ */
+export interface ConsentsSelect<T extends boolean = true> {
+  purpose?: T;
+  decision?: T;
+  subject?: T;
+  source?: T;
+  sourceId?: T;
+  wording?: T;
+  documents?: T;
+  originUrl?: T;
+  locale?: T;
+  ip?: T;
+  userAgent?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1289,6 +1349,9 @@ export interface SiteSetting {
   defaultNetwork?: ('vk' | 'facebook') | null;
   vkEnabled?: boolean | null;
   vkAppId?: string | null;
+  /**
+   * Not used: the Facebook comments widget is off (Russian personal data law, cross-border transfer).
+   */
   facebookAppId?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;

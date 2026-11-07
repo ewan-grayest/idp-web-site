@@ -7,7 +7,8 @@ import { useI18n } from '@/i18n/client'
 import { Link } from '@/i18n/Link'
 import { defaultLocale } from '@/i18n/locales'
 import { ENQUIRE_EVENT, type EnquireDetail } from '@/lib/enquire'
-import { checkLead, readConsent, rememberConsent, sendLead } from '@/lib/leads'
+import { checkLead, forgetRememberedConsent, sendLead } from '@/lib/leads'
+import { LEGAL_LINKS } from '@/lib/privacy'
 import { personPath, projectKinds, projectPath, type ProjectKind } from '@/lib/routes'
 import { applyTheme, currentTheme, THEME_EVENT, type Theme } from '@/lib/theme'
 import { MailIcon, MoonIcon, PhoneIcon, SearchIcon, SendIcon, SunIcon } from './Icons'
@@ -51,8 +52,8 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
     return () => window.removeEventListener(THEME_EVENT, sync)
   }, [])
 
-  // 0.1.9: unticked by default, remembered once ticked
-  useEffect(() => setConsent(readConsent()), [])
+  // 0.1.9: unticked every time (152-ФЗ), and never carried over from an earlier visit
+  useEffect(() => forgetRememberedConsent(), [])
 
   // A new page closes any open panel
   useEffect(() => setMode(null), [pathname])
@@ -181,6 +182,7 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
     setSending(false)
     if (ok) {
       setEmail('')
+      setConsent(false)
       setNote(t.header.thanks)
       setTimeout(() => setMode(null), 2500)
     } else {
@@ -296,18 +298,21 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
             <input
               type="checkbox"
               checked={consent}
-              onChange={(e) => {
-                setConsent(e.target.checked)
-                rememberConsent(e.target.checked)
-              }}
+              onChange={(e) => setConsent(e.target.checked)}
               data-spec="0.1.9"
             />
             <span data-spec="0.1.10">{t.header.consent}</span>
           </label>
-          {/* The consent text in full: Legal page 14, document «personal-data» */}
-          <a href={href('/legal#personal-data')} target="_blank" rel="noopener" className={styles.consentTerms} aria-label={t.header.consentTerms}>
-            {t.header.consentTermsShort} ↗
-          </a>
+          {/* The consent text in full and the policy: Legal page 14, documents «personal-data» and «privacy» */}
+          <span className={styles.consentTerms}>
+            <a href={href(LEGAL_LINKS.consent)} target="_blank" rel="noopener" aria-label={`${t.privacy.consentDoc} ${t.privacy.newTab}`}>
+              {t.privacy.consentDoc} ↗
+            </a>
+            {' · '}
+            <a href={href(LEGAL_LINKS.policy)} target="_blank" rel="noopener" aria-label={`${t.privacy.policy} ${t.privacy.newTab}`}>
+              {t.privacy.policy} ↗
+            </a>
+          </span>
           {note && (
             <p className={styles.note} role="status">
               {note}

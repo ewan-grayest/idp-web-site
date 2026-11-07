@@ -45,16 +45,20 @@ The project detail variants use page 5 component IDs because the attachment expl
 | Project feed | 3 | Site settings → Limits |
 | Latest project reviews | 5 | Site settings → Limits |
 | Hashtag | Unfiltered | Studio/GT in Site settings; Person/Project on entity |
-| Map provider | Yandex | Site settings; Google also supported |
+| Map provider | Yandex | Fixed: Google Maps removed for 152-ФЗ (data localization); loads after the visitor's consent |
 | Coordinates / zoom | Studio coordinates | Studio → Contacts |
 | VK integration | **Disabled** | Site settings → Enable VK integration / public app ID |
-| Facebook comment widget | Disabled without app ID | Site settings → public app ID |
+| Facebook comment widget | **Removed** (152-ФЗ cross-border transfer; Meta banned in Russia) | App ID field kept but unused |
 | Feed / review display | Enabled | Site settings |
 | Social network | VK fallback | Site settings; browser selection remembered |
 | Promo film / first-visit intro / autoplay / sound | Existing CMS values | Studio → Promo video |
 | Contacts and social profile links | Existing CMS values | Studio → Contacts |
 
 Feed limits are applied after entity and exact hashtag filtering. Anonymous visitors cannot publish feed items or approve their own reviews. Lead records are staff-only; public reviews do not reveal origin URLs or consent records.
+
+## Personal data (152-ФЗ)
+
+Consent boxes (0.1.9, 5.9.3) start unticked every time; reviews also need a separate consent to publication. Each consent and each cookie choice is written to «Журнал согласий» with time, IP address, browser, page, wording and document versions; records are read-only and can be deleted only after a year. The Yandex map waits for consent; Google Maps and the Facebook comment widget are gone. Details and the organisational checklist: [PERSONAL-DATA.md](PERSONAL-DATA.md).
 
 ## Deliberate scope and limits
 
@@ -68,10 +72,10 @@ Feed limits are applied after entity and exact hashtag filtering. Anonymous visi
 
 ## Validation
 
-- TypeScript and unit tests pass, including tag URL boundaries.
+- TypeScript and unit tests pass, including tag URL boundaries and the consent log rules.
 - Production Next.js build passes with all frontend, admin, API, short-link and sitemap routes.
 - The additive migration passed upgrade, rollback and re-upgrade on an isolated copy of the existing database.
-- `scripts/verify-spec.ts` passes eight integration groups: every page role and language, shell/logo behavior, default caps, latest reviews/VK off, custom caps/maps/tag URLs, moderation/privacy, context-aware leads, and sitemap/404/short redirects.
+- `scripts/verify-spec.ts` passes eight integration groups: every page role and language, shell/logo behavior, default caps, latest reviews/VK off, custom caps/no Google Maps/tag URLs, moderation/privacy with both review consents logged, context-aware leads with their consent record, and sitemap/404/short redirects.
 - Browser verification covers the narrow responsive studio layout, contextual public-project price enquiry and fullscreen image viewer. Provider sign-in is intentionally not exercised while VK is disabled.
 
 Admin sidebar names and editing tabs omit specification numbers in Russian, English and Chinese. Technical IDs remain in source comments, `data-spec` and this map.

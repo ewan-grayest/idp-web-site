@@ -1,0 +1,22 @@
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+  font: var(--t-body);
+  color: var(--c-text);
+}
+.placeholder p { max-width: 480px; margin: 0; }
+.show {
+  padding: 10px 20px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: 500 14px/20px var(--font);
+  cursor: pointer;
+}
+.show:hover { opacity: 0.75; }

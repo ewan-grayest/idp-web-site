@@ -23,6 +23,7 @@ import { PageTexts } from './globals/PageTexts'
 import { SiteSettings } from './globals/SiteSettings'
 import { SocialPosts } from './collections/SocialPosts'
 import { Reviews } from './collections/Reviews'
+import { Consents } from './collections/Consents'
 import { defaultLocale, locales } from './i18n/locales'
 import { tr } from './collections/labels'
 import { migrations } from './migrations'
@@ -62,7 +63,7 @@ export default buildConfig({
     },
   },
   // Admin side menu order: projects and team, then each page's section, then enquiries, files and users
-  collections: [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, SocialPosts, Reviews, Leads, Media, Users],
+  collections: [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, SocialPosts, Reviews, Leads, Consents, Media, Users],
   globals: [Studio, PageTexts, SiteSettings],
   // /api/v1/backups: see src/endpoints/backups.ts
   endpoints: backupEndpoints,

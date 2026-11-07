@@ -1,9 +1,11 @@
 /**
  * Enquiry (lead) helpers for header control 0.1.7–0.1.10 and entity CTAs.
- * Consent box is unticked by default and remembered once ticked
- * (confirmed decision, overrides spec 0.1.9).
+ * The consent box is unticked every time: a box ticked in advance or remembered from an earlier visit
+ * is not valid consent under 152-ФЗ (it replaces the earlier "remembered once ticked" decision on 0.1.9).
+ * The server writes each consent to «Журнал согласий» (src/collections/Consents.ts).
  */
 
+/** Where the old "remembered" tick lived; kept only to remove it */
 export const CONSENT_KEY = 'idp.consent'
 
 export type LeadEntity = { type: 'page' | 'project' | 'person' | 'partner'; ref?: string }
@@ -37,20 +39,11 @@ export async function sendLead(input: LeadInput, fetchImpl: typeof fetch = fetch
   return res.ok
 }
 
-export function readConsent(): boolean {
+/** Browsers that kept the tick from the old "remembered" box forget it. */
+export function forgetRememberedConsent(): void {
   try {
-    return localStorage.getItem(CONSENT_KEY) === '1'
+    localStorage.removeItem(CONSENT_KEY)
   } catch {
-    return false
-  }
-}
-
-/** A tick is remembered for next time; unticking forgets it. */
-export function rememberConsent(on: boolean): void {
-  try {
-    if (on) localStorage.setItem(CONSENT_KEY, '1')
-    else localStorage.removeItem(CONSENT_KEY)
-  } catch {
-    /* private mode: nothing to remember */
+    /* storage disabled */
   }
 }

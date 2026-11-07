@@ -117,7 +117,7 @@ export default async function ProjectPage({ params }: Params) {
           </section>
         )}
 
-        {settings.reviewsEnabled !== false && <Reviews project={project.id} title={title} url={url} items={reviews} limit={settings.limits.latestReviews} defaultNetwork={settings.defaultNetwork ?? 'vk'} vkAppId={settings.vkEnabled === true ? settings.vkAppId : null} facebookAppId={settings.facebookAppId} />}
+        {settings.reviewsEnabled !== false && <Reviews project={project.id} title={title} url={url} items={reviews} limit={settings.limits.latestReviews} defaultNetwork={settings.defaultNetwork ?? 'vk'} vkAppId={settings.vkEnabled === true ? settings.vkAppId : null} />}
 
         <section className={`${styles.sec} ${styles.ctaRow}`} data-spec="5.10">
           <EnquireButton label={t.project.learnMore} spec="5.10.1" context={t.project.learnMoreContext(title)} entity={entity} />

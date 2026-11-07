@@ -136,8 +136,9 @@
 }
 .consentLabel { display: flex; align-items: center; gap: 12px; font: 400 14px/20px var(--font); cursor: pointer; }
 .consentLabel input { width: 20px; height: 20px; margin: 0; accent-color: var(--c-on-green); flex: none; }
-.consentTerms { align-self: flex-start; margin-left: 32px; font: 500 13px/20px var(--font); color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-.consentTerms:hover { color: inherit; opacity: 0.75; }
+.consentTerms { align-self: flex-start; margin-left: 32px; font: 500 13px/20px var(--font); }
+.consentTerms a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.consentTerms a:hover { color: inherit; opacity: 0.75; }
 .note { margin: 0; font: 500 14px/20px var(--font); }
 
 /* 0.1.12 results panel */

@@ -218,9 +218,7 @@ Run TypeScript ones with `npx payload run <file>`. All import scripts are additi
 ## Known gaps
 
 - `POST /leads` has no rate limiting or spam protection, and leads send no notification; staff read them in the admin.
-- Bare `/team` is a stand-in, and the catch-all answers unknown sub-paths of known pages (`/press/x`) with "in progress" instead of a 404.
 - Placeholders in `lib/site.ts`: Facebook URL, ID Lab address. The map point and legal drafts need checking.
-- The `Leads.ts` header comment says leads are stored in Yandex Cloud; the site currently runs locally only.
 
 ### README statements that no longer match the code
 

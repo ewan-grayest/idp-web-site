@@ -15,6 +15,7 @@ import '@fontsource/roboto/latin-700.css'
 import '@fontsource/roboto/latin-300-italic.css'
 import '@/styles/globals.css'
 
+import { CookieNotice } from '@/components/shell/CookieNotice'
 import { SiteChrome } from '@/components/shell/SiteChrome'
 import { SpecInspector } from '@/components/shared/SpecInspector'
 import { siteUrl } from '@/lib/hosting'
@@ -62,6 +63,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
       <body>
         <I18nProvider locale={locale}>
           <SiteChrome contacts={contacts}>{children}</SiteChrome>
+          <CookieNotice />
           <SpecInspector />
         </I18nProvider>
       </body>

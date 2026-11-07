@@ -11,7 +11,7 @@ Source: https://github.com/ewan-grayest/idp-web-site. Requirements and component
 | 17 page roles and permalinks | `src/lib/routes.ts` |
 | 0.1 Header: logo, section title, phone, enquiry + consent, search | `src/components/shell/Header.tsx` |
 | 0.3 Footer | `src/components/shell/Footer.tsx`, links in `src/lib/site.ts` |
-| 1 Home: opposing sliders 1.2/1.3 of the projects ticked for Home (name, «Смотреть проект», ‹ ›, one progress segment per project, «Пауза» on hover, swipe on phones), floating logo 1.1 (opens Promo); the promo video plays over Home on a visitor's first visit (`/?intro` replays it) | `src/components/home/HomeSliders.tsx`, `src/app/(frontend)/[locale]/page.tsx` |
+| 1 Home: opposing sliders 1.2/1.3 of the projects ticked for Home (name unless switched off per project, «Смотреть проект», ‹ ›, one progress segment per project, «Пауза» on hover, swipe on phones), floating logo 1.1 (opens Promo); the promo video plays over Home on a visitor's first visit (`/?intro` replays it) | `src/components/home/HomeSliders.tsx`, `src/app/(frontend)/[locale]/page.tsx` |
 | 2 Promo video: uploaded in the admin (Студия → Промо-видео), a wordless placeholder clip until then | `src/components/promo/PromoVideo.tsx`, `public/promo-placeholder.*` |
 | 3 Studio and team: mission, team strip with an open card (photo, quote, link to Person), history timeline, online journal, map and address, company enquiry, partner tiles | `src/app/(frontend)/[locale]/studio`, `src/components/studio/`, `src/globals/Studio.ts`, `src/collections/Issues.ts` |
 | 4 Person: wide photo, role, name (header title), quote, interests, achievements timeline, their projects and tags, "ask me" enquiry | `src/app/(frontend)/[locale]/team/[slug]`, `src/components/person/`, `src/lib/person.ts` |
@@ -19,7 +19,7 @@ Source: https://github.com/ewan-grayest/idp-web-site. Requirements and component
 | 7 / 9 / 17 All projects of a kind: tag filter (up to 5 tags, «Выбрать» applies, `?tags=a,b` in the address), grid with a green hover veil and the project name, «Узнать ещё больше о проектах» enquiry | `src/app/(frontend)/[locale]/projects/[kind]/page.tsx`, `src/components/collection/`, `getCollection` in `src/lib/projects.ts` |
 | 6 Partners and Get-Together: scheme text, logo buttons that pick a partner (its text, «Как получить», photo, discount, projects and tags; `/partners#slug`), map and partnership contacts, enquiry | `src/app/(frontend)/[locale]/partners`, `src/components/pages/PartnersView.tsx`, `src/collections/Partners.ts` |
 | 10 Press «О нас пишут»: sideways slider of wide photos (own or the project's), source and date, opens the article | `src/app/(frontend)/[locale]/press`, `src/collections/Press.ts` |
-| 11 / 13 / 14 Lifestyle, Careers, Legal: vertical timeline (newest on top) beside the picked entry's title, photos and text; `#slug` opens an entry; 11 adds sharing; 14 starts with the company details (Студия → Реквизиты 14) | `src/components/pages/EntriesPage.tsx`, `src/collections/entries.ts` |
+| 11 / 13 / 14 Lifestyle, Careers, Legal: vertical timeline (newest on top) beside the picked entry's title, photos and text; `#slug` opens an entry; 11 adds sharing; 14 starts with the company details (Студия → Реквизиты) | `src/components/pages/EntriesPage.tsx`, `src/collections/entries.ts` |
 | 12 / 15 Payment, Media and PR: one admin text each (Тексты страниц) and «Вернуться» | `src/components/pages/TextPage.tsx`, `src/globals/PageTexts.ts` |
 | Reusable timeline (3.3, 4.2, 5.8), section rise motion, header title per section | `src/components/shared/` |
 | Leads (enquiries) stored in Postgres | `src/collections/Leads.ts`, `POST /api/v1/leads` |
@@ -32,19 +32,19 @@ All 17 page roles use the shared templates. `/team` permanently redirects to `/s
 Legal drafts and the press articles found online load with `npx payload run scripts/fill-pages.ts` (safe to re-run).
 Components carry their spec IDs in `data-spec` attributes. Shared project and collection templates use the reference IDs from pages 5 and 7; the outer `data-spec` identifies the actual page role (5/8/16 or 7/9/17). Add `?ids=1` for existing inline badges, and inspect `data-spec` for the full traceability surface.
 
-## Run the site on this Mac (Docker)
+## Run the site in the local environment (Docker)
 
 1. Install and open **Docker Desktop** (free for personal use and small businesses) and wait until it says it's running.
 2. In Terminal, in this folder: `./start.sh`
 
-The first start builds the site, which takes a few minutes. It then opens http://localhost:3000.
+The first start builds the site, which takes a few minutes. It then answers at http://localhost:3000; run `./start.sh --open-browser` to have it opened for you.
 The admin panel is at http://localhost:3000/admin, and the first visit asks you to create an account.
 Your data (database and uploaded photos) is kept between restarts, in Docker volumes unless you pick folders (see "Where the data is kept").
 
-- Stop: `docker compose stop`. Start again: `./start.sh`, which also rebuilds after code changes.
+- Stop: `docker compose stop`. Start again: `./start.sh`, which also rebuilds after code changes and then removes the old image versions and build cache this leaves behind, to keep disk space free. Volumes are never touched.
 - Logs: `docker compose logs -f app`
 - Settings live in `.env` (created on first start). After changing the phone number or site address there, run `./start.sh` again.
-- The site only answers on this computer (localhost), not on your network.
+- The site answers at localhost and on the local network. To keep it to localhost, change the port in `docker-compose.yml` to `'127.0.0.1:3000:3000'`.
 
 ## Where the data is kept
 
@@ -58,7 +58,7 @@ Two settings in `.env` (on the server: `deploy/.env`) choose where the content l
 Use full paths, for example `MEDIA_DIR=/Users/<you>/IDP data/media` or a mounted disk on the server (`/srv/idp/media`).
 Then run `./start.sh` again (server: the same `up -d --build`). Removing the settings switches back to the volumes, which are never deleted.
 
-- On a Mac, Docker Desktop must be allowed to use the folders: Settings > Resources > File sharing, add the folder
+- In the local environment, Docker Desktop must be allowed to use the folders: Settings > Resources > File sharing, add the folder
   (or one above it, e.g. `/Users/<you>/IDP data`), Apply & restart. `./start.sh` checks this and says so if it is missing;
   without it Docker would quietly keep the data inside its own disk instead of in your folder.
 - `PGDATA_DIR` must point to an empty folder the first time: PostgreSQL creates its files there.
@@ -96,7 +96,7 @@ npm run dev                   # http://localhost:3000, admin at /admin
 The first visit to `/admin` asks you to create the first editor account.
 For sample content (clearly marked [Пример], grey placeholder photos): `npx payload run scripts/seed.ts`,
 then open `/projects/residential/sample-loft` and `/projects/public/sample-cafe` (and `/en/…`, `/zh/…` for the sample translations).
-Tick «Показывать в слайдере на главной» on projects (Проекты in the admin) to replace the numbered placeholder slides: public projects go left, residential right, ordered by «Порядок на главной».
+Tick «Показывать в слайдере на главной» on projects (Проекты in the admin) to replace the numbered placeholder slides: public projects go left, residential right, ordered by «Порядок на главной». Untick «Показывать название на слайде главной» to leave a project's name off its slide (on by default); the title stays required, since the project page and lists use it.
 
 ## Checks
 
@@ -125,7 +125,116 @@ Before deploying a change, run `npx payload migrate:create <name>`; the producti
 
 ## Server hosting
 
-Development runs on the local Mac (`./start.sh`). Production is a Docker PaaS that builds the same `Dockerfile`; what it needs and the release steps are in [deploy/README.md](deploy/README.md).
+Development runs in the local environment (`./start.sh`). Production is a Docker host; the release steps are in [deploy/README.md](deploy/README.md).
+
+One image runs on any Docker host. Everything specific to a host (address, secrets, database, folders) comes in as settings when the container starts, so moving hosts or changing address needs no rebuild. Pick the setup that fits:
+
+| The host gives you | Use | Database | HTTPS |
+| --- | --- | --- | --- |
+| A server with Docker, and ports 80 and 443 free | `deploy/docker-compose.prod.yml`, steps in [deploy/README.md](deploy/README.md) | Container | Caddy, included |
+| Docker with its own proxy and HTTPS: a hosting panel, or nginx on a shared server | `deploy/docker-compose.behind-proxy.yml` | Container | The host |
+| One container and a managed database: a container platform | The `Dockerfile`, or an image you built and pushed | The host | The host |
+
+**Not supported:** hosts that keep no files between deploys, such as serverless containers. Uploads live on disk, so they would disappear.
+
+**Behind your own proxy.** Fill in `deploy/.env`, or enter the same settings in the panel and point it at the file:
+
+```bash
+docker compose -f deploy/docker-compose.behind-proxy.yml --env-file deploy/.env up -d --build
+```
+
+The site is then on `127.0.0.1:3000`. Set `APP_BIND` to change that, for example `8080` for all interfaces. Use backups from the admin («Резервные копии») in this setup, because `scripts/restore.sh` expects `docker-compose.prod.yml` and would also start Caddy.
+
+**One container.** A host that builds from the repository needs nothing more than the settings below. To build elsewhere and push the image, adding `--platform linux/amd64` when the host's processor differs from the one building:
+
+```bash
+docker build -t <registry>/idp-site .
+```
+
+```bash
+docker push <registry>/idp-site
+```
+
+**Check before trying a new host.** This builds the image with no build arguments and starts it the way hosts do: settings as variables only, with the host's own port and user. It uses a throwaway database and touches no real data:
+
+```bash
+./scripts/check-image.sh
+```
+
+### Required settings
+
+All are read when the container starts: change one and recreate the container (`up -d`), with no rebuild. The `NEXT_PUBLIC_` prefix is a leftover in the names and has no effect on when they are read.
+
+| Setting | Value | If it is wrong |
+| --- | --- | --- |
+| `PAYLOAD_SECRET` | Long random string (`openssl rand -hex 32`). Keep it unchanged | Empty: the container stops and says so. Changed: everyone must sign in again |
+| `DATABASE_URI` (or `DATABASE_URL`) | `postgres://user:password@host:5432/idp`, with special characters in the password URL-encoded. The compose files in `deploy/` build it from `POSTGRES_PASSWORD` | Empty: the container stops and says so. Wrong: every page fails |
+| `POSTGRES_PASSWORD` | Compose files in `deploy/` only. `openssl rand -hex 32`. PostgreSQL reads it only when it creates the database, so changing it later also needs `ALTER USER` in the database | Every page fails with `password authentication failed` |
+| `NEXT_PUBLIC_SITE_URL` | Site address: `https://example.ru` | Empty: links and share addresses point to `localhost`, with a warning in the log |
+| `SITE_DOMAIN` | `docker-compose.prod.yml` only. Domain without the scheme: `example.ru` | Caddy can't get a certificate |
+| `NEXT_PUBLIC_STUDIO_PHONE` | Optional fallback phone | |
+| `NEXT_PUBLIC_PROMO_VIDEO_URL` | Optional, used when no video is uploaded | |
+| `MEDIA_DIR`, `PGDATA_DIR` | Compose only. Optional server folders, see "Where the data is kept" | |
+| `APP_BIND` | `docker-compose.behind-proxy.yml` only. Where the proxy reaches the site, default `127.0.0.1:3000` | |
+
+The image already sets the rest, so leave these alone unless the host needs otherwise:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | Any other value skips migrations and lets the app change the database schema by itself |
+| `PORT` | `3000` | A host may set its own, and the site follows it |
+| `HOSTNAME` | Always `0.0.0.0`, whatever the host sets | Otherwise Next.js listens on the container's name only, so health checks to `localhost` fail |
+| `MEDIA_DIR`, `BACKUPS_DIR` | `/app/media`, `/app/backups` | Folders inside the container. With only the image and a host that allows one disk, mount it at `/data` and set `/data/media` and `/data/backups`. The compose files keep these paths and use `MEDIA_DIR` for the server folder instead |
+| `BACKUP_MODE` | `prod` | Names of backups made from the admin |
+
+Run every Compose command from the site folder with `-f` and the compose file, and with `--env-file deploy/.env`. Without `--env-file`, the database password comes through empty.
+
+### What the host must provide
+
+- **Storage that survives redeploys:** the upload and backup folders above, and `/var/lib/postgresql/data` when the database is a container. `/app/.next/cache` is optional and only holds resized images.
+- **PostgreSQL 16:** the backup tools in the image are version 16 and refuse a newer server. With a managed database, the role must be able to create tables. Restoring from the admin also needs `CREATEDB` and access to the `postgres` database. If its certificate is the provider's own, add `?sslmode=no-verify` to the address, or `self-signed certificate` appears in the log. Traffic stays encrypted, but the certificate isn't checked.
+- **Automatic restart** (`restart: unless-stopped` or the host's equivalent): a restore from the admin ends the process and relies on the restart.
+- **One running copy:** uploads are on one disk and migrations run at start, so don't scale the site to several copies.
+- **Health check, if the host asks for one:** `/api/health` answers 200 once the database is readable and 503 otherwise. The first answer also applies migrations, so allow it up to 2 minutes. The image declares this as its Docker health check too.
+- **Starting as root, ideally:** the image starts as root to give the upload folder to its own user (uid 100, gid 101), then drops to that user. If the host forbids root, the image runs as the user it is given, and that user must be able to write to the folders. The image's own folders already allow any user in group 0. If the host only forbids changing user, the site stays root and logs a warning.
+- **Proxy:** forward to the site's port and keep the original `Host`, or set `X-Forwarded-Host` and `X-Forwarded-Proto`. A mismatch breaks saving in the admin. Allow large request bodies for video and backup uploads. Caddy in `deploy/` already does this.
+- **Search engines:** only `deploy/Caddyfile` sends `X-Robots-Tag: noindex`. Behind any other proxy the site can be indexed from the first day, unless that proxy sends the header.
+- **Network for Caddy:** ports 80 and 443 open and the domain's DNS pointing at the server, so Caddy can get its certificate.
+- **Network for building:** Docker Hub, the npm registry and the Alpine package servers. Where Docker Hub is blocked, set `registry-mirrors` in the Docker daemon's settings, or build elsewhere and push the image.
+- **Disk and memory:** keep about 20 GB free beyond the database and media, and about 2 GB of memory (or swap) for the build. A smaller host can run an image built elsewhere. These are rules of thumb: rebuild leftovers filled about 21 GB in the local environment.
+- **Clean-up after each rebuild:** `docker image prune -f && docker builder prune -f`. Volumes are not touched. `./start.sh` does this locally, `deploy/` does not.
+
+### "A server error occurred. Reload to try again."
+
+This is the generic Next.js page for any exception on the server. The root layout reads the CMS on every page, so a problem with the settings or the database takes down the whole site, and the reason appears only in the logs:
+
+```bash
+docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env logs --tail=100 app db
+```
+
+```bash
+df -h && docker system df
+```
+
+In the local environment, use `docker compose logs --tail=100 app db`.
+
+| In the log | Cause | Fix |
+| --- | --- | --- |
+| `Can't start: the setting ... is empty` | The setting is empty, or the settings file is empty or wasn't loaded. The container stops and restarts | Set it and recreate the container. `up -d` is enough, no rebuild |
+| `cannot connect to Postgres` | Wrong `DATABASE_URI`, or the database is down or still starting | Check the address and the `db` log |
+| `password authentication failed` | `POSTGRES_PASSWORD` changed after the database was created | Restore the old value or run `ALTER USER` |
+| `No space left on device`, `PANIC` in the `db` log | Disk full, which stops PostgreSQL | Run the clean-up above, then restart. Never prune volumes |
+| `self-signed certificate` | A managed database uses the provider's own certificate | Add `?sslmode=no-verify` to `DATABASE_URI` |
+| `Error running migration` (the app keeps restarting), `relation` or `column ... does not exist` | The database doesn't match the code, often after pushing a schema in dev mode | Restore a backup, or repair the failed migration. See below |
+| `Invalid Server Actions request` | The proxy changes `Host` | Fix the proxy headers |
+
+**No error, pages just hang:** the database was used by `npm run dev`, or restored from a backup of one. Dev mode leaves a marker row, and production then waits for a terminal answer that can never come. Check for it, and take a backup before changing anything:
+
+```sql
+select name, batch from payload_migrations where batch = -1;
+```
+
+Deleting that row lets production run, but any migration not yet recorded then runs against a schema dev mode may already have changed, and can fail with `Error running migration`. Avoid this by never pointing `npm run dev` at the hosted database. Local `npm run dev` and `./start.sh` share one database, so check a local backup for the row before restoring it on the host.
 
 ## Settings, feeds and reviews
 
@@ -169,3 +278,5 @@ The verifier creates marked fixtures only in that database and exercises page ro
 - “Up to seven” in `5.1` means at most seven visible presentation frames on desktop, with horizontal scrolling for the unlimited `5.1.1` items. Mobile shows fewer frames.
 - Feed and review sections need approved CMS content. Missing studio photos/text are editorial content to fill in the CMS; development fixtures are clearly marked and are not production content.
 - ID Lab design/content remains TBD and its footer label is intentionally inactive. Checkout, job application forms and reward accounting are out of scope.
+- Admin tabs carry no spec numbers, so «Миссия», not «Миссия 3.1» (Ewan, 2026-11-05). Field labels and hints keep theirs.
+- The site must start on any Docker host (Ewan, 2026-11-05), so one image takes all its settings at start, including `NEXT_PUBLIC_*`, which are no longer build arguments. Hosts that keep no files between deploys stay unsupported, because uploads live on disk and foreign storage services are avoided.

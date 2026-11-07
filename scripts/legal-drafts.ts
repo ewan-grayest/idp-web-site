@@ -3,7 +3,7 @@
  * Written for a Russian studio site that takes e-mail enquiries; a lawyer should check them before launch.
  * Russian only: the English and Chinese site shows the Russian text until a translation is added in the admin.
  */
-const draft = '[Черновик: проверьте текст с юристом и заполните реквизиты в админке: Студия, контакты, реквизиты → Реквизиты 14]'
+const draft = '[Черновик: проверьте текст с юристом и заполните реквизиты в админке: Студия, контакты, реквизиты → Реквизиты]'
 
 export const legalDrafts = [
   {

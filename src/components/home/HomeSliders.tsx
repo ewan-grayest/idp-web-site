@@ -35,6 +35,7 @@ const SWIPE = 40
  * far edge; leaving the page closes. Captions and controls keep to each half's outer side, inside its zone.
  * Phones stack the halves: a swipe or ‹ › changes the slide.
  * Names, «Смотреть проект», the arrows and the segments were added on 2026-10-25, when Ewan found Home vague.
+ * Since 2026-11-03 each project can leave its name off the slide («Показывать название на слайде главной»).
  * 1.1: floating logo, grows 20% on hover and opens the fullscreen Promo page 2.
  */
 export function HomeSliders({ left, right }: { left: Slide[]; right: Slide[] }) {
@@ -178,9 +179,11 @@ function Half({
       </div>
       <div className={styles.caption}>
         <span className={styles.kind}>{label}</span>
-        <span key={current.key} className={styles.name}>
-          {current.title}
-        </span>
+        {!current.hideName && (
+          <span key={current.key} className={styles.name}>
+            {current.title}
+          </span>
+        )}
         {current.href ? (
           <span className={styles.open}>
             {t.home.open} <ArrowIcon />

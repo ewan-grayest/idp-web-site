@@ -8,6 +8,7 @@ import type { Media, Project } from '@/payload-types'
 import type { ProjectKind } from './routes'
 import { coverOf, mediaUrl, toCard, type CollectionCard } from './projects'
 import type { Rich } from './rich'
+import { studioPhoneSetting } from './hosting'
 import { partnersEmail, partnersPhone, social, studioEmail, studioPhone } from './site'
 import { getSettings } from './settings'
 
@@ -24,7 +25,7 @@ export const getContacts = cache(async () => {
     select: { phone: true, email: true, partnersPhone: true, partnersEmail: true, social: true, address: true, lat: true, lng: true, zoom: true },
   })
   return {
-    phone: s.phone || process.env.NEXT_PUBLIC_STUDIO_PHONE || studioPhone,
+    phone: s.phone || studioPhoneSetting() || studioPhone,
     email: s.email || studioEmail,
     partnersPhone: s.partnersPhone || partnersPhone,
     partnersEmail: s.partnersEmail || partnersEmail,
@@ -60,7 +61,7 @@ export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'):
   }))
 }
 
-/** Company details for the Legal page 14 (Студия → Реквизиты 14); only the filled ones. */
+/** Company details for the Legal page 14 (Студия → Реквизиты); only the filled ones. */
 export async function getCompany() {
   const payload = await getPayload({ config })
   const s = await payload.findGlobal({

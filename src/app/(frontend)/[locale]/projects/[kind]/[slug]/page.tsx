@@ -15,6 +15,7 @@ import { Timeline } from '@/components/shared/Timeline'
 import { Link } from '@/i18n/Link'
 import { localePath } from '@/i18n/locales'
 import { getLocale, getT } from '@/i18n/server'
+import { siteUrl } from '@/lib/hosting'
 import { getProject, getRecommendations, mediaUrl, tagPath, tagsOf, toPhotos } from '@/lib/projects'
 import { pages, projectKinds, projectPath, type ProjectKind } from '@/lib/routes'
 import { shortPath } from '@/lib/shortCode'
@@ -52,7 +53,7 @@ export default async function ProjectPage({ params }: Params) {
   const locale = await getLocale()
   const t = await getT()
   const pageId = projectKinds[kind].detail
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const site = siteUrl()
   // Shared links open the page in the language it was shared from
   const url = site + localePath(locale, projectPath(kind, slug))
   const title = project.title ?? ''

@@ -17,6 +17,7 @@ import '@/styles/globals.css'
 
 import { SiteChrome } from '@/components/shell/SiteChrome'
 import { SpecInspector } from '@/components/shared/SpecInspector'
+import { siteUrl } from '@/lib/hosting'
 import { I18nProvider } from '@/i18n/client'
 import { locales, localePath, PATH_HEADER } from '@/i18n/locales'
 import { getLocale, getT } from '@/i18n/server'
@@ -29,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // The address without its language prefix, passed on by src/proxy.ts
   const path = (await headers()).get(PATH_HEADER) || '/'
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+    metadataBase: new URL(siteUrl()),
     title: { default: 'ID project', template: '%s · ID project' },
     description: t.meta.description,
     // Search engines: this page's address in each language

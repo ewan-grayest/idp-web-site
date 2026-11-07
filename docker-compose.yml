@@ -1,26 +1,21 @@
-# Runs the whole site on this computer: the website/admin and its PostgreSQL database.
+# Runs the whole site in the local environment: the website/admin and its PostgreSQL database.
 #   ./start.sh            build and start (first time and after code changes)
 #   docker compose stop   stop; data is kept
 # For development with live reload, start only the database: docker compose up -d db
 services:
   app:
-    build:
-      context: .
-      args:
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-        NEXT_PUBLIC_STUDIO_PHONE: ${NEXT_PUBLIC_STUDIO_PHONE:-}
-        NEXT_PUBLIC_PROMO_VIDEO_URL: ${NEXT_PUBLIC_PROMO_VIDEO_URL:-}
+    build: .
     restart: unless-stopped
     env_file: .env
     environment:
       DATABASE_URI: postgres://idp:idp@db:5432/idp
-      # Inside the container uploads always live here; MEDIA_DIR in .env picks where that is on this computer
+      # Inside the container uploads always live here; MEDIA_DIR in .env picks where that is in the local environment
       MEDIA_DIR: /app/media
       # Backups made from the admin («Резервные копии»), in the same folder and format as scripts/backup.sh
       BACKUPS_DIR: /app/backups
       BACKUP_MODE: local
     ports:
-      - '0.0.0.0:3000:3000' # other devices on this network can open the site; '127.0.0.1:3000:3000' = this computer only
+      - '0.0.0.0:3000:3000' # other devices on this network can open the site; '127.0.0.1:3000:3000' = localhost only
     volumes:
       # Uploaded photos and videos: the Docker volume "media", or the folder set as MEDIA_DIR in .env
       - ${MEDIA_DIR:-media}:/app/media
@@ -40,7 +35,7 @@ services:
       POSTGRES_PASSWORD: idp
       POSTGRES_DB: idp
     ports:
-      - '127.0.0.1:5432:5432' # for `npm run dev` on this computer
+      - '127.0.0.1:5432:5432' # for `npm run dev` in the local environment
     volumes:
       # Database files: the Docker volume "pgdata", or the folder set as PGDATA_DIR in .env
       - ${PGDATA_DIR:-pgdata}:/var/lib/postgresql/data

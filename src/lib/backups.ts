@@ -18,6 +18,7 @@ import { pipeline } from 'node:stream/promises'
 
 import { migrations } from '../migrations'
 import { BackupError, type Message } from './backupMessages'
+import { libpqUrl } from './hosting'
 
 export const FORMAT_VERSION = '1'
 const NAME_RE = /^idp-[A-Za-z0-9_-]+\.tar$/
@@ -75,11 +76,7 @@ const isoLocal = (d = new Date()) => {
 }
 
 /** Database connection settings from DATABASE_URI; `db` swaps the database name (for the maintenance db and temp copies) */
-function dbUrl(db?: string) {
-  const url = new URL(process.env.DATABASE_URI || '')
-  if (db) url.pathname = `/${db}`
-  return url.toString()
-}
+const dbUrl = (db?: string) => libpqUrl(process.env.DATABASE_URI || '', db)
 const dbName = () => decodeURIComponent(new URL(process.env.DATABASE_URI || '').pathname.slice(1))
 const ident = (s: string) => `"${s.replace(/"/g, '""')}"`
 const lit = (s: string) => `'${s.replace(/'/g, "''")}'`

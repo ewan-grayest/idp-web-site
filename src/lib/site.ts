@@ -1,6 +1,6 @@
 /**
  * Studio-wide defaults. Real contacts come from the studio's public Taplink and VK pages (2026-10-25).
- * The studio edits them in the admin (Студия → Контакты 3.5); these values fill in whatever is left empty there.
+ * The studio edits them in the admin (Студия → Контакты); these values fill in whatever is left empty there.
  */
 /** Header 0.1.6 and Team page 3.5.3 (design projects), when the admin has none: NEXT_PUBLIC_STUDIO_PHONE in .env, else this. */
 export const studioPhone = '+7 (905) 588-94-88'

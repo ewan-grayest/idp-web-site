@@ -88,9 +88,9 @@ export const Studio: GlobalConfig = {
         {
           label: tr('Наша история', 'Our history', '我们的历史'),
           description: tr(
-            'Шкала «Наша история» на странице «Наша команда» (/studio). Личные достижения сотрудников — в «Команда» → сотрудник → «Достижения 4.2».',
-            'The «Our history» timeline on the «Our team» page (/studio). Each person\'s own achievements are in «People» → the person → «Achievements 4.2».',
-            '“我们的团队”页面 (/studio) 上的“我们的历史”时间轴。成员个人成就在“团队成员”→成员→“成就 4.2”中编辑。',
+            'Шкала «Наша история» на странице «Наша команда» (/studio). Личные достижения сотрудников — в «Команда» → сотрудник → «Достижения».',
+            'The «Our history» timeline on the «Our team» page (/studio). Each person\'s own achievements are in «People» → the person → «Achievements».',
+            '“我们的团队”页面 (/studio) 上的“我们的历史”时间轴。成员个人成就在“团队成员”→成员→“成就”中编辑。',
           ),
           fields: [
             {

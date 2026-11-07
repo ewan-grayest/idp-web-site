@@ -17,9 +17,9 @@ export const Partners: CollectionConfig = {
     preview: previewPartner,
     defaultColumns: ['name', 'discount', 'order'],
     description: tr(
-      'Страница 6 (/partners). Описание бонусной системы Get-Together: «Тексты страниц» → «Партнёры 6».',
-      'Page 6 (/partners). The Get-Together bonus scheme description is in «Тексты страниц» (Page texts) → «Партнёры 6».',
-      '第 6 页（/partners）。Get-Together 积分计划的介绍在“页面文字”→“合作伙伴 6”。',
+      'Страница 6 (/partners). Описание бонусной системы Get-Together: «Тексты страниц» → «Партнёры».',
+      'Page 6 (/partners). The Get-Together bonus scheme description is in «Тексты страниц» (Page texts) → «Партнёры».',
+      '第 6 页（/partners）。Get-Together 积分计划的介绍在“页面文字”→“合作伙伴”。',
     ),
   },
   access: { read: () => true },

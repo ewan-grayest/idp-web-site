@@ -2,7 +2,7 @@ import { expect, test, type APIRequestContext } from '@playwright/test'
 
 import { accountFor, password } from './accounts'
 
-// Студия → Промо-видео 2: show over Home on the first visit, start by itself, with sound (all on by default).
+// Студия → Промо-видео: show over Home on the first visit, start by itself, with sound (all on by default).
 // These change the site for everyone, so playwright.config.ts runs this file on its own after the other tests.
 test.describe.configure({ mode: 'serial' })
 

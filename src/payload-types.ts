@@ -170,6 +170,10 @@ export interface Project {
    * Lower numbers come first in the slider; no number means last.
    */
   homeOrder?: number | null;
+  /**
+   * Untick to leave only the photo and «Смотреть проект» (view project) on the slide. The title itself is still needed: the project page and lists use it.
+   */
+  homeShowName?: boolean | null;
   tags?: (number | Tag)[] | null;
   socialHashtag?: string | null;
   gallery?:
@@ -333,7 +337,7 @@ export interface Tag {
   createdAt: string;
 }
 /**
- * Page 6 (/partners). The Get-Together bonus scheme description is in «Тексты страниц» (Page texts) → «Партнёры 6».
+ * Page 6 (/partners). The Get-Together bonus scheme description is in «Тексты страниц» (Page texts) → «Партнёры».
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "partners".
@@ -760,6 +764,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   cover?: T;
   onHome?: T;
   homeOrder?: T;
+  homeShowName?: T;
   tags?: T;
   socialHashtag?: T;
   gallery?:

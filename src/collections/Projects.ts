@@ -58,7 +58,7 @@ const stage = (name: string, label: Record<string, string>): Field => ({
 export const Projects: CollectionConfig = {
   slug: 'projects',
   labels: { singular: { ru: 'Проект', en: 'Project', zh: '项目' }, plural: { ru: 'Проекты', en: 'Projects', zh: '项目' } },
-  admin: { group: groups.projects, useAsTitle: 'title', defaultColumns: ['title', 'kind', 'onHome', 'homeOrder', 'updatedAt'], preview: previewProject },
+  admin: { group: groups.projects, useAsTitle: 'title', defaultColumns: ['title', 'kind', 'onHome', 'homeOrder', 'homeShowName', 'updatedAt'], preview: previewProject },
   access: { read: () => true },
   hooks: {
     beforeChange: [
@@ -124,6 +124,19 @@ export const Projects: CollectionConfig = {
                   'Меньше число — раньше в слайдере; без числа — в конце.',
                   'Lower numbers come first in the slider; no number means last.',
                   '数字越小越靠前；不填则排在最后。',
+                ),
+              },
+            },
+            {
+              name: 'homeShowName',
+              type: 'checkbox',
+              defaultValue: true,
+              label: tr('Показывать название на слайде главной', 'Show the name on the Home slide', '在首页幻灯片上显示名称'),
+              admin: {
+                description: tr(
+                  'Снимите галочку, чтобы на слайде остались только фото и «Смотреть проект». Само название нужно и дальше: оно есть на странице проекта и в списках.',
+                  'Untick to leave only the photo and «Смотреть проект» (view project) on the slide. The title itself is still needed: the project page and lists use it.',
+                  '取消勾选后，幻灯片上只保留照片和“Смотреть проект”（查看项目）。名称本身仍需填写：项目页面和列表会用到它。',
                 ),
               },
             },

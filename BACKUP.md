@@ -49,7 +49,7 @@ A restore from the admin:
 The backups the admin makes live in the same folder as the scripts' (`backups/`, or `deploy/backups/` in production),
 mounted into the app container at `/app/backups`. The app's database tools are PostgreSQL 16, copied into the image from
 `postgres:16-alpine` (see `Dockerfile`). In `npm run dev` the page works too when `pg_dump`, `pg_restore` and `psql` 16
-are installed on the computer (on the PATH, or set `PG_BIN_DIR` to their folder), but after a restore restart the dev server by hand.
+are installed in the local environment (on the PATH, or set `PG_BIN_DIR` to their folder), but after a restore restart the dev server by hand.
 
 Only one backup or restore runs at a time: the admin and the scripts share a lock (`backups/.lock`).
 If a task was cut off by a crash, the next one from the admin clears the leftover lock itself.
@@ -74,13 +74,13 @@ Each backup is one file, `idp-<local|prod>-<date>_<time>.tar`, with a `.sha256` 
 in `backups/` (local) or `deploy/backups/` (production). Inside:
 
 - `db.dump`: the whole database (`pg_dump` custom format, compressed)
-- `media.tar`: everything in the media storage (`/app/media` in the app container, wherever `MEDIA_DIR` points on the computer)
+- `media.tar`: everything in the media storage (`/app/media` in the app container, wherever `MEDIA_DIR` points on the host)
 - `db-counts.txt`: the number of rows in every table, used to prove a restore is complete
 - `manifest.txt`: when and where it was made, PostgreSQL version, last database migration, number of media files
 - `SHA256SUMS`: a checksum for each of the files above
 
 The scripts reach the data through Docker, so they work the same whether `MEDIA_DIR` and `PGDATA_DIR` are
-left empty (Docker volumes) or set to folders on the computer.
+left empty (Docker volumes) or set to folders on the host.
 
 Backups hold enquiries (emails, names), so they are created readable by your user only. Treat them as private.
 
@@ -120,7 +120,7 @@ before a restore (`idp-…-pre-restore-…`) stay until you delete them.
 
 ### Off-site copy (optional)
 
-Keep at least one copy away from the computer that runs the site. Only Russian-payable or your own storage:
+Keep at least one copy away from the environment that runs the site. Only Russian-payable or your own storage:
 
 - Your own server or NAS: `BACKUP_UPLOAD_CMD='scp "$1" backup@nas.local:/srv/idp-backups/'`
 - Yandex Object Storage or Selectel (S3-compatible, paid in roubles) with [rclone](https://rclone.org) (free):
@@ -162,7 +162,7 @@ If anything goes wrong, restore the `pre-restore` backup the same way.
 
 ### Restore on a new or empty computer
 
-1. Install Docker (Docker Desktop on a Mac) and copy the site folder there.
+1. Install Docker (Docker Desktop in a local environment) and copy the site folder there.
 2. Put the saved settings file back: `.env` (local) or `deploy/.env` (production). Without a saved one, copy
    `.env.example` and set a new `PAYLOAD_SECRET`.
 3. Copy the backup `.tar` and `.tar.sha256` files into `backups/` (or `deploy/backups/`).
@@ -181,7 +181,7 @@ scripts/schedule-backup.sh off
 ```
 
 This adds one line to your user's crontab. Each night's output goes to `backup.log` in the backup folder;
-look there if a backup is missing. On a Mac the job runs only while the computer is awake and Docker Desktop is
+look there if a backup is missing. In the local environment the job runs only while the computer is awake and Docker Desktop is
 running (Docker Desktop's "Start when you sign in" setting helps). If macOS blocks it, give `cron` Full Disk
 Access in System Settings → Privacy & Security.
 

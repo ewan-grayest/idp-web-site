@@ -45,6 +45,17 @@ copy_in() {
   say "  $what: copied from $from to $to"
 }
 
+# Docker Desktop refuses folders it doesn't share, or quietly uses one inside its own disk: check a file written there appears here
+mkdir -p "$HOST_DATA_DIR"
+docker run --rm -v "$HOST_DATA_DIR":/data --entrypoint touch postgres:16 /data/.idp-docker-check >/dev/null 2>&1 || true
+if [ ! -f "$HOST_DATA_DIR/.idp-docker-check" ]; then
+  say "Docker can't use the folder $HOST_DATA_DIR."
+  say "In Docker Desktop open Settings > Resources > File sharing, add that folder (or one above it), click Apply & restart,"
+  say "then run this again. Nothing was changed."
+  exit 1
+fi
+rm -f "$HOST_DATA_DIR/.idp-docker-check"
+
 log "Stopping the $MODE site"
 dc stop >/dev/null 2>&1 || true
 

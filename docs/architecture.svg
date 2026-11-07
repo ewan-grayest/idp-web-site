@@ -1,0 +1,280 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1080" width="1600" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">
+  <title>ID project website — architecture (v0.1.2)</title>
+  <style>
+    .bg { fill: #ffffff; }
+    .t { fill: #1f2328; }
+    .m { fill: #57606a; }
+    .h { font-weight: 700; font-size: 14px; }
+    .k { font-weight: 700; font-size: 11px; letter-spacing: .08em; fill: #57606a; }
+    .actor { fill: #f6f8fa; stroke: #8c959f; }
+    .ext { fill: #ffffff; stroke: #8c959f; stroke-dasharray: 6 4; }
+    .edge { fill: #fff8e5; stroke: #d4a72c; }
+    .app { fill: #fbfcfd; stroke: #1f2328; stroke-width: 1.6; }
+    .site { fill: #f1f8e9; stroke: #6d9b2c; }
+    .cms { fill: #eef4ff; stroke: #3b6fd8; }
+    .sub { fill: #ffffff; stroke: #3b6fd8; stroke-dasharray: 4 3; }
+    .store { fill: #f5f0ff; stroke: #8250df; }
+    .tool { fill: #f6f8fa; stroke: #6e7781; }
+    .toolbox { fill: #ffffff; stroke: #afb8c1; }
+    .sep { stroke: #c9d1a8; }
+    .ar { fill: none; stroke: #57606a; stroke-width: 1.5; }
+    .ard { fill: none; stroke: #8c959f; stroke-width: 1.4; stroke-dasharray: 5 4; }
+    .head { fill: #57606a; }
+    .headd { fill: #8c959f; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .t { fill: #e6edf3; }
+      .m, .k { fill: #9198a1; }
+      .actor { fill: #161b22; stroke: #6e7681; }
+      .ext { fill: #0d1117; stroke: #6e7681; }
+      .edge { fill: #2a2112; stroke: #bb8009; }
+      .app { fill: #10151c; stroke: #c9d1d9; }
+      .site { fill: #16220d; stroke: #7fb33a; }
+      .cms { fill: #0f1d33; stroke: #4c8dff; }
+      .sub { fill: #0d1117; stroke: #4c8dff; }
+      .store { fill: #1d1430; stroke: #a371f7; }
+      .tool { fill: #161b22; stroke: #6e7681; }
+      .toolbox { fill: #0d1117; stroke: #3d444d; }
+      .sep { stroke: #3a4a22; }
+      .ar { stroke: #9198a1; }
+      .ard { stroke: #6e7681; }
+      .head { fill: #9198a1; }
+      .headd { fill: #6e7681; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" class="head"/>
+    </marker>
+    <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" class="headd"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="1080"/>
+
+  <!-- Title -->
+  <text x="40" y="36" class="t" font-size="22" font-weight="700">ID project website — current architecture</text>
+  <text x="40" y="58" class="m">v0.1.2 · Next.js 16 + Payload CMS 3 + PostgreSQL 16 · one app, one Docker image · runs locally today, server setup prepared in deploy/</text>
+
+  <!-- ============ Actors ============ -->
+  <rect class="actor" x="40" y="100" width="300" height="95" rx="8"/>
+  <text x="56" y="124" class="t h">Visitor · browser</text>
+  <text x="56" y="144" class="m">ru (default, /studio) · en (/en/…) · zh (/zh/…)</text>
+  <text x="56" y="161" class="m">React 19 · GSAP · Embla · PhotoSwipe</text>
+  <text x="56" y="178" class="m">light / dark theme · enquiry and review forms</text>
+
+  <rect class="actor" x="370" y="100" width="300" height="95" rx="8"/>
+  <text x="386" y="124" class="t h">Editor · Payload admin</text>
+  <text x="386" y="144" class="m">/admin, interface in RU · EN · 中</text>
+  <text x="386" y="161" class="m">content language switch ru / en / zh</text>
+  <text x="386" y="178" class="m">«Резервные копии» at /admin/backups</text>
+
+  <rect class="ext" x="720" y="100" width="460" height="95" rx="8"/>
+  <text x="736" y="124" class="t h">External services <tspan class="m" font-weight="400" font-size="12">(loaded in the browser only)</tspan></text>
+  <text x="736" y="144" class="m">Maps: Yandex (default) or Google iframe, chosen in Site settings</text>
+  <text x="736" y="161" class="m">Comments: VK openapi.js (off by default) · Facebook plugin</text>
+  <text x="736" y="178" class="m">Share links: VK / Facebook · Instagram: curated post URLs</text>
+
+  <!-- visitor → external (dashed, over the top) -->
+  <path class="ard" d="M190 100 V84 H950 V98" marker-end="url(#ad)"/>
+  <text x="560" y="80" class="m" font-size="11">iframes, SDK scripts, share links</text>
+
+  <!-- ============ Entry point ============ -->
+  <rect class="edge" x="40" y="235" width="1140" height="60" rx="8"/>
+  <text x="56" y="259" class="t"><tspan font-weight="700">Now (local):</tspan> docker compose · app published on 0.0.0.0:3000, reachable from the local network</text>
+  <text x="56" y="281" class="t"><tspan font-weight="700">Later (deploy/, prepared, not in use):</tspan> Caddy 2 on one Yandex Cloud VM · Let's Encrypt HTTPS · gzip/zstd · X-Robots-Tag noindex · reverse_proxy app:3000</text>
+
+  <path class="ar" d="M190 195 V233" marker-end="url(#a)"/>
+  <path class="ar" d="M520 195 V233" marker-end="url(#a)"/>
+
+  <!-- ============ App container ============ -->
+  <rect class="app" x="40" y="335" width="1140" height="525" rx="10"/>
+  <text x="60" y="360" class="t h">app container</text>
+  <text x="60" y="378" class="m">node:22-alpine · non-root user via entrypoint.sh</text>
+  <text x="640" y="360" class="t h">Next.js 16 standalone + Payload 3</text>
+  <text x="640" y="378" class="m">one Node process on port 3000</text>
+
+  <text x="60" y="404" class="k">PUBLIC SITE · src/app/(frontend)</text>
+  <text x="640" y="404" class="k">CMS AND API · src/app/(payload)</text>
+
+  <!-- entry → proxy / payload routes -->
+  <path class="ar" d="M480 295 V413" marker-end="url(#a)"/>
+  <text x="488" y="320" class="m" font-size="11">pages</text>
+  <path class="ar" d="M1060 295 V413" marker-end="url(#a)"/>
+  <text x="1052" y="313" class="m" font-size="11" text-anchor="end">/admin · /api/v1/*</text>
+  <text x="1052" y="327" class="m" font-size="11" text-anchor="end">(also browser fetch: leads, reviews, search)</text>
+
+  <!-- proxy -->
+  <rect class="site" x="60" y="415" width="520" height="65" rx="6"/>
+  <text x="76" y="436" class="t" font-weight="700">src/proxy.ts — language routing</text>
+  <text x="76" y="454" class="m">/studio → rewrite to /ru/studio · /ru/… → 308 to clean URL · /en, /zh pass</text>
+  <text x="76" y="471" class="m">first visit: idp-locale cookie, else Accept-Language · skips /admin, /api</text>
+
+  <path class="ar" d="M320 480 V498" marker-end="url(#a)"/>
+
+  <!-- App Router -->
+  <rect class="site" x="60" y="500" width="520" height="225" rx="6"/>
+  <text x="76" y="521" class="t" font-weight="700">App Router · app/(frontend)/[locale] · React Server Components</text>
+  <text x="76" y="542" class="m">/  Home sliders + intro video</text>
+  <text x="76" y="559" class="m">/promo</text>
+  <text x="76" y="576" class="m">/studio  (/team → /studio#team)</text>
+  <text x="76" y="593" class="m">/team/[slug]  Person</text>
+  <text x="76" y="610" class="m">/projects/[kind]  all projects</text>
+  <text x="76" y="627" class="m">/projects/[kind]/[slug]  project</text>
+  <text x="330" y="542" class="m">/partners</text>
+  <text x="330" y="559" class="m">/press · /journal</text>
+  <text x="330" y="576" class="m">/careers · /legal</text>
+  <text x="330" y="593" class="m">/payment · /media</text>
+  <text x="330" y="610" class="m">/p/[code]  short-link redirect</text>
+  <text x="330" y="627" class="m">[...slug] → 404 · /sitemap.xml</text>
+  <line class="sep" x1="76" y1="641" x2="564" y2="641"/>
+  <text x="76" y="660" class="m">renders src/components: shell (header, footer, menu), home, project</text>
+  <text x="76" y="677" class="m">viewer, studio, pages, shared · src/i18n dictionaries ru / en / zh</text>
+  <text x="76" y="694" class="m">src/styles design tokens · 17 page roles, tagged with data-spec IDs</text>
+  <text x="76" y="711" class="m">next/image: AVIF / WebP</text>
+
+  <path class="ar" d="M320 725 V743" marker-end="url(#a)"/>
+
+  <!-- lib -->
+  <rect class="site" x="60" y="745" width="520" height="100" rx="6"/>
+  <text x="76" y="766" class="t" font-weight="700">src/lib — server data layer</text>
+  <text x="76" y="785" class="m">getPayload({ config }): Payload Local API, in-process, no HTTP hop</text>
+  <text x="76" y="802" class="m">projects · studio · person · pages · social · settings · homeSlides</text>
+  <text x="76" y="819" class="m">client helpers: leads.ts → POST /api/v1/leads · shortCode · theme</text>
+  <text x="76" y="836" class="m">limits (feed and tag caps from Site settings) · routes · version</text>
+
+  <!-- lib → payload core -->
+  <path class="ar" d="M580 765 H608 V690 H638" marker-end="url(#a)"/>
+
+  <!-- payload routes -->
+  <rect class="cms" x="640" y="415" width="520" height="90" rx="6"/>
+  <text x="656" y="436" class="t" font-weight="700">Routes served by Payload</text>
+  <text x="656" y="455" class="m">/admin  admin UI + custom parts: top-bar actions, guide,</text>
+  <text x="656" y="472" class="m">            hotspot picker, language switch, backups view</text>
+  <text x="656" y="491" class="m">/api/v1/*  REST · /api/v1/graphql · /api/v1/backups (custom)</text>
+
+  <path class="ar" d="M900 505 V523" marker-end="url(#a)"/>
+
+  <!-- payload core -->
+  <rect class="cms" x="640" y="525" width="520" height="320" rx="6"/>
+  <text x="656" y="547" class="t" font-weight="700">Payload CMS 3 · src/payload.config.ts</text>
+  <text x="656" y="569" class="t">Collections (14)</text>
+  <text x="656" y="587" class="m">Projects · People · Tags · Partners · Issues (journal) · Press</text>
+  <text x="656" y="604" class="m">Lifestyle · Careers · LegalDocs · SocialPosts · Reviews</text>
+  <text x="656" y="621" class="m">Leads · Media (uploads) · Users (editors)</text>
+  <text x="656" y="643" class="t">Globals (3) <tspan class="m">Studio · PageTexts · SiteSettings</tspan></text>
+  <text x="656" y="664" class="m">Localization ru / en / zh, fallback to ru · Lexical rich text</text>
+  <text x="656" y="681" class="m">Access: public read · Leads, Reviews: anyone creates, staff reads</text>
+  <text x="656" y="698" class="m">sharp resizes uploads · postgresAdapter</text>
+  <text x="656" y="715" class="m">dev: schema push · production: 12 migrations applied on start</text>
+
+  <rect class="sub" x="656" y="732" width="488" height="100" rx="5"/>
+  <text x="670" y="752" class="t" font-weight="700">Backups engine</text>
+  <text x="670" y="770" class="m">src/endpoints/backups.ts + src/lib/backups.ts, signed-in staff only</text>
+  <text x="670" y="787" class="m">make · check · download · upload · restore · delete</text>
+  <text x="670" y="804" class="m">background jobs, polled by the admin page</text>
+  <text x="670" y="821" class="m">/opt/pg: pg_dump · pg_restore · psql 16, copied into the image</text>
+
+  <!-- ============ Storage ============ -->
+  <rect class="store" x="40" y="900" width="260" height="90" rx="8"/>
+  <text x="56" y="923" class="t h">Next.js cache</text>
+  <text x="56" y="943" class="m">volume nextcache</text>
+  <text x="56" y="960" class="m">→ /app/.next/cache</text>
+  <text x="56" y="977" class="m">optimised images</text>
+
+  <rect class="store" x="320" y="900" width="300" height="90" rx="8"/>
+  <text x="336" y="923" class="t h">Backups folder</text>
+  <text x="336" y="943" class="m">/app/backups ← BACKUPS_MOUNT</text>
+  <text x="336" y="960" class="m">idp-&lt;local|prod&gt;-&lt;date&gt;.tar + .sha256</text>
+  <text x="336" y="977" class="m">same format as scripts/backup.sh</text>
+
+  <rect class="store" x="640" y="900" width="250" height="90" rx="8"/>
+  <text x="656" y="923" class="t h">db · PostgreSQL 16</text>
+  <text x="656" y="943" class="m">volume pgdata or PGDATA_DIR</text>
+  <text x="656" y="960" class="m">127.0.0.1:5432 for npm run dev</text>
+  <text x="656" y="977" class="m">separate container</text>
+
+  <rect class="store" x="910" y="900" width="270" height="90" rx="8"/>
+  <text x="926" y="923" class="t h">Uploaded media</text>
+  <text x="926" y="943" class="m">/app/media ← MEDIA_DIR or volume</text>
+  <text x="926" y="960" class="m">photos, videos, resized copies</text>
+  <text x="926" y="977" class="m">promo video, partner logos</text>
+
+  <!-- storage arrows -->
+  <path class="ar" d="M170 845 V898" marker-end="url(#a)"/>
+  <path class="ar" d="M765 845 V898" marker-end="url(#a)"/>
+  <text x="772" y="882" class="m" font-size="11">SQL</text>
+  <path class="ar" d="M1045 845 V898" marker-end="url(#a)"/>
+  <text x="1052" y="882" class="m" font-size="11">files</text>
+  <path class="ar" d="M700 832 V880 H470 V898" marker-end="url(#a)"/>
+  <text x="482" y="875" class="m" font-size="11">pg_dump + media → .tar</text>
+
+  <!-- ============ Tooling column ============ -->
+  <rect class="toolbox" x="1220" y="100" width="340" height="890" rx="10"/>
+  <text x="1236" y="124" class="k">TOOLING AND DELIVERY</text>
+
+  <rect class="tool" x="1236" y="138" width="308" height="100" rx="6"/>
+  <text x="1250" y="159" class="t" font-weight="700">Local development</text>
+  <text x="1250" y="178" class="m">./start.sh → docker compose up (app + db)</text>
+  <text x="1250" y="195" class="m">npm run dev + docker compose up -d db</text>
+  <text x="1250" y="212" class="m">settings in .env (from .env.example)</text>
+  <text x="1250" y="229" class="m">migrations: npx payload migrate:create</text>
+
+  <rect class="tool" x="1236" y="254" width="308" height="168" rx="6"/>
+  <text x="1250" y="275" class="t" font-weight="700">scripts/</text>
+  <text x="1250" y="294" class="m">npx payload run: seed.ts (sample content),</text>
+  <text x="1250" y="311" class="m">import-archive, import-studio, fill-pages,</text>
+  <text x="1250" y="328" class="m">legal-drafts</text>
+  <text x="1250" y="345" class="m">verify-spec on an isolated idp_spec_qa DB</text>
+  <text x="1250" y="366" class="m">backup.sh · restore.sh · verify-backup.sh</text>
+  <text x="1250" y="383" class="m">schedule-backup.sh: nightly backups</text>
+  <text x="1250" y="400" class="m">--prod for the server setup in deploy/</text>
+
+  <rect class="tool" x="1236" y="438" width="308" height="100" rx="6"/>
+  <text x="1250" y="459" class="t" font-weight="700">Tests</text>
+  <text x="1250" y="478" class="m">npm run lint: TypeScript (tsc --noEmit)</text>
+  <text x="1250" y="495" class="m">Vitest unit: locales, routes, leads, limits,</text>
+  <text x="1250" y="512" class="m">short codes, admin labels, version</text>
+  <text x="1250" y="529" class="m">Playwright e2e: desktop + phone</text>
+
+  <rect class="tool" x="1236" y="554" width="308" height="100" rx="6"/>
+  <text x="1250" y="575" class="t" font-weight="700">Versioning and CI</text>
+  <text x="1250" y="594" class="m">every commit raises package.json version</text>
+  <text x="1250" y="611" class="m">.githooks/pre-commit checks staged files</text>
+  <text x="1250" y="628" class="m">GitHub Actions version.yml: PRs + main</text>
+  <text x="1250" y="645" class="m">current version shown in the site footer</text>
+
+  <rect class="tool" x="1236" y="670" width="308" height="84" rx="6"/>
+  <text x="1250" y="691" class="t" font-weight="700">Docs</text>
+  <text x="1250" y="710" class="m">README · BACKUP.md · deploy/README.md</text>
+  <text x="1250" y="727" class="m">SPEC-COMPLIANCE.md: spec → code map</text>
+  <text x="1250" y="744" class="m">docs/architecture.svg (this diagram)</text>
+
+  <rect class="tool" x="1236" y="770" width="308" height="84" rx="6"/>
+  <text x="1250" y="791" class="t" font-weight="700">Build</text>
+  <text x="1250" y="810" class="m">Dockerfile: npm ci + next build (standalone)</text>
+  <text x="1250" y="827" class="m">NEXT_PUBLIC_* baked in as build args</text>
+  <text x="1250" y="844" class="m">pgtools stage copies PostgreSQL 16 clients</text>
+
+  <text x="1236" y="932" class="m" font-size="11">backup / restore scripts reach the</text>
+  <text x="1236" y="947" class="m" font-size="11">database and media through docker</text>
+  <text x="1236" y="962" class="m" font-size="11">compose, into the same backups folder</text>
+  <path class="ard" d="M1230 945 H1184" marker-end="url(#ad)"/>
+
+  <!-- ============ Legend ============ -->
+  <path class="ar" d="M40 1035 H80" marker-end="url(#a)"/>
+  <text x="90" y="1039" class="m">request or data flow</text>
+  <path class="ard" d="M240 1035 H280" marker-end="url(#ad)"/>
+  <text x="290" y="1039" class="m">browser-side loads, scripts</text>
+  <rect class="site" x="470" y="1027" width="16" height="16" rx="3"/>
+  <text x="494" y="1039" class="m">public site</text>
+  <rect class="cms" x="590" y="1027" width="16" height="16" rx="3"/>
+  <text x="614" y="1039" class="m">CMS and API</text>
+  <rect class="store" x="720" y="1027" width="16" height="16" rx="3"/>
+  <text x="744" y="1039" class="m">persistent storage</text>
+  <rect class="edge" x="870" y="1027" width="16" height="16" rx="3"/>
+  <text x="894" y="1039" class="m">entry point</text>
+  <rect class="ext" x="990" y="1027" width="16" height="16" rx="3"/>
+  <text x="1014" y="1039" class="m">third party</text>
+</svg>

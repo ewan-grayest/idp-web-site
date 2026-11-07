@@ -1545,6 +1545,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "home_show_name": {
+          "name": "home_show_name",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
         "social_hashtag": {
           "name": "social_hashtag",
           "type": "varchar",

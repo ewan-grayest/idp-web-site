@@ -4,7 +4,7 @@ Describes the design as built. Last checked against the code on 2026-11-03.
 
 ## Sources, in order of precedence
 
-1. **Owner decisions**: dated `(Ewan, YYYY-MM-DD)` in code comments and in the README's "Open assumptions".
+1. **Owner decisions**: dated `(Ewan, YYYY-MM-DD)` in code comments and in the README's "Content and scope decisions".
 2. **Design tokens v1.0**: `src/styles/tokens.css`. They replace the spec's type and most of its colours.
 3. **Technical specification**: `../technical specifications.pptx`, in the parent `IDP Site/` folder, not in this repo. It defines the page numbers and component IDs. Six slides, in Russian.
 
@@ -152,7 +152,7 @@ Page frame: `SiteChrome` adds header, `main` and footer everywhere except Home a
 | Instagram feeds 3.8, 4.5, 6.7 | Not built | README |
 | Google map 3.5.2 | Free Yandex widget | README |
 
-The full list is under "Open assumptions" in the README.
+The full list is under "Content and scope decisions" in the README.
 
 ## Accessibility baseline
 

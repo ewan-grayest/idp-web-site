@@ -20,6 +20,9 @@ let introShown = false
  * its first frame with the play button. With sound on it starts with sound; browsers allow that only once the visitor
  * has clicked or tapped on the site, so on a first visit it starts muted with a hint, and the first click, tap or key
  * press anywhere turns the sound on. With sound off it plays muted and the sound button turns it on.
+ * Safari aborts play() while the video is still loading, so an aborted start is tried again once the video can play.
+ * If the browser refuses even a muted start (Safari in Low Power Mode or set to Never Auto-Play), the play button shows
+ * and one click on it starts the video with sound.
  * `intro`: the same video over Home on a visitor's first visit; closing it, Escape or the end of the video shows Home.
  */
 export function PromoVideo({
@@ -65,8 +68,8 @@ export function PromoVideo({
       return leave()
     }
     lastTap.current = now
-    // The click that turned the sound on keeps the video playing
-    if (now - unlockedAt.current < 600) return
+    // The click that turned the sound on keeps a playing video playing; a stopped one it starts, as the visitor expects
+    if (playing && now - unlockedAt.current < 600) return
     action()
   }
 
@@ -113,13 +116,44 @@ export function PromoVideo({
     const v = video.current
     if (!v) return
     if (!playing) return v.pause()
-    v.play().catch((e: DOMException) => {
-      if (e.name === 'AbortError') return // paused or closed before it started
-      if (e.name !== 'NotAllowedError') return setPlaying(false) // e.g. a file this browser cannot play
-      v.muted = true
-      setBlocked(true)
-      return v.play().catch(() => setPlaying(false))
-    })
+    let stopped = false
+    let aborts = 0
+    let unwait = () => {}
+    const start = () => {
+      try {
+        v.play().catch(refused)
+      } catch (e) {
+        refused(e) // some Safari versions throw instead of rejecting
+      }
+    }
+    // Safari rejects play() with AbortError while the video is still loading (WebKit bug 255024), even when nothing
+    // paused it: try again once the video can play
+    const retry = () => {
+      if (v.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+        const id = window.setTimeout(start, 200)
+        unwait = () => window.clearTimeout(id)
+      } else {
+        v.addEventListener('canplay', start, { once: true })
+        unwait = () => v.removeEventListener('canplay', start)
+      }
+    }
+    const refused = (e: unknown) => {
+      if (stopped) return // paused or closed meanwhile
+      const name = e instanceof DOMException ? e.name : ''
+      if (name === 'AbortError' && aborts++ < 3) return retry()
+      // No sound before a click or tap: play muted; the next click, tap or key press turns the sound on
+      if (name === 'NotAllowedError' && !v.muted) {
+        v.muted = true
+        setBlocked(true)
+        return start()
+      }
+      setPlaying(false) // refused even muted, or a file this browser cannot play: the play button
+    }
+    start()
+    return () => {
+      stopped = true
+      unwait()
+    }
   }, [playing])
 
   if (!open) return null

@@ -145,7 +145,7 @@ docker compose -f deploy/docker-compose.behind-proxy.yml --env-file deploy/.env 
 
 The site is then on `127.0.0.1:3000`. Set `APP_BIND` to change that, for example `8080` for all interfaces. Use backups from the admin («Резервные копии») in this setup, because `scripts/restore.sh` expects `docker-compose.prod.yml` and would also start Caddy.
 
-**One container.** A host that builds from the repository needs nothing more than the settings below. To build elsewhere and push the image, adding `--platform linux/amd64` when the host's processor differs from the one building:
+**One container.** A host that builds from the repository needs nothing more than the settings below; `.env.hosting.example` lists them ready to copy into a hosting panel. To build elsewhere and push the image, adding `--platform linux/amd64` when the host's processor differs from the one building:
 
 ```bash
 docker build -t <registry>/idp-site .

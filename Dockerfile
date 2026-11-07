@@ -24,6 +24,9 @@ RUN mkdir -p /opt/pg/bin /opt/pg/lib \
 FROM node:22-alpine AS run
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
+# Defaults so a hosting panel needs only the database and secret (see .env.hosting.example); any of these can be overridden.
+# HOSTNAME: Docker sets it to the container id, and the Next.js server would listen on that address only
+ENV HOSTNAME=0.0.0.0 MEDIA_DIR=/app/media BACKUPS_DIR=/app/backups BACKUP_MODE=prod
 RUN addgroup -S app && adduser -S app -G app && apk add --no-cache su-exec
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static

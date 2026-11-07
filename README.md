@@ -127,6 +127,20 @@ Before deploying a change, run `npx payload migrate:create <name>`; the producti
 
 Not in use: the site runs locally for now. `deploy/` holds a ready setup for one server (site, database, HTTPS) for later.
 
+### Any Docker host
+
+For a host that builds the site from this repo and asks only for the Dockerfile location:
+
+- **Dockerfile:** `Dockerfile` (the repo root is the build context). **Port:** `3000`.
+- **Database:** a PostgreSQL **16** database from the host or provider. Migrations create the tables on start.
+- **Settings:** copy the list from `.env.hosting.example` into the hosting panel. Only `DATABASE_URI`, `PAYLOAD_SECRET` and
+  `NEXT_PUBLIC_SITE_URL` need values. The image already sets the folders, `BACKUP_MODE=prod` and `HOSTNAME=0.0.0.0`.
+- `NEXT_PUBLIC_*` values are baked in by the build, so the host must pass them to the build. Most hosts do this with their environment variables.
+  After changing one, redeploy with a rebuild.
+- **Volumes:** `/app/media` is required, or uploads are lost on every redeploy. Also mount `/app/backups` for the admin's backups.
+- The build needs about 2 GB of RAM. HTTPS and the domain come from the host; `deploy/Caddyfile` is not used.
+- Open `/admin` straight after the first deploy and create the first editor account.
+
 ## Settings, feeds and reviews
 
 In the CMS, **Site settings and integrations** controls tag limits (default 5), feed caps (Studio/Person/GT 12, project 3), latest reviews (5), exact hashtag filters, map provider, feed/review visibility and social provider settings. All caps are integers from 1–100 and are enforced on the server. Map coordinates and zoom remain in Studio → Contacts.

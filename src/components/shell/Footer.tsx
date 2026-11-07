@@ -3,7 +3,8 @@
 import { useI18n } from '@/i18n/client'
 import { Link } from '@/i18n/Link'
 import type { Contacts } from '@/lib/pages'
-import { footerColumns, sisterSites } from '@/lib/site'
+import { COOKIE_SETTINGS_EVENT } from '@/lib/privacy'
+import { footerColumns, metaNetworks, sisterSites } from '@/lib/site'
 import { SITE_VERSION } from '@/lib/version'
 import { LanguageLinks } from './LanguageLinks'
 import styles from './Footer.module.css'
@@ -19,6 +20,7 @@ export function Footer({ social }: { social: Contacts['social'] }) {
             <li key={s.id}>
               <a href={s.href} rel="noopener" target="_blank" data-spec={s.id}>
                 {t.footer.social[s.key]}
+                {metaNetworks.includes(s.key) && '*'}
               </a>{' '}
               <span className="spec-id">{s.id}</span>
             </li>
@@ -46,6 +48,13 @@ export function Footer({ social }: { social: Contacts['social'] }) {
           <LanguageLinks className={styles.langs} pill />
           <span className={styles.copy}>© ID project, {new Date().getFullYear()}</span>
           <span className={styles.copy} data-site-version>v{SITE_VERSION}</span>
+        </div>
+
+        <div className={styles.notes}>
+          <button type="button" className={styles.cookieBtn} onClick={() => window.dispatchEvent(new Event(COOKIE_SETTINGS_EVENT))}>
+            {t.privacy.cookies.settings}
+          </button>
+          {social.some((s) => metaNetworks.includes(s.key)) && <p className={styles.meta}>{t.privacy.meta}</p>}
         </div>
       </div>
     </footer>

@@ -1,12 +1,14 @@
 import type { CollectionConfig } from 'payload'
 
 import { localeNames, locales } from '../i18n/locales'
+import { logConsent } from '../lib/consentLog'
 import { groups, tr } from './labels'
 
 /**
  * Enquiries from header control 0.1.7–0.1.10 and entity-specific CTAs.
  * Stored in Russia (Yandex Cloud) per the hosting decision.
  * Anyone may create a lead (with consent); only signed-in staff can read them.
+ * Each new lead writes its consent to «Журнал согласий» (src/collections/Consents.ts) in the same transaction.
  */
 export const Leads: CollectionConfig = {
   slug: 'leads',
@@ -17,6 +19,17 @@ export const Leads: CollectionConfig = {
     read: ({ req }) => Boolean(req.user),
     update: ({ req }) => Boolean(req.user),
     delete: ({ req }) => Boolean(req.user),
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc, operation, req }) => {
+        // Leads a visitor sends from the site; one staff add by hand (say after a call) or a script has no tick to prove
+        if (operation === 'create' && !req.user && req.payloadAPI !== 'local') {
+          await logConsent(req, { purpose: 'personal-data', source: 'lead', sourceId: doc.id, subject: doc.email, originUrl: doc.originUrl, locale: doc.locale })
+        }
+        return doc
+      },
+    ],
   },
   fields: [
     { name: 'email', type: 'email', required: true, label: tr('E-mail', 'Email', '电子邮件') },

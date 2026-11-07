@@ -26,14 +26,17 @@ test('Legal 14: company details first, then the documents; the address picks one
   await expect(page.getByRole('tabpanel').locator('[data-spec="14.1.1"]')).toHaveText('Авторское право')
 })
 
-test('The enquiry consent links to the personal data consent in a new tab', async ({ page, isMobile }) => {
+test('The enquiry consent links to the consent text and the policy in new tabs', async ({ page, isMobile }) => {
   test.skip(isMobile, 'same strip on phones')
   await page.goto('/studio')
   await page.waitForLoadState('networkidle')
   await page.locator('header [data-spec="0.1.4"]').click()
-  const terms = page.getByRole('link', { name: /Условия обработки данных/ })
+  const terms = page.getByRole('link', { name: /Текст согласия/ })
   await expect(terms).toHaveAttribute('href', '/legal#personal-data')
   await expect(terms).toHaveAttribute('target', '_blank')
+  const policy = page.locator('header').getByRole('link', { name: /Политика обработки персональных данных/ })
+  await expect(policy).toHaveAttribute('href', '/legal#privacy')
+  await expect(policy).toHaveAttribute('target', '_blank')
 })
 
 test('Press 10: each article opens its source in a new tab', async ({ page }) => {

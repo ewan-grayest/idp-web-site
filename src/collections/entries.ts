@@ -26,6 +26,8 @@ export function entries(slug: string, labels: Names, page: { id: number; path: s
       ),
     },
     access: { read: () => true },
+    // Legal documents keep every earlier text: «Журнал согласий» shows which version a visitor agreed to
+    ...(page.id === 14 ? { versions: { maxPerDoc: 0 } } : {}),
     defaultSort: '-date',
     ...(page.id === 11 ? { hooks: { beforeChange: [({ data, originalDoc }) => ({ ...data, shortCode: originalDoc?.shortCode || data.shortCode || `j-${makeShortCode()}` })] } } : {}),
     fields: [

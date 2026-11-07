@@ -3,6 +3,7 @@
  * and the press articles about the studio for page 10 (from content-source/press.json, collected 2026-10-25).
  * Run: npx payload run scripts/fill-pages.ts
  * Safe to re-run: a document or article that already exists (same slug or same link) is left as it is. Nothing is deleted.
+ * `REFRESH_DRAFTS=1 npx payload run scripts/fill-pages.ts` also brings legal documents still marked «[Черновик» up to date.
  */
 import { getPayload } from 'payload'
 
@@ -14,10 +15,22 @@ const payload = await getPayload({ config })
 const locale = 'ru' as const
 const log: string[] = []
 
+// REFRESH_DRAFTS=1 (`payload run` doesn't pass on arguments): replace legal documents whose text still carries the «[Черновик» marker with the current drafts,
+// e.g. after the 152-ФЗ update of 2026-11-07. Delete the marker once a lawyer has checked a document, and it is left alone.
+// The replaced text stays in the document's version history in the admin.
+const refresh = process.env.REFRESH_DRAFTS === '1'
+
 for (const d of legalDrafts) {
-  const found = await payload.find({ collection: 'legal', where: { slug: { equals: d.slug } }, limit: 1, depth: 0 })
-  if (found.docs[0]) continue
-  await payload.create({ collection: 'legal', locale, data: { slug: d.slug, title: d.title, date: '2026-10-26T00:00:00.000Z', text: toLexical(d.text) as never } })
+  const found = await payload.find({ collection: 'legal', where: { slug: { equals: d.slug } }, limit: 1, depth: 0, locale })
+  const doc = found.docs[0]
+  if (doc) {
+    if (refresh && JSON.stringify(doc.text ?? '').includes('[Черновик')) {
+      await payload.update({ collection: 'legal', id: doc.id, locale, data: { title: d.title, date: new Date().toISOString(), text: toLexical(d.text) as never } })
+      log.push(`legal draft refreshed: ${d.title}`)
+    }
+    continue
+  }
+  await payload.create({ collection: 'legal', locale, data: { slug: d.slug, title: d.title, date: new Date().toISOString(), text: toLexical(d.text) as never } })
   log.push(`legal document added: ${d.title}`)
 }
 

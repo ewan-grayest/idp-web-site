@@ -5,14 +5,15 @@ import { useI18n } from '@/i18n/client'
 import { Link } from '@/i18n/Link'
 import styles from '@/components/shared/Social.module.css'
 import { socialCopy } from '@/lib/socialCopy'
+import { LEGAL_LINKS } from '@/lib/privacy'
 
 type Network = 'vk' | 'facebook'
 type Review = { id: number; name: string; text: string; date: string; network: Network; sourceUrl?: string | null }
 type VKApi = { init: (options: { apiId: number; onlyWidgets: boolean }) => void; Widgets: { Comments: (id: string, options: { limit: number; attach: false; pageUrl: string }, pageId: string) => void } }
 declare global { interface Window { VK?: VKApi } }
 
-export function Reviews({ project, title, url, items, limit, defaultNetwork, vkAppId, facebookAppId }: {
-  project: number; title: string; url: string; items: Review[]; limit: number; defaultNetwork: Network; vkAppId?: string | null; facebookAppId?: string | null
+export function Reviews({ project, title, url, items, limit, defaultNetwork, vkAppId }: {
+  project: number; title: string; url: string; items: Review[]; limit: number; defaultNetwork: Network; vkAppId?: string | null
 }) {
   const { locale, t } = useI18n()
   const copy = socialCopy[locale]
@@ -62,14 +63,15 @@ export function Reviews({ project, title, url, items, limit, defaultNetwork, vkA
     const data = new FormData(form)
     setSending(true); setStatus('')
     try {
-      const res = await fetch('/api/v1/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), text: data.get('text'), consent: data.get('consent') === 'on', project, network, originUrl: window.location.href }) })
+      const res = await fetch('/api/v1/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), text: data.get('text'), consent: data.get('consent') === 'on', publicationConsent: data.get('publicationConsent') === 'on', project, network, originUrl: window.location.href }) })
       if (!res.ok) throw new Error('Review rejected')
       form.reset(); setStatus(copy.thanks)
     } catch { setStatus(t.header.failed) }
     finally { setSending(false) }
   }
 
-  const providerReady = network === 'vk' ? Boolean(vkAppId) : Boolean(facebookAppId)
+  // Only VK's widget can load: Facebook's would send visitors' data abroad (152-ФЗ, ст. 12) and Meta is banned in Russia
+  const providerReady = network === 'vk' && Boolean(vkAppId)
   return <section className={styles.section} data-spec="5.9" data-header-title={copy.heading}>
     <div className={styles.heading}><h2>{copy.heading}</h2><span>{title}</span></div>
     <div className={styles.networks} role="group" aria-label={copy.network} data-spec="5.9.1">
@@ -82,14 +84,18 @@ export function Reviews({ project, title, url, items, limit, defaultNetwork, vkA
     <form className={styles.form} onSubmit={submit} data-spec="5.9.3" aria-label={copy.leave}>
       <label>{copy.name}<input name="name" required maxLength={100} autoComplete="name" /></label>
       <label>{copy.leave}<textarea name="text" required minLength={10} maxLength={3000} onFocus={() => window.dispatchEvent(new CustomEvent('idp-review-context', { detail: `${copy.leave} · ${title}` }))} onBlur={() => window.dispatchEvent(new CustomEvent('idp-review-context', { detail: null }))} /></label>
-      <label className={styles.consent}><input name="consent" type="checkbox" required /><span>{t.header.consent} · <Link href="/legal#personal-data">{t.header.consentTermsShort}</Link></span></label>
+      {/* Two separate consents (152-ФЗ): processing, and publishing the name and review (ст. 10.1); neither is ticked in advance */}
+      <label className={styles.consent}><input name="consent" type="checkbox" required /><span>{t.header.consent} · <Link href={LEGAL_LINKS.consent} target="_blank" rel="noopener">{t.privacy.consentDoc}</Link></span></label>
+      <label className={styles.consent}><input name="publicationConsent" type="checkbox" required /><span>{t.privacy.publication} · <Link href={LEGAL_LINKS.publication} target="_blank" rel="noopener">{t.privacy.publicationDoc}</Link></span></label>
+      <p className={styles.note}><Link href={LEGAL_LINKS.policy} target="_blank" rel="noopener">{t.privacy.policy}</Link></p>
       <p className={styles.note}>{copy.moderation}</p>
       <button type="submit" className={styles.submit} disabled={sending} aria-busy={sending} data-spec="5.9.4">{t.header.send}</button>
       <p role="status">{status}</p>
     </form>
     {providerReady && <div>
       <button type="button" className={styles.network} aria-expanded={widget} onClick={() => setWidget((v) => !v)}>{copy.socialComments}</button>
-      {widget && (network === 'vk' ? <div ref={host} className={styles.widget} /> : <iframe className={styles.widget} title="Facebook comments" src={`https://www.facebook.com/plugins/comments.php?href=${encodeURIComponent(url)}&numposts=${limit}&order_by=reverse_time&width=680&appId=${facebookAppId}`} />)}
+      <p className={styles.note}>{t.privacy.social}</p>
+      {widget && <div ref={host} className={styles.widget} />}
     </div>}
   </section>
 }

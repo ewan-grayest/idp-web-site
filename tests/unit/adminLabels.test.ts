@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { Consents } from '@/collections/Consents'
 import { Careers, LegalDocs, Lifestyle } from '@/collections/entries'
 import { Issues } from '@/collections/Issues'
 import { Leads } from '@/collections/Leads'
@@ -31,7 +32,7 @@ describe('admin field names', () => {
   // Payload lists the fields that failed to save as one comma-separated line and splits it on every comma,
   // so a comma inside a field name breaks the list into nonsense (Ewan's project 12, 2026-10-26)
   it('have no commas', () => {
-    const all = [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, Leads, Media, Users, Studio, PageTexts]
+    const all = [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, Leads, Consents, Media, Users, Studio, PageTexts]
     const bad = labels((all as unknown as Node[]).flatMap((c) => c.fields ?? [])).filter((l) => l.includes(','))
     expect(bad).toEqual([])
   })

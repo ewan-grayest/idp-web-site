@@ -11,6 +11,8 @@ export const partnersEmail = 'sale@id-proekt.com'
 /* Telegram https://t.me/IDPROJECT_INFO and VK messages vk.me/id_project_studio are not in the spec's footer. */
 
 /** Footer 0.3.1–0.3.4. Labels are dictionary keys: footer.social.* */
+/** Networks of Meta, banned in Russia as extremist: their names carry an asterisk and a note in the footer. */
+export const metaNetworks: readonly string[] = ['instagram', 'facebook']
 export const social = [
   { id: '0.3.1', key: 'instagram', href: 'https://www.instagram.com/id_project_/' },
   { id: '0.3.2', key: 'vk', href: 'https://vk.ru/id_project_design' },
@@ -55,6 +57,8 @@ export const footerColumns = [
     key: 'legal',
     links: [
       { key: 'terms', href: '/legal' },
+      // 152-ФЗ, ч. 2 ст. 18.1: the personal data policy is reachable from every page
+      { key: 'privacy', href: '/legal#privacy' },
       { key: 'copyright', href: '/legal#copyright' },
       { key: 'archive', href: '/projects/archive' },
     ],

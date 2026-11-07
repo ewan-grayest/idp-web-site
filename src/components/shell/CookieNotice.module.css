@@ -1,0 +1,33 @@
+/* Cookie notice: a card in the bottom-left corner, above every page including Home and Promo */
+.notice {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 200;
+  width: min(520px, calc(100vw - 48px));
+  padding: 20px 24px;
+  border-radius: 8px;
+  background: var(--c-raised);
+  color: var(--c-text);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+.text { margin: 0 0 16px; font: var(--t-small); }
+.more { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.primary,
+.secondary {
+  padding: 10px 20px;
+  border-radius: 999px;
+  font: 500 14px/20px var(--font);
+  cursor: pointer;
+}
+/* Both choices look equally easy to press: refusing must be as simple as agreeing */
+.primary { border: 1px solid var(--c-accent); background: var(--c-accent); color: var(--c-on-accent); }
+.secondary { border: 1px solid currentColor; background: transparent; color: inherit; }
+.primary:hover,
+.secondary:hover { opacity: 0.85; }
+
+@media (max-width: 767px) {
+  .notice { left: 16px; right: 16px; bottom: 16px; width: auto; padding: 16px; }
+  .actions > button { flex: 1 1 auto; }
+}

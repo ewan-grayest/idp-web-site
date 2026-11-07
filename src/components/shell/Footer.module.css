@@ -58,6 +58,20 @@
 /* Site languages: the same bar as on Home (LanguageLinks `pill`); the header has no language button */
 .footer .langs { margin-left: auto; background: #23221f; }
 .langs + .copy { margin-left: 0; }
+
+/* Cookie settings and the note on Meta's networks */
+.notes { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; font: var(--t-small); }
+.cookieBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-on-green);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.meta { margin: 0; }
 .footer .langs a { color: rgba(245, 242, 236, 0.72); }
 .footer .langs a:hover, .footer .langs a[aria-current='true'] { color: #f5f2ec; text-decoration: none; }
 

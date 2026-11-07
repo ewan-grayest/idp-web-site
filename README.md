@@ -2,8 +2,9 @@
 
 Next.js 16 + Payload CMS 3 + PostgreSQL, one app and one Docker image.
 Source: https://github.com/ewan-grayest/idp-web-site. Requirements and component coverage: [SPEC-COMPLIANCE.md](SPEC-COMPLIANCE.md).
+Personal data law (152-ФЗ) and what is left to do outside the code: [PERSONAL-DATA.md](PERSONAL-DATA.md).
 
-## Specification implementation (v0.1.1)
+## Specification implementation (v0.2.0)
 
 | Spec | Where |
 |---|---|
@@ -23,13 +24,14 @@ Source: https://github.com/ewan-grayest/idp-web-site. Requirements and component
 | 12 / 15 Payment, Media and PR: one admin text each (Тексты страниц) and «Вернуться» | `src/components/pages/TextPage.tsx`, `src/globals/PageTexts.ts` |
 | Reusable timeline (3.3, 4.2, 5.8), section rise motion, header title per section | `src/components/shared/` |
 | Leads (enquiries) stored in Postgres | `src/collections/Leads.ts`, `POST /api/v1/leads` |
+| 152-ФЗ: consent boxes never pre-ticked or remembered, separate publication consent for reviews, «Журнал согласий» (time, IP, browser, wording, document versions; read-only, kept at least a year), cookie notice, Yandex map only after consent, no Google Maps or Facebook widget, policy linked on every page | `src/collections/Consents.ts`, `src/lib/consentLog.ts`, `src/lib/privacy.ts`, `src/components/shell/CookieNotice.tsx`, [PERSONAL-DATA.md](PERSONAL-DATA.md) |
 | Dark/light switch (design tokens v1.0): follows the system setting, remembers the visitor's choice; Home, Promo and the photo viewer stay dark | `src/styles/tokens.css`, `src/lib/theme.ts` |
 | Languages: Russian (default, `/studio`), English (`/en/studio`), Chinese (`/zh/studio`); switch in the header, footer and on Home; translatable content with Russian fallback | `src/i18n/`, `src/proxy.ts`, `localization` in `src/payload.config.ts` |
 | Site menu (not in the spec; added 2026-10-25 when Ewan found no navigation): the header's last button opens every section, contacts, languages and the theme switch; Home has none (Ewan, 2026-10-25) | `src/components/shell/SiteMenu.tsx`, `menuMain` / `menuMore` in `src/lib/site.ts` |
 | CMS admin, in Russian, English or Chinese; "Open site" and "Log out" always in its top bar; side menu grouped as projects and team / site pages / enquiries, files, access; contacts, social links and company details in Студия | `/admin`, `src/components/admin/`, `groups` in `src/collections/labels.ts` |
 
 All 17 page roles use the shared templates. `/team` permanently redirects to `/studio#team`; individual people remain at `/team/[slug]`. Unknown nested URLs return 404. The generated `/sitemap.xml` includes the public routes and entity pages in all three languages.
-Legal drafts and the press articles found online load with `npx payload run scripts/fill-pages.ts` (safe to re-run).
+Legal drafts and the press articles found online load with `npx payload run scripts/fill-pages.ts` (safe to re-run). `REFRESH_DRAFTS=1` also replaces legal documents still marked «[Черновик» with the current drafts.
 Components carry their spec IDs in `data-spec` attributes. Shared project and collection templates use the reference IDs from pages 5 and 7; the outer `data-spec` identifies the actual page role (5/8/16 or 7/9/17). Add `?ids=1` for existing inline badges, and inspect `data-spec` for the full traceability surface.
 
 ## Run the site on this Mac (Docker)

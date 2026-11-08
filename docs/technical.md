@@ -141,7 +141,7 @@ Window events: `idp:theme` (theme changed), `idp:enquire` (open the enquiry form
 Base `/api/v1`, chosen so a client area can be added later without breaking URLs. Payload provides REST and `/api/v1/graphql` for every collection and global.
 
 - **`POST /api/v1/leads`**: the public enquiry endpoint. Body: `email`, `consent`, `originUrl`, optional `context`, `entity`, `locale`. No rate limiting or captcha.
-- **`/api/v1/backups`**: signed-in admins only (`guarded` in `src/endpoints/backups.ts`). Long tasks run in the background and the page polls for their steps.
+- **`/api/v1/backups`**: signed-in admins only (`guarded` in `src/endpoints/backups.ts`). Long tasks run in the background; the page follows their steps at `GET /backups/job/:id`, which needs no sign-in, only the task's random id: a restore replaces the accounts the sign-in is checked against, and the restarted site answers 404 for a task it doesn't know.
 - **`GET /api/v1/diagnostics`**: signed-in admins only. Settings with secrets blanked out, live checks and the kept log lines (`src/endpoints/diagnostics.ts`).
 
 Search (`Header.tsx`) queries `projects.title` and `people.name` through REST with `like`, in the visitor's language and Russian. It does not cover partners, articles or entries.

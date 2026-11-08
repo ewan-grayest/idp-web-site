@@ -149,15 +149,26 @@ upload_backup() {
   [ -n "$backup" ]
 }
 delete_photo() { api DELETE "/api/v1/media/$media_id" >/dev/null && page_gone "/api/v1/media/file/$file"; }
-# A restore ends the site's process on purpose; the container starts it again by itself
+# A restore ends the site's process on purpose; the container starts it again by itself. Followed as the admin page
+# follows it: by the task's id, without sign-in (the restore replaces the accounts), through «restarting» until the
+# restarted site no longer knows the task
 restore_backup() {
-  api POST "/api/v1/backups/$backup/restore" -H 'Content-Type: application/json' -d "{\"confirm\":\"$backup\"}" >/dev/null || return 1
-  i=0
+  job=$(api POST "/api/v1/backups/$backup/restore" -H 'Content-Type: application/json' -d "{\"confirm\":\"$backup\"}" | json job.id)
+  [ -n "$job" ] || return 1
+  i=0 seen=
   while [ $i -lt 120 ]; do
-    logs_say "$app" 'The site process ended; starting it again' && return 0
-    [ "$(job_state)" = failed ] && { show_job_error; return 1; }
+    out=$(curl -s -m 5 -w '\n%{http_code}' "$base/api/v1/backups/job/$job")
+    body=$(echo "$out" | sed '$d')
+    case $(echo "$out" | tail -n 1) in
+      200)
+        case $(echo "$body" | json job.state) in
+          restarting) seen=1 ;;
+          failed) echo "        $(echo "$body" | json job.error)"; return 1 ;;
+        esac ;;
+      404) [ -n "$seen" ] && logs_say "$app" 'The site process ended; starting it again'; return ;;
+    esac
     i=$((i + 1))
-    sleep 2
+    sleep 1
   done
   return 1
 }

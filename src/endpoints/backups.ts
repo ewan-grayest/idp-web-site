@@ -1,6 +1,6 @@
 /**
- * /api/v1/backups: the admin's «Резервные копии» page. Signed-in admin users only.
- * Long tasks (make, check, restore) run in the background; the page polls GET /backups for their steps.
+ * /api/v1/backups: the admin's «Резервные копии» page. Signed-in admin users only, except a running task's steps.
+ * Long tasks (make, check, restore) run in the background; the page follows their steps at GET /backups/job/:id.
  */
 import { createReadStream } from 'node:fs'
 import fs from 'node:fs/promises'
@@ -54,6 +54,19 @@ export const backupEndpoints: Endpoint[] = [
     path: '/backups',
     method: 'post',
     handler: guarded(async (req) => json({ job: startJob('create', who(req), undefined, (step) => createBackup(step, { by: who(req) })) }, 202)),
+  },
+  {
+    // The running task's steps, for the page that started it. Without sign-in, on purpose: a restore swaps the database
+    // the sign-in is checked against, so from that step on the page's session no longer exists, and the restarted site
+    // has no task. The task's random id stands in for the sign-in. 404 means this site process does not know the task
+    path: '/backups/job/:id',
+    method: 'get',
+    handler: async (req: PayloadRequest) => {
+      const job = currentJob()
+      if (!job || job.id !== String(req.routeParams?.id ?? '')) return json({ job: null }, 404)
+      const { by: _by, ...shown } = job
+      return json({ job: shown })
+    },
   },
   {
     path: '/backups/upload',

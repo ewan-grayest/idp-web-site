@@ -4,7 +4,7 @@ import { accountFor, password } from './accounts'
 
 // «Резервные копии»: make a backup from the admin page, check it, download it, then delete it.
 // Restore is not run here: it replaces the whole database and restarts the site (see BACKUP.md for that test).
-test('A backup made from the admin page checks out, downloads and deletes', async ({ page, isMobile }, testInfo) => {
+test('A backup made from the admin page checks out, downloads and deletes', async ({ page, request, isMobile }, testInfo) => {
   test.skip(isMobile, 'One device is enough: backups run one at a time')
   test.setTimeout(120_000)
   await page.goto('/admin/login')
@@ -19,6 +19,14 @@ test('A backup made from the admin page checks out, downloads and deletes', asyn
   await expect(page.getByRole('heading', { name: /Резервные копии|Backups|备份/ })).toBeVisible()
   await page.locator('#backup-create').click()
   await expect(page.locator('[data-job-state=done]')).toBeVisible({ timeout: 60_000 })
+
+  // The page follows the task by its id, without sign-in (a restore replaces the accounts), and the task's author stays private
+  const { job } = await (await page.request.get('/api/v1/backups')).json()
+  const followed = await request.get(`/api/v1/backups/job/${job.id}`)
+  expect(followed.status()).toBe(200)
+  const shown = (await followed.json()).job
+  expect(shown).toMatchObject({ id: job.id, kind: 'create', state: 'done' })
+  expect(shown).not.toHaveProperty('by')
 
   const row = page.locator('tr[data-backup]').first()
   const name = await row.getAttribute('data-backup')
@@ -41,4 +49,8 @@ test('A backup made from the admin page checks out, downloads and deletes', asyn
 test('Backups are for signed-in admin users only', async ({ request }) => {
   expect((await request.get('/api/v1/backups')).status()).toBe(401)
   expect((await request.post('/api/v1/backups')).status()).toBe(401)
+  // A task's steps only for whoever knows its id
+  const unknown = await request.get('/api/v1/backups/job/0123456789ab')
+  expect(unknown.status()).toBe(404)
+  expect(await unknown.json()).toEqual({ job: null })
 })

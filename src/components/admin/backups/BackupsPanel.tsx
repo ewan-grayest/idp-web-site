@@ -55,8 +55,9 @@ export function BackupsPanel() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [upload, setUpload] = useState<number | null>(null)
   const [restart, setRestart] = useState<'waiting' | 'back' | null>(null)
+  // The site stopped answering while a task ran
+  const [quiet, setQuiet] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
-  const sawRestart = useRef(false)
 
   const base = `${api}/backups`
   const failure = (out: Failure, fallback: string) => (out.key ? messageText({ key: out.key, vars: out.vars }, i18n.language) : out.error || fallback)
@@ -72,35 +73,51 @@ export function BackupsPanel() {
     load().catch((e) => setError(e.message))
   }, [load])
 
-  // Follow a running task; after a restore, wait for the restarted site
+  // Follow a running task at GET /backups/job/:id, which needs no sign-in: a restore swaps the database the sign-in is
+  // checked against, so from that step on this page's session is gone. The restarted site no longer knows the task (404):
+  // after a restore that is the end, and the reader signs in again with an account from the backup
   const job = data?.job
+  const following = job && (job.state === 'running' || job.state === 'restarting') ? job : null
+  // The newest steps seen, for when the restarted site answers before this page saw «restarting»
+  const latest = useRef(job)
+  latest.current = job
   useEffect(() => {
-    if (restart === 'waiting') {
-      const timer = setInterval(async () => {
-        try {
-          const res = await fetch(base, { credentials: 'include', cache: 'no-store' })
-          const body = res.ok ? await res.json() : null
-          // A fresh process has no task (or the old session is gone): the site is back
-          if (res.status === 401 || (res.ok && body?.job?.state !== 'restarting')) {
-            clearInterval(timer)
-            setRestart('back')
-            setTimeout(() => window.location.assign(loginURL), 2000)
-          }
-        } catch {
-          // Still restarting
+    if (!following) return
+    if (following.state === 'restarting') setRestart('waiting')
+    let failures = 0
+    const timer = setInterval(async () => {
+      let res: Response
+      let body: { job?: Job | null }
+      try {
+        res = await fetch(`${base}/job/${following.id}`, { credentials: 'include', cache: 'no-store' })
+        body = await res.json()
+      } catch {
+        // No answer, or not the site's (a host's error page while the site restarts)
+        if (++failures >= 5) setQuiet(true)
+        return
+      }
+      failures = 0
+      setQuiet(false)
+      if (res.ok && body.job) {
+        const next = body.job
+        setData((d) => d && { ...d, job: next })
+        if (next.state === 'done' || next.state === 'failed') load().catch((e) => setError(e.message))
+      } else if (res.status === 404 && body.job === null) {
+        clearInterval(timer)
+        const seen = latest.current
+        if (seen?.state === 'restarting' || (seen?.kind === 'restore' && seen.steps.some((m) => m.key === 'restored'))) {
+          setRestart('back')
+          setTimeout(() => window.location.assign(loginURL), 2000)
+        } else {
+          setData((d) => d && { ...d, job: null })
+          setError(t.interrupted)
+          load().catch(() => {})
         }
-      }, 2000)
-      return () => clearInterval(timer)
-    }
-    if (job?.state === 'restarting' && !sawRestart.current) {
-      sawRestart.current = true
-      // Let the server finish answering, then wait for it to come back
-      setTimeout(() => setRestart('waiting'), 4000)
-    }
-    if (job?.state !== 'running' && job?.state !== 'restarting') return
-    const timer = setInterval(() => load().catch(() => {}), 1000)
+      }
+    }, 1000)
     return () => clearInterval(timer)
-  }, [job?.state, restart, load, base, loginURL])
+    // Set up again only when the task or its state changes, not on every new step
+  }, [following?.id, following?.state, base, loginURL, load])
 
   const busy = job?.state === 'running' || job?.state === 'restarting' || upload !== null
 
@@ -225,6 +242,7 @@ export function BackupsPanel() {
             ))}
           </ol>
           {job.error && <p className={styles.error}>{messageText(job.error, i18n.language)}</p>}
+          {quiet && job.state === 'running' && <p role="status">{t.notAnswering}</p>}
         </section>
       )}
 

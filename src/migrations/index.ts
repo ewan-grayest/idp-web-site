@@ -11,6 +11,7 @@ import * as migration_20261028_210247_promo_options from './20261028_210247_prom
 import * as migration_20261102_200136_spec_compliance from './20261102_200136_spec_compliance';
 import * as migration_20261102_221628_home_show_name from './20261102_221628_home_show_name';
 import * as migration_20261107_192830_personal_data_law from './20261107_192830_personal_data_law';
+import * as migration_20261108_083000_restore_projects_after_master from './20261108_083000_restore_projects_after_master';
 
 export const migrations = [
   {
@@ -77,5 +78,10 @@ export const migrations = [
     up: migration_20261107_192830_personal_data_law.up,
     down: migration_20261107_192830_personal_data_law.down,
     name: '20261107_192830_personal_data_law'
+  },
+  {
+    up: migration_20261108_083000_restore_projects_after_master.up,
+    down: migration_20261108_083000_restore_projects_after_master.down,
+    name: '20261108_083000_restore_projects_after_master'
   },
 ];

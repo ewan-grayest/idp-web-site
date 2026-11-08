@@ -29,6 +29,22 @@ npx payload run scripts/seed.ts          # sample content, safe to re-run
 
 Run one test with `npx vitest run tests/unit/routes.test.ts` or `npx playwright test tests/e2e/home.spec.ts --project=desktop`.
 
+## Data locations
+
+One layout in every setup: prod and dev, local and remote, `Dockerfile` and compose. Keep it that way in any code, script, compose file or doc you touch.
+
+| Data | Path inside the containers | Persistent Docker volume |
+|---|---|---|
+| Uploaded photos and videos | `/data/media` (site) | `media` |
+| Backups, from the admin and `scripts/` | `/data/backup` (site) | `backup` |
+| PostgreSQL 16 files | `/data/db` (database, `PGDATA=/data/db`) | `db` |
+
+- The site and the database are always separate containers, on a hosting platform and in compose. Never put a database server in the site image; it only carries the PostgreSQL client tools for backups.
+- The paths are container paths only. Every compose file mounts named volumes there (`site_media` locally, `deploy_media` on the server, and so on), never host folders, so nothing needs sharing with Docker Desktop. A hosting platform mounts its own persistent volumes at the same paths.
+- The image sets `MEDIA_DIR=/data/media` and `BACKUPS_DIR=/data/backup`, and compose files set them again. `npm run dev` runs outside Docker, leaves them empty and uses `media/` and `backups/` in the site folder. Read the folders through `src/lib/dataDirs.ts`, never `process.env.MEDIA_DIR` directly.
+- `scripts/` reach the backup volume through a throwaway container (`bk` in `scripts/backup-common.sh`); `scripts/get-backup.sh` copies backups out.
+- `scripts/move-data.sh [--prod]` moves data from the places used before 2026-11-08 (volumes `pgdata` and `backups`, `MEDIA_DIR`/`PGDATA_DIR`/`BACKUPS_MOUNT` settings, `backups/`). Don't reintroduce those.
+
 ## Where things live
 
 | Area | Path |
@@ -76,5 +92,5 @@ Run one test with `npx vitest run tests/unit/routes.test.ts` or `npx playwright 
 **Repository.**
 - `site/` has its own git repo, and the parent `IDP Site/` folder holds a separate one that also tracks it. Commands here act on the inner repo.
 - `AGENTS.md` is rewritten by `next dev`: keep that block as it is.
-- Never commit `.env`, `deploy/.env`, `backups/` or `media/`. `.claude/` is ignored, so project docs for Claude go here or in `docs/`.
+- Never commit `.env`, `deploy/.env`, `backups/`, `media/` or `logs/`. `.claude/` is ignored, so project docs for Claude go here or in `docs/`.
 - Temporary, development-only and other non-production code goes in `extras/`. Git, Docker and `tsc` ignore it, so it is never committed or shipped. `scripts/` is for tooling the project keeps.

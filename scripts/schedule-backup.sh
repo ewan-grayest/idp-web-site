@@ -5,7 +5,7 @@
 #   scripts/schedule-backup.sh off [--prod]               stop the nightly backup
 #   scripts/schedule-backup.sh status                     show what is scheduled
 #
-# The output of each night's run goes to backup.log in the backup folder.
+# The output of each night's run goes to backup.log in the site folder (deploy/backup.log with --prod).
 # Settings such as KEEP_LAST or BACKUP_UPLOAD_CMD go in backup.env (see backup.sh).
 # In the local environment the job only runs while the computer is awake and Docker Desktop is running.
 
@@ -33,13 +33,12 @@ case $action in
     hour=${at%%:*}; minute=${at##*:}
     case "$hour$minute" in *[!0-9]*|"") die "--at wants a time like 03:30" ;; esac
     flag=""; [ "$MODE" = prod ] && flag=" --prod"
-    mkdir -p "$BACKUP_DIR"
     # cron starts with an almost empty PATH: add where Docker lives on Macs (Intel, Apple silicon) and Linux
     q() { printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"; }
     job="cd $(q "$SITE_DIR") && bash scripts/backup.sh$flag && bash scripts/verify-backup.sh --deep --latest$flag"
-    line="$((10#$minute)) $((10#$hour)) * * * PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin; ( $job || echo \"[\$(date)] BACKUP FAILED, see above\" ) >> $(q "$BACKUP_DIR/backup.log") 2>&1 $tag"
+    line="$((10#$minute)) $((10#$hour)) * * * PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin; ( $job || echo \"[\$(date)] BACKUP FAILED, see above\" ) >> $(q "$LOG_FILE") 2>&1 $tag"
     { [ -n "$current" ] && printf '%s\n' "$current"; printf '%s\n' "$line"; } | crontab -
-    say "Nightly backup of the $MODE site is on, at $at. Log: $BACKUP_DIR/backup.log"
+    say "Nightly backup of the $MODE site is on, at $at. Log: $LOG_FILE"
     ;;
   off)
     if [ -n "$current" ]; then printf '%s\n' "$current" | crontab -; else crontab -r 2>/dev/null || true; fi

@@ -185,19 +185,19 @@
 
   <rect class="store" x="320" y="900" width="300" height="90" rx="8"/>
   <text x="336" y="923" class="t h">Backups folder</text>
-  <text x="336" y="943" class="m">/app/backups ← BACKUPS_MOUNT</text>
+  <text x="336" y="943" class="m">volume backup → /data/backup</text>
   <text x="336" y="960" class="m">idp-&lt;local|prod&gt;-&lt;date&gt;.tar + .sha256</text>
   <text x="336" y="977" class="m">same format as scripts/backup.sh</text>
 
   <rect class="store" x="640" y="900" width="250" height="90" rx="8"/>
   <text x="656" y="923" class="t h">db · PostgreSQL 16</text>
-  <text x="656" y="943" class="m">volume pgdata or PGDATA_DIR</text>
+  <text x="656" y="943" class="m">volume db → /data/db</text>
   <text x="656" y="960" class="m">127.0.0.1:5432 for npm run dev</text>
   <text x="656" y="977" class="m">separate container</text>
 
   <rect class="store" x="910" y="900" width="270" height="90" rx="8"/>
   <text x="926" y="923" class="t h">Uploaded media</text>
-  <text x="926" y="943" class="m">/app/media ← MEDIA_DIR or volume</text>
+  <text x="926" y="943" class="m">volume media → /data/media</text>
   <text x="926" y="960" class="m">photos, videos, resized copies</text>
   <text x="926" y="977" class="m">promo video, partner logos</text>
 

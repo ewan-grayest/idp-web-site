@@ -18,6 +18,7 @@ import { pipeline } from 'node:stream/promises'
 
 import { migrations } from '../migrations'
 import { BackupError, type Message } from './backupMessages'
+import { dataDirs } from './dataDirs'
 import { libpqUrl } from './hosting'
 
 export const FORMAT_VERSION = '1'
@@ -29,8 +30,8 @@ const TABLE_COUNTS_SQL =
 const MEDIA_TEMP_PREFIX = '.idp-restore-'
 
 // Folders chosen at run time: the ignore comments keep Next.js from bundling the whole project into the server build
-export const backupDir = () => path.resolve(/*turbopackIgnore: true*/ process.env.BACKUPS_DIR || 'backups')
-const mediaDir = () => path.resolve(/*turbopackIgnore: true*/ process.env.MEDIA_DIR || 'media')
+export const backupDir = () => path.resolve(/*turbopackIgnore: true*/ dataDirs().backup)
+const mediaDir = () => path.resolve(/*turbopackIgnore: true*/ dataDirs().media)
 const siteMode = () => (process.env.BACKUP_MODE === 'prod' ? 'prod' : 'local')
 const keepLast = () => Number(process.env.KEEP_LAST) || 14
 const keepMonthly = () => Number(process.env.KEEP_MONTHLY) || 6

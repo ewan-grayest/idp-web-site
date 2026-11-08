@@ -36,6 +36,9 @@ describe('database address for the PostgreSQL tools', () => {
   it('swaps the database name', () => {
     expect(libpqUrl('postgres://idp:x@db:5432/idp', 'postgres')).toBe('postgres://idp:x@db:5432/postgres')
   })
+  it('keeps a socket address when swapping the name', () => {
+    expect(libpqUrl('postgres://idp@localhost/idp?host=/run/postgresql', 'postgres')).toBe('postgres://idp@localhost/postgres?host=%2Frun%2Fpostgresql')
+  })
   it('turns the driver-only TLS settings into ones the tools accept', () => {
     expect(libpqUrl('postgres://u:x@h/idp?sslmode=no-verify')).toBe('postgres://u:x@h/idp?sslmode=require')
     expect(libpqUrl('postgres://u:x@h/idp?uselibpqcompat=true&sslmode=require')).toBe('postgres://u:x@h/idp?sslmode=require')

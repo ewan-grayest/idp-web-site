@@ -6,13 +6,13 @@
 #   scripts/backup.sh --with-env   also put the settings file (.env, holds passwords) into the archive
 #
 # Settings, all optional: environment variables, or lines in backup.env (deploy/backup.env with --prod):
-#   BACKUP_DIR         where archives go (default: backups/, or deploy/backups/ with --prod)
 #   KEEP_LAST          how many newest backups to keep (default 14)
 #   KEEP_MONTHLY       also keep the newest backup of each of this many past months (default 6)
 #   BACKUP_UPLOAD_CMD  optional off-site copy, run with the archive path as $1,
 #                      e.g. 'rclone copy "$1" yandex:idp-backups' or 'scp "$1" backup@my-server:/srv/idp/'
 #
-# Output: BACKUP_DIR/idp-<local|prod>-<date>_<time>.tar and a .sha256 file beside it.
+# Output: idp-<local|prod>-<date>_<time>.tar and a .sha256 file beside it, in the backup volume (/data/backup in the
+# site's container), where the admin lists them too. Copy one out with scripts/get-backup.sh.
 # Restore with scripts/restore.sh, check with scripts/verify-backup.sh.
 
 . "$(dirname "$0")/backup-common.sh"
@@ -38,8 +38,8 @@ KEEP_MONTHLY=${KEEP_MONTHLY:-6}
 
 stamp=$(date '+%Y-%m-%d_%H%M%S')
 name="idp-$MODE$label-$stamp"
-WORK=$(mktemp -d "$BACKUP_DIR/.work.XXXXXX")
-log "Backing up the $MODE site to $BACKUP_DIR/$name.tar"
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/idp-backup.XXXXXX")
+log "Backing up the $MODE site as $name.tar"
 
 # 1. Database: a pg_dump custom-format file (compressed, restorable table by table)
 db_up
@@ -80,19 +80,17 @@ EOF
 (cd "$WORK" && find . -type f ! -name SHA256SUMS | sed 's|^\./||' | sort | while read -r f; do
   printf '%s  %s\n' "$(sha256_of "$f")" "$f"; done > SHA256SUMS)
 
-(cd "$WORK" && tar -cf "../$name.tar.part" manifest.txt SHA256SUMS db.dump db-counts.txt media.tar $( [ -d env ] && echo env ))
-mv "$BACKUP_DIR/$name.tar.part" "$BACKUP_DIR/$name.tar"
-printf '%s  %s\n' "$(sha256_of "$BACKUP_DIR/$name.tar")" "$name.tar" > "$BACKUP_DIR/$name.tar.sha256"
-# Give the files to the folder's owner: on a server that is the site's app user, which lists and restores
-# backups from the admin page (run as root, e.g. with sudo; elsewhere this quietly does nothing)
-owner=$(stat -c '%u:%g' "$BACKUP_DIR" 2>/dev/null || stat -f '%u:%g' "$BACKUP_DIR" 2>/dev/null || true)
-[ -n "$owner" ] && chown "$owner" "$BACKUP_DIR/$name.tar" "$BACKUP_DIR/$name.tar.sha256" 2>/dev/null || true
-log "Done: $BACKUP_DIR/$name.tar ($(wc -c < "$BACKUP_DIR/$name.tar" | tr -d ' ') bytes)"
+mkdir "$WORK/out"
+(cd "$WORK" && tar -cf "out/$name.tar" manifest.txt SHA256SUMS db.dump db-counts.txt media.tar $( [ -d env ] && echo env ))
+printf '%s  %s\n' "$(sha256_of "$WORK/out/$name.tar")" "$name.tar" > "$WORK/out/$name.tar.sha256"
+# Into the backup volume, checksum last: the admin and the other scripts only trust a backup with its checksum beside it
+bk_put "$WORK/out/$name.tar" && bk_put "$WORK/out/$name.tar.sha256" || die "couldn't save the backup into the volume $BACKUP_VOLUME"
+log "Done: $name.tar ($(wc -c < "$WORK/out/$name.tar" | tr -d ' ') bytes) in the backup volume"
 
 # 4. Optional off-site copy (Russian-payable or your own storage, e.g. Yandex Object Storage, Selectel, a home NAS)
 if [ -n "${BACKUP_UPLOAD_CMD:-}" ] && [ -z "$label" ]; then
   log "Copying off-site"
-  sh -c "$BACKUP_UPLOAD_CMD" sh "$BACKUP_DIR/$name.tar" && sh -c "$BACKUP_UPLOAD_CMD" sh "$BACKUP_DIR/$name.tar.sha256" \
+  sh -c "$BACKUP_UPLOAD_CMD" sh "$WORK/out/$name.tar" && sh -c "$BACKUP_UPLOAD_CMD" sh "$WORK/out/$name.tar.sha256" \
     || log "WARNING: the off-site copy failed; the local backup is fine"
 fi
 
@@ -100,7 +98,7 @@ fi
 #    Only regular backups of this mode are rotated; safety copies made by restore.sh stay until you delete them.
 [ -n "$label" ] && exit 0
 kept=0; months=""; nmonths=0
-for f in $(ls -1 "$BACKUP_DIR" | grep -E "^idp-$MODE-[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{6}\.tar$" | sort -r); do
+for f in $(bk_list | sort -r); do
   month=$(printf '%s' "$f" | sed -E "s/^idp-$MODE-([0-9]{4}-[0-9]{2}).*/\1/")
   keep=no
   if [ $kept -lt "$KEEP_LAST" ]; then keep=yes; fi
@@ -109,5 +107,5 @@ for f in $(ls -1 "$BACKUP_DIR" | grep -E "^idp-$MODE-[0-9]{4}-[0-9]{2}-[0-9]{2}_
     *) if [ $nmonths -lt "$KEEP_MONTHLY" ]; then keep=yes; months="$months $month"; nmonths=$((nmonths + 1)); fi ;;
   esac
   if [ $keep = yes ]; then kept=$((kept + 1))
-  else rm -f "$BACKUP_DIR/$f" "$BACKUP_DIR/$f.sha256"; log "  removed old backup $f"; fi
+  else bk 'rm -f "$1" "$1.sha256"' "$f"; log "  removed old backup $f"; fi
 done

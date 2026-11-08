@@ -1,10 +1,12 @@
 #!/bin/sh
 # Checks the image starts and works on a host it knows nothing about. Builds it with no build arguments, then runs it
 # the way hosting platforms do: settings as variables only, the port, HOSTNAME and user chosen by the host.
+# Also builds the database's image (deploy/db/Dockerfile), for hosts that build every container from a Dockerfile.
 # The main case is the layout every setup uses: the site and PostgreSQL 16 in separate containers, with storage at
-# /data/media and /data/backup in the site's and /data/db in the database's. On it the check works the site like an
-# editor (uploads a photo, makes, checks and restores a backup), then redeploys both containers on the same storage.
-# Then a managed-style database that wants TLS, and a host that forbids root.
+# /data/media and /data/backup in the site's and /data/db in the database's, here the database's image with only a
+# password and one disk at /data. On it the check works the site like an editor (uploads a photo, makes, checks and
+# restores a backup), then redeploys both containers on the same storage.
+# Then a database disk mounted straight at /data/db, a managed-style database that wants TLS, and a host that forbids root.
 # Uses throwaway containers and volumes and removes everything it made, so it touches no real data. Needs Docker and curl.
 # Usage: scripts/check-image.sh [--platform linux/amd64]   (the host's platform, when it differs from the local environment)
 set -eu
@@ -19,14 +21,17 @@ esac
 
 id=$$
 image="idp-site-check:$id"
+db_image="idp-db-check:$id"
 net="idp-check-$id"
 db="idp-check-db-$id"
 app="idp-check-app-$id"
 tls="idp-check-tls-$id"
+lf="idp-check-lf-$id"
 vol_media="idp-check-media-$id"
 vol_db="idp-check-db-$id"
 vol_backup="idp-check-backup-$id"
 vol_data="idp-check-data-$id"
+vol_lf="idp-check-lf-$id"
 db_url="postgres://idp:check@$db:5432/idp"
 tls_url="postgres://idp:check@$tls:5432/idp"
 secret="check-secret-$id"
@@ -37,10 +42,10 @@ failures=0
 base= token= media_id= file= backup=
 
 cleanup() {
-  docker rm -f "$app" "$db" "$tls" >/dev/null 2>&1 || true
-  docker volume rm "$vol_media" "$vol_db" "$vol_backup" "$vol_data" >/dev/null 2>&1 || true
+  docker rm -f "$app" "$db" "$tls" "$lf" >/dev/null 2>&1 || true
+  docker volume rm "$vol_media" "$vol_db" "$vol_backup" "$vol_data" "$vol_lf" >/dev/null 2>&1 || true
   docker network rm "$net" >/dev/null 2>&1 || true
-  docker rmi "$image" >/dev/null 2>&1 || true
+  docker rmi "$image" "$db_image" >/dev/null 2>&1 || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -100,7 +105,7 @@ site_user_is() { [ "$(docker exec "$app" stat -c %u /proc/1)" = "$1" ]; }
 docker_says_healthy() {
   i=0
   while [ $i -lt 30 ]; do
-    [ "$(docker inspect -f '{{.State.Health.Status}}' "$app")" = healthy ] && return 0
+    [ "$(docker inspect -f '{{.State.Health.Status}}' "$1")" = healthy ] && return 0
     i=$((i + 1))
     sleep 3
   done
@@ -147,22 +152,26 @@ docker_did_not_restart_it() {
   [ "$(docker inspect -f '{{.RestartCount}}' "$app")" = 0 ] && [ "$(docker inspect -f '{{.State.Running}}' "$app")" = true ]
 }
 
-# A PostgreSQL 16 container as every setup runs it: its files at /data/db. Extra arguments go to the server
+# A PostgreSQL 16 container, waited for until it answers. The arguments are `docker run`'s: settings, volumes, the
+# image, then any for the server. The database's image needs only the password; postgres:16, as the compose files run
+# it, also needs the names and PGDATA ($compose_db)
+compose_db="-e POSTGRES_USER=idp -e POSTGRES_PASSWORD=check -e POSTGRES_DB=idp -e PGDATA=/data/db"
 start_db() {
   name=$1; shift
-  docker run -d --name "$name" --network "$net" -e POSTGRES_USER=idp -e POSTGRES_PASSWORD=check -e POSTGRES_DB=idp \
-    -e PGDATA=/data/db "$@" >/dev/null
+  docker run -d --name "$name" --network "$net" "$@" >/dev/null
   i=0
   until docker exec "$name" pg_isready -q -h 127.0.0.1 -U idp 2>/dev/null; do
     i=$((i + 1))
     if [ $i -gt 90 ] || [ "$(docker inspect -f '{{.State.Running}}' "$name")" != true ]; then
-      echo "The test database didn't start:"
+      echo "        The test database didn't start:"
       docker logs --tail 20 "$name" 2>&1 | sed 's/^/        /'
-      exit 1
+      return 1
     fi
     sleep 1
   done
 }
+# The database as a host that builds it from deploy/db/Dockerfile runs it: the password and one disk at /data
+start_hosted_db() { start_db "$db" -e POSTGRES_PASSWORD=check -v "$vol_db":/data "$db_image"; }
 # The site as the README's hosts run it: the host's port and HOSTNAME, storage at /data/media and /data/backup,
 # the database in its own container, no restart policy
 run_site() {
@@ -176,17 +185,23 @@ stops_cleanly() {
 
 echo "Building with no build arguments"
 docker build $platform -t "$image" .
+echo "Building the database's image, with the repository as the build context"
+docker build $platform -t "$db_image" -f deploy/db/Dockerfile .
+builds_in_own_folder() { docker build -q $platform -t "$db_image" deploy/db >/dev/null; }
+check "the database's image also builds with its own folder as the context" builds_in_own_folder
 
 echo "Missing settings"
 want=PAYLOAD_SECRET
 check "no secret: stops and names the setting" stops_with "$image"
 want=DATABASE_URI
 check "no database address: stops and names the setting" stops_with -e PAYLOAD_SECRET="$secret" "$image"
+want='not on a persistent disk'
+check "database with no disk: stops and says so" stops_with -e POSTGRES_PASSWORD=check "$db_image"
 
 echo "Every setup: the site and PostgreSQL in separate containers, storage at /data/media, /data/backup and /data/db"
 docker network create "$net" >/dev/null
 for v in "$vol_media" "$vol_db" "$vol_backup"; do docker volume create "$v" >/dev/null; done
-start_db "$db" -v "$vol_db":/data/db postgres:16
+start_hosted_db || exit 1
 run_site
 if wait_for_site 8080; then
   echo "  ok    answers on the host's port, migrations applied"
@@ -194,7 +209,8 @@ if wait_for_site 8080; then
   check "admin opens" page_opens /admin
   check "drops root and runs as the app user" site_user_is 100
   check "the database keeps its files at /data/db" docker exec "$db" test -s /data/db/PG_VERSION
-  check "Docker reports it healthy" docker_says_healthy
+  check "Docker reports the site healthy" docker_says_healthy "$app"
+  check "Docker reports the database healthy" docker_says_healthy "$db"
 
   echo "Editor's work: an upload, then a backup made, checked and restored"
   if first_admin; then
@@ -220,7 +236,7 @@ if wait_for_site 8080; then
   echo "Redeploy: both containers are replaced, on the same storage"
   check "the site stops cleanly" stops_cleanly
   docker rm -f "$app" "$db" >/dev/null
-  start_db "$db" -v "$vol_db":/data/db postgres:16
+  start_hosted_db || exit 1
   run_site
   if wait_for_site 8080; then
     echo "  ok    starts again"
@@ -235,9 +251,16 @@ else
 fi
 docker rm -f "$app" >/dev/null
 
-# PostgreSQL with TLS on and a certificate no one vouches for, like a managed database with the provider's own
-start_db "$tls" postgres:16 \
-  -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+echo "A database disk mounted straight at /data/db, with an empty lost+found on it"
+docker volume create "$vol_lf" >/dev/null
+docker run --rm -v "$vol_lf":/v --entrypoint mkdir "$db_image" /v/lost+found
+check "the database starts on it" start_db "$lf" -e POSTGRES_PASSWORD=check -v "$vol_lf":/data/db "$db_image"
+docker rm -f "$lf" >/dev/null
+
+# PostgreSQL with TLS on and a certificate no one vouches for, like a managed database with the provider's own.
+# Run as the compose files run postgres:16, so that setup is checked too
+start_db "$tls" $compose_db postgres:16 \
+  -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key || exit 1
 
 echo "A managed-style database with TLS and its own certificate, given as DATABASE_URL, one disk at /data"
 docker volume create "$vol_data" >/dev/null

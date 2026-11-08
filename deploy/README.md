@@ -2,14 +2,16 @@
 
 Development runs in the local environment (`./start.sh`). Production is a Docker host: it builds this repo's
 `Dockerfile` from GitHub `main`, or runs an image built from it, and supplies the settings when the container starts.
-It's the same image `./start.sh` builds locally.
+It's the same image `./start.sh` builds locally. The database is a second container: on a host that only builds
+Dockerfiles, it is built once from `deploy/db/Dockerfile` and stays as it is between releases.
 
 ```
-local environment (./start.sh) ──push──▶ GitHub main ──build Dockerfile──▶ Docker host
+local environment (./start.sh) ──push──▶ GitHub main ──build Dockerfile──────────────▶ site container (every release)
+                                                     └─build deploy/db/Dockerfile────▶ db container (once)
 ```
 
-Required settings, what the host must provide and troubleshooting: "Server hosting" in the [site README](../README.md#server-hosting).
-Before trying a new host, `./scripts/check-image.sh` builds the image and starts it the way hosts do.
+Required settings, the panel's fields, what the host must provide and troubleshooting: "Server hosting" in the [site README](../README.md#server-hosting).
+Before trying a new host, `./scripts/check-image.sh` builds both images and starts them the way hosts do.
 
 ## Release
 
@@ -22,8 +24,8 @@ Before trying a new host, `./scripts/check-image.sh` builds the image and starts
    git push
    ```
 4. **Back up the live site:** admin → «Резервные копии» → make a backup, then download it. Migrations can't be undone.
-5. **Deploy** in the host's panel. Prefer a manual deploy over auto-deploy on every push, so merging work doesn't put it live by itself.
-   Migrations apply when the new container starts.
+5. **Deploy** the site in the host's panel. Prefer a manual deploy over auto-deploy on every push, so merging work doesn't put it live by itself.
+   Migrations apply when the new container starts. Leave the database container alone: rebuild it only when `deploy/db/Dockerfile` changes.
 6. **Check** that the footer shows the new version.
 
 **Rollback:** redeploy the previous build in the host's panel. If the release changed the database, restore the step 4 backup from the admin.

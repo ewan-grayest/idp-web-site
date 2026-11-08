@@ -137,22 +137,36 @@ One image runs on any Docker host. Everything specific to a host (address, secre
 | --- | --- | --- | --- |
 | A server with Docker, and ports 80 and 443 free | `deploy/docker-compose.prod.yml`, steps in [deploy/README.md](deploy/README.md) | `postgres:16` container | Caddy, included |
 | Docker with its own proxy and HTTPS: a hosting panel, or nginx on a shared server | `deploy/docker-compose.behind-proxy.yml` | `postgres:16` container | The host |
-| Containers built from the `Dockerfile`, and persistent storage | "Containers on a hosting platform" below | A `postgres:16` container, or the host's PostgreSQL 16 | The host |
+| Containers built from Dockerfiles in a panel, and persistent storage (Dockhost, for one) | "Containers on a hosting platform" below | A container built from `deploy/db/Dockerfile` (`postgres:16`), or the host's PostgreSQL 16 | The host |
 
 **Not supported:** hosts that keep no files between deploys, such as serverless containers. Uploads and the database live on disk, so they would disappear.
 
 ### Containers on a hosting platform
 
-1. **Database:** a container of its own from the image `postgres:16`, with a persistent volume mounted at `/data/db` and the settings `PGDATA=/data/db`, `POSTGRES_USER=idp`, `POSTGRES_DB=idp` and `POSTGRES_PASSWORD` (`openssl rand -hex 32`). Or the host's managed PostgreSQL 16. The database disk must keep file owners and permissions and support file locks, such as a block volume; a shared network folder often doesn't, and PostgreSQL then refuses to start.
-2. **Site source:** connect the GitHub repository `ewan-grayest/idp-web-site`. The `Dockerfile` is at its root and needs no build arguments.
-3. **Site storage:** persistent volumes at `/data/media` (uploads) and `/data/backup` (backups).
-4. **Site settings:** `DATABASE_URI` pointing at the database container (`postgres://idp:<password>@<its name>:5432/idp`), `PAYLOAD_SECRET` and `NEXT_PUBLIC_SITE_URL`; see "Required settings".
-5. **Port and health check:** the site listens on 3000, or on `PORT` if the host sets one. The health check path is `/api/health`. Allow 2 minutes for the first start.
-6. **Deploys:** one copy of the site; it applies migrations on start. Open `/admin` and create the first editor account straight away.
+Two containers, both built from the GitHub repository `ewan-grayest/idp-web-site`, so this works on hosts that only build Dockerfiles and can't run a ready image such as `postgres:16`. Create the database first.
+
+1. **Database:** a container named `db`, built with the Dockerfile path `deploy/db/Dockerfile`. It copies nothing from the repository, so any build context works (`.` or `deploy/db`). It is `postgres:16` with `PGDATA=/data/db`, `POSTGRES_USER=idp` and `POSTGRES_DB=idp` already set, so its one setting is `POSTGRES_PASSWORD` (`openssl rand -hex 32`, which needs no escaping in the address). Mount a persistent disk at `/data` (an SSD if the host offers a choice); without one the container stops and says so. Port 5432, inside the project only: give it no domain or public port. Turn off building it on every push: it needs building again only when `deploy/db/Dockerfile` changes. The disk must keep file owners and permissions and support file locks, as the host's own PostgreSQL recipe does on Dockhost; a shared network folder often doesn't, and PostgreSQL then refuses to start.
+   A host that runs images can use `postgres:16` instead, with `PGDATA=/data/db`, `POSTGRES_USER=idp` and `POSTGRES_DB=idp` set. The host's managed PostgreSQL 16 works too (see "What the host must provide").
+2. **Site source:** the same repository, Dockerfile path `Dockerfile`, build context `.`, no build arguments.
+3. **Site storage:** one persistent disk at `/data`, which holds `/data/media` (uploads) and `/data/backup` (backups). Two disks at those two paths work too.
+4. **Site settings:** `DATABASE_URI=postgres://idp:<POSTGRES_PASSWORD>@db:5432/idp`, where `db` is the database container's name, which hosts such as Dockhost use as its address inside the project. Then `PAYLOAD_SECRET` and `NEXT_PUBLIC_SITE_URL`; see "Required settings".
+5. **Port and health check:** the site listens on 3000, or on `PORT` if the host sets one. Give it the domain and HTTPS. The health check path is `/api/health`. Allow 2 minutes for the first start.
+6. **Deploys:** one copy of the site; it applies migrations on start. Open `/admin` and create the first editor account straight away. Releases redeploy the site only.
+
+**The panel's other fields:** leave them empty in both containers. Both images start as root, give their disk to their own user, then drop to that user.
+
+| Field | Site | Database |
+| --- | --- | --- |
+| Entrypoint («Точка входа»), command («Команда выполнения») | Empty. A replaced entrypoint skips the settings check, handing the disk to the site's user, and starting the site again after a restore from the admin | Empty. A replaced entrypoint skips the disk check |
+| Init commands («Команды инициализации») | Empty. The site applies migrations itself when it starts, and the image has no Payload command line to run them | Empty |
+| UID and GID | Empty | Empty |
+| Only if the host insists on a UID and GID | An init command run as root («Выполнить команды от пользователя root»): `chown -R <UID>:<GID> /data` | An init command run as root: `mkdir -p /data/db && chown -R <UID>:<GID> /data/db && chmod 700 /data/db` |
+| Network disks («Сетевые диски») | One at `/data` | One at `/data`, of its own |
+| Replicas | 1 | 1 |
 
 **Moving existing content in:** in the local environment's admin, make a backup in «Резервные копии» and download it. Upload it in the host's admin and restore it. The site restarts by itself; sign in with an account from the backup.
 
-`.env.hosting.example` lists the site's settings ready to copy into a hosting panel.
+`.env.hosting.example` lists both containers' settings ready to copy into a hosting panel.
 
 **To build elsewhere** and push the image, add `--platform linux/amd64` when the host's processor differs from the one building:
 
@@ -176,7 +190,7 @@ The site is then on `127.0.0.1:3000`. Set `APP_BIND` to change that, for example
 
 ### Checking the image before a new host
 
-This builds the image with no build arguments and runs it as every setup does: the site and a `postgres:16` container side by side, with storage at `/data/media`, `/data/backup` and `/data/db`. There it works the site like an editor: it uploads a photo, and makes, checks and restores a backup through the admin's API. Then it replaces both containers on the same storage and checks nothing was lost. It also tries a managed-style database with TLS and its own certificate, and a host that forbids root. It uses throwaway containers and volumes and touches no real data. Add `--platform linux/amd64` when the host's processor differs from the local environment's:
+This builds the image with no build arguments, and the database's image from `deploy/db/Dockerfile` with either build context. It runs them as a hosting platform does: the site and the database side by side, with storage at `/data/media`, `/data/backup` and `/data/db`, and the database given only its password and one disk at `/data`. There it works the site like an editor: it uploads a photo, and makes, checks and restores a backup through the admin's API. Then it replaces both containers on the same storage and checks nothing was lost. It also checks that the database refuses to start without a disk and starts on a disk mounted straight at `/data/db`, and tries `postgres:16` as the compose files run it, there as a managed-style database with TLS and its own certificate, and a host that forbids root. It uses throwaway containers and volumes and touches no real data. Add `--platform linux/amd64` when the host's processor differs from the local environment's:
 
 ```bash
 ./scripts/check-image.sh
@@ -212,7 +226,7 @@ Run every Compose command from the site folder with `-f` and the compose file, a
 ### What the host must provide
 
 - **Storage that survives redeploys:** persistent volumes at `/data/media` and `/data/backup` for the site, `/data/db` for the database. `/app/.next/cache` is optional and only holds resized images. A host set up before 2026-11-08 has them at `/app/media` and `/app/backups`: before deploying, move those mounts to the new paths, or keep them and set `MEDIA_DIR=/app/media` and `BACKUPS_DIR=/app/backups`.
-- **PostgreSQL 16,** in its own container or the host's. The backup tools in the image are version 16 and refuse a newer server. With a managed database, the role must be able to create tables. Restoring from the admin also needs `CREATEDB` and access to the `postgres` database. If its certificate is the provider's own, add `?sslmode=no-verify` to the address, or `self-signed certificate` appears in the log. Traffic stays encrypted, but the certificate isn't checked.
+- **PostgreSQL 16,** in its own container (built from `deploy/db/Dockerfile` where the host only builds Dockerfiles) or the host's. The backup tools in the image are version 16 and refuse a newer server. With a managed database, the role must be able to create tables. Restoring from the admin also needs `CREATEDB` and access to the `postgres` database. If its certificate is the provider's own, add `?sslmode=no-verify` to the address, or `self-signed certificate` appears in the log. Traffic stays encrypted, but the certificate isn't checked.
 - **Automatic restart:** not needed for a restore from the admin, which ends the site's process on purpose: the container starts it again by itself. Still worth turning on in case the whole container fails.
 - **One running copy:** uploads are on one disk and migrations run at start, so don't scale the site to several copies.
 - **Health check, if the host asks for one:** `/api/health` answers 200 once the database is readable and 503 otherwise. The first answer also applies migrations, so allow it up to 2 minutes. The image declares this as its Docker health check too.
@@ -247,7 +261,8 @@ In the local environment, use `docker compose logs --tail=100 app db`.
 | `Can't start: the setting ... is empty` | The setting is empty, or the settings file is empty or wasn't loaded. The container stops and restarts | Set it and recreate the container. `up -d` is enough, no rebuild |
 | `cannot connect to Postgres` | Wrong `DATABASE_URI`, or the database is down or still starting | Check the address and the `db` log |
 | `wrong ownership`, `invalid permissions` or `could not lock` from PostgreSQL | The database disk doesn't keep owners and permissions or support locks, as with many network folders | Use a block volume for `/data/db` |
-| `initdb: error: directory "/data/db" exists but is not empty` | The database disk has other files, such as `lost+found` | Mount the disk at `/data` instead, so `/data/db` is an empty folder inside it |
+| `Cannot start: /data/db is not on a persistent disk` (database built from `deploy/db/Dockerfile`) | The database container has no persistent disk, so its data would be lost on the next deploy | Mount a disk at `/data` in the database container |
+| `initdb: error: directory "/data/db" exists but is not empty` | The database disk has other files. The image from `deploy/db/Dockerfile` clears an empty `lost+found` by itself | Mount the disk at `/data` instead, so `/data/db` is an empty folder inside it |
 | `password authentication failed` | `POSTGRES_PASSWORD` changed after the database was created | Restore the old value or run `ALTER USER` |
 | `No space left on device`, `PANIC` in the `db` log | Disk full, which stops PostgreSQL | Run the clean-up above, then restart. Never prune volumes |
 | `self-signed certificate` | A managed database uses the provider's own certificate | Add `?sslmode=no-verify` to `DATABASE_URI` |
@@ -311,4 +326,5 @@ The verifier creates marked fixtures only in that database and exercises page ro
 - «Создать» beside an admin list's title is a filled button with a plus, 44px tall on touch screens (Ewan, 2026-11-08). Payload's small grey pill looked like the «правда» tags in the table, so adding a project seemed impossible. The style is in `src/app/(payload)/custom.css`.
 - `main` and `master` are one history again (Ewan, 2026-11-08): `master`'s work (ID Lab, «Публиковать на сайте», «Главная», the `/data` volumes) was ported onto `main`, which is the branch to work on. Its migration keeps its `master` name, so a database `master` already migrated skips it. `20261108_120000_align_project_schema` then brings any database to the same schema, including one repaired by the short-lived `20261108_083000_restore_projects_after_master`, and does nothing on the rest.
 - Data has one layout in every setup, local or remote, compose or a hosting platform (Ewan, 2026-11-08): `/data/media`, `/data/backup` and `/data/db` inside the containers, each a persistent Docker volume (`media`, `backup`, `db`), with no folder on the host. Only `npm run dev`, outside Docker, keeps `media/` and `backups/` in the site folder. The site and PostgreSQL always run in separate containers; this replaced the database built into the image (2026-11-06). The site's container still starts the site again by itself after a restore.
+- Hosts that build every container from a Dockerfile, such as Dockhost, get the database from `deploy/db/Dockerfile` (Ewan, 2026-11-08): `postgres:16` with `/data/db` and the `idp` names set, built as a second container from the same repository, so the site's image still holds no database server. It refuses to start without a persistent disk and copies nothing, so it builds with any build context. The compose files keep running `postgres:16` directly.
 - The site must start on any Docker host (Ewan, 2026-11-05), so one image takes all its settings at start, including `NEXT_PUBLIC_*`, which are no longer build arguments. Hosts that keep no files between deploys stay unsupported, because uploads live on disk and foreign storage services are avoided.

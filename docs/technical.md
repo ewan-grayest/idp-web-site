@@ -188,7 +188,9 @@ No setting is baked into the image: `src/lib/hosting.ts` looks up the `NEXT_PUBL
 
 **Local**: `./start.sh` runs `docker-compose.yml`, with `app` and `db`. Postgres binds to `127.0.0.1`; the app binds to `0.0.0.0:3000`.
 
-**Image**: three stages in the `Dockerfile`: build with Node, copy the PostgreSQL 16 client tools for backups (with their libraries, into `/opt/pg`), run standalone. No database server is in it. `entrypoint.sh` stops early if `PAYLOAD_SECRET` or `DATABASE_URI` is empty, forces `HOSTNAME=0.0.0.0`, starts as root only to hand `/data/media`, `/data/backup` and the image cache to the `app` user, then drops privileges. It runs the site and starts it again whenever it ends, which a restore does on purpose. It also runs as an arbitrary non-root user. `GET /api/health` backs the image's `HEALTHCHECK`. `scripts/check-image.sh` builds the image and runs it beside a `postgres:16` container on the `/data` layout: uploads a photo, makes, checks and restores a backup through the API, and replaces both containers on the same storage. It also tests a managed-style database with TLS and a host that forbids root.
+**Image**: three stages in the `Dockerfile`: build with Node, copy the PostgreSQL 16 client tools for backups (with their libraries, into `/opt/pg`), run standalone. No database server is in it. `entrypoint.sh` stops early if `PAYLOAD_SECRET` or `DATABASE_URI` is empty, forces `HOSTNAME=0.0.0.0`, starts as root only to hand `/data/media`, `/data/backup` and the image cache to the `app` user, then drops privileges. It runs the site and starts it again whenever it ends, which a restore does on purpose. It also runs as an arbitrary non-root user. `GET /api/health` backs the image's `HEALTHCHECK`. `scripts/check-image.sh` builds the image and the database's image, and runs them side by side on the `/data` layout: uploads a photo, makes, checks and restores a backup through the API, and replaces both containers on the same storage. It also tests the database's image without a disk and on a disk with `lost+found`, `postgres:16` as compose runs it as a managed-style database with TLS, and a host that forbids root.
+
+**Database image**: `deploy/db/Dockerfile`, for hosts that build every container from a Dockerfile (Dockhost). `postgres:16` with `PGDATA=/data/db`, `POSTGRES_USER=idp` and `POSTGRES_DB=idp`, so the host sets only `POSTGRES_PASSWORD`. A wrapper written by `RUN printf` (no `COPY`, so any build context works; no BuildKit) runs before the official entrypoint: it refuses to start when `PGDATA` is not on a mounted disk and removes an empty `lost+found` before the first `initdb`. Compose keeps using `postgres:16` directly. The site reaches it at `db:5432` when the container is named `db`.
 
 **Production**: `deploy/docker-compose.prod.yml` is one VM with app, Postgres and Caddy for HTTPS. `deploy/docker-compose.behind-proxy.yml` is the same without Caddy, for hosts with their own proxy; keep the two in step. Required settings and troubleshooting: "Server hosting" in the README. `deploy/Caddyfile` sends `X-Robots-Tag: noindex`; delete that line to go public.
 
@@ -225,7 +227,7 @@ Run TypeScript ones with `npx payload run <file>`. All import scripts are additi
 | `scripts/import-studio.ts` | Real studio content from `../content-source` |
 | `scripts/import-archive.ts`, `run-archive-import.sh` | Archived id-proekt.com and get-together.ru content |
 | `scripts/backup.sh`, `restore.sh`, `verify-backup.sh`, `schedule-backup.sh` | See BACKUP.md |
-| `scripts/check-image.sh` | Builds the image and checks it starts the way hosts run it. Needs Docker |
+| `scripts/check-image.sh` | Builds the site's and database's images and checks they start the way hosts run them. Needs Docker |
 
 ## Known gaps
 

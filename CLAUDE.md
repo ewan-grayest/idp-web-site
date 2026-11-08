@@ -24,7 +24,7 @@ npx payload migrate:create <name>        # after any schema change
 npm run generate:types                   # after any collection or global change
 npm run generate:importmap               # after adding or moving an admin component
 npx payload run scripts/seed.ts          # sample content, safe to re-run
-./scripts/check-image.sh                 # build the image and check it starts the way hosts run it; needs Docker
+./scripts/check-image.sh                 # build the site's and database's images and check they start the way hosts run them; needs Docker
 ```
 
 Run one test with `npx vitest run tests/unit/routes.test.ts` or `npx playwright test tests/e2e/home.spec.ts --project=desktop`.
@@ -40,6 +40,7 @@ One layout in every setup: prod and dev, local and remote, `Dockerfile` and comp
 | PostgreSQL 16 files | `/data/db` (database, `PGDATA=/data/db`) | `db` |
 
 - The site and the database are always separate containers, on a hosting platform and in compose. Never put a database server in the site image; it only carries the PostgreSQL client tools for backups.
+- Compose runs the database from the image `postgres:16`. A host that builds every container from a Dockerfile (Dockhost) builds it from `deploy/db/Dockerfile`: `postgres:16` with `PGDATA=/data/db` and the `idp` names set, refusing to start without a persistent disk. Keep that file free of `COPY`, so it builds with any build context.
 - The paths are container paths only. Every compose file mounts named volumes there (`site_media` locally, `deploy_media` on the server, and so on), never host folders, so nothing needs sharing with Docker Desktop. A hosting platform mounts its own persistent volumes at the same paths.
 - The image sets `MEDIA_DIR=/data/media` and `BACKUPS_DIR=/data/backup`, and compose files set them again. `npm run dev` runs outside Docker, leaves them empty and uses `media/` and `backups/` in the site folder. Read the folders through `src/lib/dataDirs.ts`, never `process.env.MEDIA_DIR` directly.
 - `scripts/` reach the backup volume through a throwaway container (`bk` in `scripts/backup-common.sh`); `scripts/get-backup.sh` copies backups out.

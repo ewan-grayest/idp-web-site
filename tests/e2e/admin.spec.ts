@@ -105,6 +105,7 @@ test('RU / EN / 中 in the header switch the whole admin, field names included',
 
   await choose('zh', '中文')
   await expect(tab('基本信息')).toBeVisible()
+  await expect(page.getByText('在首页轮播中显示', { exact: true })).toBeVisible()
   if (!isMobile) await expect(contentLanguage('内容语言')).toBeVisible()
 
   await choose('ru', 'Русский')

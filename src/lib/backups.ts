@@ -158,9 +158,12 @@ async function takeLock() {
   try {
     await fs.mkdir(lockDir())
   } catch {
-    // Left by this site's own job that died with the app (no job runs here now): safe to take over
+    // Left by an admin task that died with its site process: safe to take over. startJob runs one task at a time and
+    // the site runs as one copy, so an admin lock is never another task's that is still running. (This used to also
+    // require that no task ran here, but the task taking the lock is one, so a leftover lock blocked every task.)
+    // A script's lock has no owner file and stays: the script may still be running
     const owner = await fs.readFile(path.join(lockDir(), 'owner'), 'utf8').catch(() => '')
-    if (owner.startsWith('admin ') && store.job?.state !== 'running') {
+    if (owner.startsWith('admin ')) {
       await fs.rm(lockDir(), { recursive: true, force: true })
       await fs.mkdir(lockDir())
     } else {
@@ -568,10 +571,22 @@ export const backupSettings = () => ({
 })
 
 /**
- * Unpacked files of a restore the app did not live to finish. A folder of parked old files (…old-…) is left alone:
- * it holds real uploads and is never backed up, so nothing is lost.
+ * What a check or restore the app did not live to finish left behind: unpacked files, and its copy of a backup's
+ * database (…_check_…, …_restore_…), which would keep its disk space on the database server for good. Runs under the
+ * lock, so no other task is using them. A folder of parked old files (…old-…) is left alone: it holds real uploads and
+ * is never backed up, so nothing is lost; so is a …_before_… database, the site's data from before a restore.
  */
 async function cleanLeftovers() {
+  const like = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`)
+  const copies = await (async () => {
+    const live = like(dbName())
+    return psql(
+      `select datname from pg_database where datname like ${lit(`${live}\\_check\\_%`)} or datname like ${lit(`${live}\\_restore\\_%`)}`,
+      'postgres',
+    )
+  })().catch(() => '')
+  for (const db of copies.split('\n').filter(Boolean)) await dropDatabase(db).catch(() => {})
+
   const media = mediaDir()
   const entries = await fs.readdir(media).catch(() => [] as string[])
   for (const e of entries.filter((n) => n.startsWith(`${MEDIA_TEMP_PREFIX}new-`))) {

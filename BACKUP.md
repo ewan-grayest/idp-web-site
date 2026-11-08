@@ -36,6 +36,11 @@ A restore from the admin:
 5. Restarts the site, which its container starts again by itself (about half a minute). The page waits and then
    opens the sign-in page: sign in with an account from the backup.
 
+From step 4 on, the session you started the restore with no longer exists: the accounts are now the backup's. The page
+follows the task by its id instead, so it still shows every step and the restart. If the site stops answering partway,
+the page says so and waits; if it comes back without the task, the page says the task stopped. A restore changes the
+site's data only at step 4.
+
 The admin and the scripts keep backups in the same place: the persistent Docker volume `backup` (`site_backup`, or
 `deploy_backup` in production; see "Where the data is kept" in the README), mounted in the site's container at
 `/data/backup`. The scripts reach it through Docker. `scripts/get-backup.sh --list` lists the backups, and
@@ -44,7 +49,9 @@ The admin and the scripts keep backups in the same place: the persistent Docker 
 are installed in the local environment (on the PATH, or set `PG_BIN_DIR` to their folder), but after a restore restart the dev server by hand.
 
 Only one backup or restore runs at a time: the admin and the scripts share a lock (`.lock` in the backup folder).
-If a task was cut off by a crash, the next one from the admin clears the leftover lock itself.
+If a task was cut off by a crash, the next one from the admin clears the leftover lock itself, and drops the temporary
+database copies a check or restore leaves when cut off (`idp_check_…`, `idp_restore_…`). A lock left by a script is
+not cleared: the script may still be running.
 
 ## With scripts
 

@@ -196,18 +196,18 @@ No setting is baked into the image: `src/lib/hosting.ts` looks up the `NEXT_PUBL
 
 ## Schema changes
 
-1. Edit the collection or global. Development pushes the schema automatically.
+1. Edit the collection or global.
 2. `npm run generate:types`.
-3. `npx payload migrate:create <name>`.
+3. `npx payload migrate:create <name>`, then restart `npm run dev` (or `npx payload migrate`) to apply it.
 4. Commit the `.ts`, `.json` and updated `src/migrations/index.ts` with `payload-types.ts`.
 
-Production applies `prodMigrations` on start. The backup restore also checks that the code is new enough for the backup.
+Development never pushes the schema (`push: false`): `npm run dev` and `./start.sh` share one local database, and the pushes used to leave a mark (`payload_migrations`, batch -1) that stopped the next production start at a terminal prompt, so the site hung. Committed migrations are the only way the schema changes. `onInit` applies them on every start, in development and production (`src/lib/startupMigrations.ts`, in place of Payload's `prodMigrations`). It removes such a mark if it finds one. A migration that stops because development already made part of it runs again one statement at a time, skipping what is already there and logging it; any other error stops the start. The backup restore also checks that the code is new enough for the backup.
 
 ## Testing
 
-**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels, hosting settings, the diagnostics settings check and log buffer.
+**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels, hosting settings, the diagnostics settings check and log buffer, startup migrations.
 
-**End to end** (`tests/e2e`): needs the database; starts `npm run dev` unless `BASE_URL` is set. The browser locale is `ru-RU`, otherwise the proxy would redirect to `/en`. `global-setup.ts` creates one admin per Playwright project, because Payload keeps sessions on the user row and concurrent logins as one user would drop each other.
+**End to end** (`tests/e2e`): runs against its own site on port 3100, started by `scripts/e2e-server.sh` unless `BASE_URL` is set: a dev server with its own database (`idp_e2e` on the local PostgreSQL, created when missing, or `E2E_DATABASE_URI`), uploads and backups (`.e2e/`), filled by `scripts/seed.ts`. Never port 3000 or the `idp` database: the tests sign in, change site-wide settings, add and delete projects and make backups, and they used to do it to the site `./start.sh` runs. Next.js allows one dev server per folder, so stop `npm run dev` first. The browser locale is `ru-RU`, otherwise the proxy would redirect to `/en`. `global-setup.ts` creates one admin per Playwright project, because Payload keeps sessions on the user row and concurrent logins as one user would drop each other.
 
 | Project | Runs |
 |---|---|

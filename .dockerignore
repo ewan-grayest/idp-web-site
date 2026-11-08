@@ -31,3 +31,4 @@ backups
 test-results
 playwright-report
 extras
+.e2e

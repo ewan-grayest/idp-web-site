@@ -82,7 +82,7 @@ export function checkSettings(env: NodeJS.ProcessEnv, ctx: Context = {}): Check[
     rows.push({ id, status: 'warn', key: 'siteUrlHttp', vars: { value: site } })
   else rows.push({ id, status: 'ok', key: 'value', vars: { value: site } })
 
-  // NODE_ENV: only production applies migrations instead of changing the schema by itself
+  // NODE_ENV: the image runs in production mode; development mode is for `npm run dev`
   const nodeEnv = get('NODE_ENV')
   if (production) rows.push({ id: 'NODE_ENV', status: 'ok', key: 'value', vars: { value: nodeEnv } })
   else rows.push({ id: 'NODE_ENV', status: inImage ? 'error' : 'info', key: inImage ? 'nodeEnvImage' : 'nodeEnvDev', vars: { value: nodeEnv || '—' } })

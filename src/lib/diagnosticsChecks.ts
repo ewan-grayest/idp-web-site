@@ -46,11 +46,7 @@ async function databaseChecks(payload: Payload): Promise<Check[]> {
       : { id: 'database', status: 'warn', key: 'dbVersion', vars: { version, ms } },
   ]
 
-  // Migrations: production applies them at start; development changes the schema by itself
-  if (process.env.NODE_ENV !== 'production') {
-    rows.push({ id: 'migrations', status: 'info', key: 'migrationsDev' })
-    return rows
-  }
+  // Migrations: every start applies them, in development too (src/lib/startupMigrations.ts)
   try {
     const { rows: done } = await within(5000, pool.query('select name from payload_migrations'))
     const applied = new Set(done.map((r) => String(r.name)))

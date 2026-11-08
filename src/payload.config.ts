@@ -31,6 +31,7 @@ import { migrations } from './migrations'
 import { backupEndpoints } from './endpoints/backups'
 import { diagnosticsEndpoints } from './endpoints/diagnostics'
 import { payloadLogHooks } from './lib/logBuffer'
+import { migrateOnStart } from './lib/startupMigrations'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -79,9 +80,12 @@ export default buildConfig({
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URI || '' },
-    // Dev pushes schema changes automatically; production applies these on start
-    prodMigrations: migrations,
+    // Development never changes the schema by itself: `npm run dev` shares the database of the site ./start.sh runs,
+    // and its pushes left a mark that kept that site from starting. Migrations are the only way the schema changes
+    push: false,
   }),
+  // Committed migrations apply on every start, in production and development (src/lib/startupMigrations.ts)
+  onInit: (payload) => migrateOnStart(payload, migrations),
   sharp,
   // Site content languages: fields marked `localized` get a language switch in the admin;
   // a text not yet translated shows in Russian on the site

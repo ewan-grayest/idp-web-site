@@ -18,7 +18,7 @@ docker compose up -d db                  # database only, for local development
 npm run dev                              # http://localhost:3000, admin at /admin
 npm run lint                             # tsc --noEmit; there is no ESLint
 npm test                                 # Vitest, tests/unit
-npm run test:e2e                         # Playwright, desktop + phone; needs the database
+npm run test:e2e                         # Playwright, desktop + phone; its own site on :3100 and database idp_e2e (stop npm run dev first)
 npm run build
 npx payload migrate:create <name>        # after any schema change
 npm run generate:types                   # after any collection or global change
@@ -83,7 +83,8 @@ One layout in every setup: prod and dev, local and remote, `Dockerfile` and comp
 - Pages that read the CMS set `export const dynamic = 'force-dynamic'`, so edits show immediately.
 - Read content through helpers in `src/lib/` using Payload's local API, and shape it for the page there.
 - Collections are public-read only where the site needs it. Leads stay readable by signed-in staff only, and the public may only create them.
-- A schema change needs a committed migration (`.ts`, `.json`, and its entry in `src/migrations/index.ts`) and regenerated `src/payload-types.ts`. Development pushes schema automatically; production only applies migrations.
+- A schema change needs a committed migration (`.ts`, `.json`, and its entry in `src/migrations/index.ts`) and regenerated `src/payload-types.ts`. Nothing pushes the schema, in development either (`push: false`): every start applies the migrations (`src/lib/startupMigrations.ts`), so restart `npm run dev` after `migrate:create`.
+- `npm run dev`, `npx payload run` and `./start.sh` share the owner's local database, which holds the real content. Never run destructive scripts or point tests at it; the e2e suite has its own (see Commands).
 - Avoid foreign runtime services and foreign billing: visitors are in Russia and such services may be unreachable. That is why fonts are self-hosted, the map is Yandex and Gravatar is off.
 
 **Tests.** Add a unit test for pure logic in `src/lib` and `src/i18n`, and an e2e spec for visitor-facing behaviour. A spec that changes site-wide settings gets its own Playwright project that runs after `desktop` and `phone` (see `intro-options`, `home-name`).

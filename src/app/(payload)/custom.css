@@ -1,5 +1,38 @@
 /* Admin overrides, loaded after Payload's styles (which sit in the payload-default layer, so these win) */
 
+/* «Создать» beside a list's title, e.g. «Проекты». Payload draws it as a small grey pill, the same as the «правда»
+   tags in the table below, so it read as a label and the button for adding a project seemed missing (Ewan, 2026-11-08).
+   Drawn as the page's main action instead: filled like «Сохранить», with a plus, and a full tap target on touch screens.
+   The same elevation pair as Payload's primary button, so it inverts with the admin's dark theme. */
+.list-create-new-doc__create-new-button.btn {
+  --bg-color: var(--theme-elevation-800);
+  --color: var(--theme-elevation-0);
+  --hover-bg: var(--theme-elevation-600);
+  --hover-color: var(--theme-elevation-0);
+  --btn-padding-inline-start: calc(var(--base) * 0.6);
+  --btn-padding-inline-end: calc(var(--base) * 0.8);
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  font-weight: 600;
+}
+
+/* The link's aria-label («Создать новый Проект») names it for screen readers, so the plus is not read out */
+.list-create-new-doc__create-new-button .btn__label::before {
+  content: '+';
+  margin-inline-end: 0.35em;
+  font-size: 1.3em;
+  font-weight: 400;
+  line-height: 1;
+  vertical-align: -0.08em;
+}
+
+@media (pointer: coarse) {
+  .list-create-new-doc__create-new-button.btn {
+    min-height: 44px;
+  }
+}
+
 /* Phones: a long breadcrumb (a user's email, a project name) kept its full width and pushed
    "Log out" and the account button past the right edge of the screen. Let it shrink and clip instead. */
 @media (max-width: 768px) {

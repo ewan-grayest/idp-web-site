@@ -288,4 +288,5 @@ The verifier creates marked fixtures only in that database and exercises page ro
 - Feed and review sections need approved CMS content. Missing studio photos/text are editorial content to fill in the CMS; development fixtures are clearly marked and are not production content.
 - ID Lab design/content remains TBD and its footer label is intentionally inactive. Checkout, job application forms and reward accounting are out of scope.
 - Admin tabs carry no spec numbers, so «Миссия», not «Миссия 3.1» (Ewan, 2026-11-05). Field labels and hints keep theirs.
+- «Создать» beside an admin list's title is a filled button with a plus, 44px tall on touch screens (Ewan, 2026-11-08). Payload's small grey pill looked like the «правда» tags in the table, so adding a project seemed impossible. The style is in `src/app/(payload)/custom.css`.
 - The site must start on any Docker host (Ewan, 2026-11-05), so one image takes all its settings at start, including `NEXT_PUBLIC_*`, which are no longer build arguments. Hosts that keep no files between deploys stay unsupported, because uploads live on disk and foreign storage services are avoided.

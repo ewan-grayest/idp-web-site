@@ -130,6 +130,30 @@ test('The login page has the interface language switch, and the dashboard explai
   await expect(guide).toContainText('Язык контента')
 })
 
+// Payload's small grey «Создать» pill was taken for a tag, so adding a project seemed impossible (Ewan, 2026-11-08)
+test('The projects list has a clear Create button that opens a new project', async ({ page, isMobile }, testInfo) => {
+  await page.goto('/admin/login')
+  await page.locator('#field-email').fill(accountFor(testInfo.project.name))
+  await page.locator('#field-password').fill(password)
+  await page.locator('button[type=submit]').click()
+  await expect(page).toHaveURL(/\/admin$/)
+  await page.goto('/admin/collections/projects')
+
+  const create = page.getByRole('link', { name: 'Создать новый Проект' }).first()
+  await expect(create).toBeVisible()
+  await expect(create).toHaveText(/Создать/)
+  // Filled dark like «Сохранить» in the light admin, not the light grey of the value tags in the table
+  const background = await create.evaluate((el) => getComputedStyle(el).backgroundColor)
+  const [r, g, b] = (background.match(/\d+/g) ?? []).map(Number)
+  expect((r + g + b) / 3, background).toBeLessThan(110)
+  // A full tap target on phones
+  const box = await create.boundingBox()
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(isMobile ? 44 : 36)
+
+  await create.click()
+  await expect(page).toHaveURL(/\/admin\/collections\/projects\/create$/)
+})
+
 test('A project saves with unfinished products; a product without a partner shows its name only', async ({ page, request }, testInfo) => {
   test.setTimeout(90_000)
   await request.post('/api/v1/users/login', { data: { email: accountFor(testInfo.project.name), password } })

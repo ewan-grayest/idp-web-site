@@ -242,6 +242,8 @@ Run every Compose command from the site folder with `-f` and the compose file, a
 
 Admin → «Обслуживание» → «Диагностика» (`/admin/diagnostics`) shows in one place what usually takes a look at the host's panel: every setting above with what is missing or wrong, whether the database answers and its migrations are applied, whether the upload and backup folders are writable and how much disk is free, whether the backup tools work, how old the latest backup is, and the site's latest log lines. «Скопировать отчёт» copies all of it as text, with the secret and passwords hidden, ready to send to the developer. Log lines are kept since the last start only; when the site doesn't start at all, the host's log is still the place to look.
 
+When the admin page can't be reached, run `scripts/container-diag.sh` inside the site container instead: with `deploy/`, `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env exec -T app sh < scripts/container-diag.sh` from the site folder; on a hosting platform, copy the file into the container's console and run `sh container-diag.sh`. It checks the settings, the site's answers from inside, the database and its migrations, the folders and disk, and the network to the database, and saves the report to `/tmp/diag.txt` with secrets hidden.
+
 ### "A server error occurred. Reload to try again."
 
 This is the generic Next.js page for any exception on the server. The root layout reads the CMS on every page, so a problem with the settings or the database takes down the whole site, and the reason appears only in the logs. On a hosting platform, read them on its log page. With `deploy/`:

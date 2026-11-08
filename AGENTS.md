@@ -15,3 +15,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Commit with plain, descriptive messages. Commits don't need a version bump.
 - The version in `package.json` (shown in the site footer) changes only when deploying a release: `npm run version:patch` (or minor/major), commit, then deploy as in `deploy/README.md` → Release.
 - There is no CI. Run `npm run lint` and `npm test` before pushing.
+- **When the developer asks for a release, merge every branch into `main` and push `main` to GitHub.** That means all branches on `origin`, the `claude/*` session branches included, not only the one you are working on. Then bump the version and push again as in `deploy/README.md` → Release. This is the one time an assistant pushes to `main`. (Ewan, 2026-11-08)

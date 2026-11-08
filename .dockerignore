@@ -13,3 +13,4 @@ deploy/backup.env
 **/.DS_Store
 test-results
 playwright-report
+.e2e

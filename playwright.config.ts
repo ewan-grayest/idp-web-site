@@ -2,9 +2,10 @@ import { defineConfig, devices } from '@playwright/test'
 
 const options = /intro-options\.spec\.ts/
 const homeName = /home-name\.spec\.ts/
-const baseURL = process.env.BASE_URL || 'http://localhost:3000'
+// Port 3100, never 3000: the site ./start.sh runs is there, and these tests change settings, content and backups
+const baseURL = process.env.BASE_URL || 'http://localhost:3100'
 
-/** Runs against a dev server with a database (see README). */
+/** Runs against a dev server with its own database, uploads and backups (scripts/e2e-server.sh). */
 export default defineConfig({
   testDir: 'tests/e2e',
   globalSetup: './tests/e2e/global-setup.ts',
@@ -31,5 +32,5 @@ export default defineConfig({
   ],
   webServer: process.env.BASE_URL
     ? undefined
-    : { command: 'npm run dev', url: 'http://localhost:3000', reuseExistingServer: true, timeout: 120_000 },
+    : { command: 'sh scripts/e2e-server.sh', url: 'http://localhost:3100/api/health', reuseExistingServer: true, timeout: 300_000 },
 })

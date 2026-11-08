@@ -112,10 +112,12 @@ npx playwright install chromium && npm run test:e2e   # browser tests, desktop +
 npm run build
 ```
 
+The browser tests start their own site on port 3100, with their own database (`idp_e2e`, created on the local PostgreSQL when missing), uploads and backups (`.e2e/`), and sample content. They never touch the site `./start.sh` runs on port 3000. Stop `npm run dev` before running them: Next.js allows one dev server per folder.
+
 ## Schema changes
 
-In development the database schema follows the code automatically.
-Before deploying a change, run `npx payload migrate:create <name>`; the production image applies migrations on start.
+The database schema changes only through migrations, in development too: run `npx payload migrate:create <name>` after changing a collection or global, then restart `npm run dev`.
+Every start, local or on a host, applies the migrations not yet in the database.
 
 ## Languages
 
@@ -234,16 +236,12 @@ In the local environment, use `docker compose logs --tail=100 app db`.
 | `password authentication failed` | `POSTGRES_PASSWORD` changed after the database was created | Restore the old value or run `ALTER USER` |
 | `No space left on device`, `PANIC` in the `db` log | Disk full, which stops PostgreSQL | Run the clean-up above, then restart. Never prune volumes |
 | `self-signed certificate` | A managed database uses the provider's own certificate | Add `?sslmode=no-verify` to `DATABASE_URI` |
-| `Error running migration` (the app keeps restarting), `relation` or `column ... does not exist` | The database doesn't match the code, often after pushing a schema in dev mode | Restore a backup, or repair the failed migration. See below |
+| `Error running migration` (the app keeps restarting), `relation` or `column ... does not exist` | The database doesn't match the code, for example a table changed by hand or by code from another branch | Restore a backup, or repair the failed migration |
+| `Removed the mark development leaves in the database` | Older code ran `npm run dev` or a script against this database | Nothing: the site removed the mark itself, see below |
+| `statements were already in the database, made by development, and were skipped` | The same, and that code had already made part of a migration | Nothing: the site applied the rest of it |
 | `Invalid Server Actions request` | The proxy changes `Host` | Fix the proxy headers |
 
-**No error, pages just hang:** the database was used by `npm run dev`, or restored from a backup of one. Dev mode leaves a marker row, and production then waits for a terminal answer that can never come. Check for it, and take a backup before changing anything:
-
-```sql
-select name, batch from payload_migrations where batch = -1;
-```
-
-Deleting that row lets production run, but any migration not yet recorded then runs against a schema dev mode may already have changed, and can fail with `Error running migration`. Avoid this by never pointing `npm run dev` at the hosted database. Local `npm run dev` and `./start.sh` share one database, so check a local backup for the row before restoring it on the host.
+**Pages just hang with no error, on an older version:** the database was used by `npm run dev` or `npx payload run`, or restored from a backup of one. Development used to change the schema by itself and leave a mark (`payload_migrations`, batch -1), and production then waited for a terminal answer that never came. The current version removes the mark on start, and a migration that development had already made in part runs again, skipping what is already there. Development no longer changes the schema by itself. Still, never point `npm run dev` at the hosted database.
 
 ## Settings, feeds and reviews
 

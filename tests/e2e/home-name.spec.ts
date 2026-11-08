@@ -33,5 +33,6 @@ test('Switched off, no slide shows its name, but each still opens its project an
   await expect(left).toContainText('Смотреть проект')
   const link = left.getByRole('link')
   await expect(link).toHaveAttribute('href', '/projects/public/sample-cafe')
-  await expect(link).toHaveAttribute('aria-label', new RegExp(NAME))
+  // The name has brackets, so it is escaped before it goes into a pattern
+  await expect(link).toHaveAttribute('aria-label', new RegExp(NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
 })

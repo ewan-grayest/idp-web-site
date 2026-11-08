@@ -45,7 +45,8 @@ test('Timeline years magnify under the mouse like the macOS Dock, and settle bac
   test.skip(isMobile, 'mouse only')
   await page.goto(PERSON)
   await page.waitForLoadState('networkidle')
-  const tabs = page.locator('[data-spec="4.2.2"] [data-dock] [role="tab"]')
+  // 4.2.2 is the year line itself, which is also the dock (src/components/shared/Timeline.tsx)
+  const tabs = page.locator('[data-spec="4.2.2"][data-dock] [role="tab"]')
   expect(await tabs.count()).toBeGreaterThan(1)
   const scale = (k: number) => tabs.nth(k).evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a)
   const box = (await tabs.nth(0).boundingBox())!

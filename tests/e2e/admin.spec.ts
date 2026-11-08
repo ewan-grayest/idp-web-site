@@ -98,18 +98,20 @@ test('RU / EN / 中 in the header switch the whole admin, field names included',
 
   await choose('en', 'English')
   await expect(tab('Main')).toBeVisible()
-  await expect(page.getByText('Show in the Home slider (1.2 / 1.3)')).toBeVisible()
+  // Field labels carry no spec numbers since v0.1.1 (src/collections/Projects.ts)
+  await expect(page.getByText('Show in the Home slider', { exact: true })).toBeVisible()
   if (!isMobile) await expect(contentLanguage('Content language')).toBeVisible()
   // The content languages are named in the interface language too
   if (!isMobile) await expect(page.locator('.localizer-button__current-label').locator('visible=true')).toHaveText('Russian')
 
   await choose('zh', '中文')
   await expect(tab('基本信息')).toBeVisible()
+  await expect(page.getByText('在首页轮播中显示', { exact: true })).toBeVisible()
   if (!isMobile) await expect(contentLanguage('内容语言')).toBeVisible()
 
   await choose('ru', 'Русский')
   await expect(tab('Основное')).toBeVisible()
-  await expect(page.getByText('Показывать в слайдере на главной (1.2 / 1.3)')).toBeVisible()
+  await expect(page.getByText('Показывать в слайдере на главной', { exact: true })).toBeVisible()
   if (!isMobile) await expect(contentLanguage('Язык контента')).toBeVisible()
 })
 

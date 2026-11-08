@@ -15,7 +15,7 @@ Before trying a new host, `./scripts/check-image.sh` builds both images and star
 
 ## Release
 
-1. **Develop locally.** Merge the finished work into `main` on GitHub.
+1. **Develop locally.** Merge every branch into `main` (an assistant asked for a release merges all of them, `claude/*` included) and push `main` to GitHub.
 2. **Rehearse:** `./start.sh` runs the production image against the local database, and `./scripts/check-image.sh` starts it the way a host does.
 3. **Bump the version** (shown in the footer), commit and push to `main`:
    ```bash

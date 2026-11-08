@@ -1,10 +1,12 @@
-sh
 #!/bin/sh
-# Run inside the site container: sh /path/to/container-diag.sh
+# Diagnostics from inside the site container, for when the admin's diagnostics page can't be reached.
+# The script isn't in the image: from the site folder, feed it to the running container,
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env exec -T app sh < scripts/container-diag.sh
+# or copy it into the container and run: sh container-diag.sh
 # Requires only Node (already in the image) and BusyBox. No settings are changed.
 # DIAG_FILE overrides /tmp/diag.txt. The report hides known credentials.
 if ! command -v node >/dev/null 2>&1; then
-  echo 'Для диагностики нужен Node.js.' >&2
+  echo 'The diagnostics need Node.js.' >&2
   exit 1
 fi
 
@@ -48,7 +50,7 @@ function redact(value) {
       }
       return url.toString()
     } catch {
-      return '[неверный URL скрыт]'
+      return '[invalid URL hidden]'
     }
   })
   for (const secret of [...secrets].sort((a, b) => b.length - a.length)) {
@@ -61,7 +63,7 @@ try {
   logFile = fs.openSync(report, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW, 0o600)
   fs.fchmodSync(logFile, 0o600)
 } catch (error) {
-  console.error(redact(`Не удалось открыть отчёт: ${error.message}`))
+  console.error(redact(`Can't open the report file: ${error.message}`))
   process.exit(1)
 }
 function say(value = '') {
@@ -79,7 +81,7 @@ function run(command, args = [], commandEnv = env) {
 }
 function show(result, lines = 15) {
   // Mask before shortening, so a truncation cannot expose part of a password.
-  say(redact(result.output).split('\n').slice(0, lines).join('\n') || '(нет вывода)')
+  say(redact(result.output).split('\n').slice(0, lines).join('\n') || '(no output)')
 }
 function executable(file) {
   try { fs.accessSync(file, fs.constants.X_OK); return true } catch { return false }
@@ -88,7 +90,7 @@ function request(route, port) {
   return new Promise((resolve) => {
     say(`--- ${route}:`)
     // A total deadline also bounds a response that never finishes streaming.
-    const timer = setTimeout(() => req.destroy(new Error('тайм-аут 30 с')), 30000)
+    const timer = setTimeout(() => req.destroy(new Error('timed out after 30 s')), 30000)
     const req = http.get({ hostname: '127.0.0.1', port, path: route }, (res) => {
       say(`HTTP/${res.httpVersion} ${res.statusCode} ${res.statusMessage}`)
       if (res.headers.location) say(`Location: ${res.headers.location}`)
@@ -112,11 +114,11 @@ function request(route, port) {
 function connect(options) {
   return new Promise((resolve) => {
     const socket = net.createConnection(options)
-    const timer = setTimeout(() => finish('тайм-аут 5 с'), 5000)
+    const timer = setTimeout(() => finish('timed out after 5 s'), 5000)
     function finish(error) {
       clearTimeout(timer)
       socket.destroy()
-      say(error ? `!!! База недоступна: ${error}` : 'Порт базы доступен')
+      say(error ? `!!! Database unreachable: ${error}` : 'Database port is reachable')
       resolve()
     }
     socket.once('connect', () => finish())
@@ -124,21 +126,21 @@ function connect(options) {
   })
 }
 async function main() {
-  section(1, 'Версия и окружение')
+  section(1, 'Version and system')
   say(new Date().toISOString())
   show(run('uname', ['-a']))
   show(run('id'))
   say(`Node ${process.version}`)
-  try { say(`Сайт ${JSON.parse(fs.readFileSync('/app/package.json', 'utf8')).version}`) } catch { say('/app/package.json не найден') }
+  try { say(`Site ${JSON.parse(fs.readFileSync('/app/package.json', 'utf8')).version}`) } catch { say('/app/package.json not found') }
 
-  section(2, 'Настройки (секреты скрыты)')
+  section(2, 'Settings (secrets hidden)')
   for (const [key, value] of Object.entries(env).sort()) {
     if (/^(DATABASE_URI|DATABASE_URL|PAYLOAD_SECRET|MEDIA_DIR|BACKUPS_DIR|BACKUP_MODE|PORT|HOSTNAME|NODE_ENV|PG_BIN_DIR)$|^(NEXT_PUBLIC_|KEEP_)/.test(key)) {
-      say(`${key}=${sensitive.test(key) && value ? '*** (задан)' : value}`)
+      say(`${key}=${sensitive.test(key) && value ? '*** (set)' : value}`)
     }
   }
-  if (!env.PAYLOAD_SECRET) say('!!! PAYLOAD_SECRET пустой')
-  if (!db) say('!!! DATABASE_URI и DATABASE_URL пустые')
+  if (!env.PAYLOAD_SECRET) say('!!! PAYLOAD_SECRET is empty')
+  if (!db) say('!!! DATABASE_URI and DATABASE_URL are both empty')
   let url
   if (db) {
     try {
@@ -146,11 +148,11 @@ async function main() {
       if (!['postgres:', 'postgresql:'].includes(url.protocol)) throw new Error()
     } catch {
       url = undefined
-      say('!!! Неверный URL базы: ожидается postgres://user:password@host:5432/db')
+      say('!!! Invalid database URL: expected postgres://user:password@host:5432/db')
     }
   }
 
-  section(3, 'Процессы и порт')
+  section(3, 'Processes and port')
   const processes = run('ps', ['-o', 'pid,user,args'])
   if (processes.ok) say(processes.output.split('\n').filter((line, i) => i === 0 || /node|next|postgres|entrypoint/.test(line)).join('\n'))
   else show(processes)
@@ -158,18 +160,18 @@ async function main() {
   const validPort = Number.isInteger(port) && port > 0 && port <= 65535
   const ports = run('netstat', ['-ltn'])
   const listeners = ports.ok ? ports : run('ss', ['-ltn'])
-  if (listeners.ok) say(listeners.output.split('\n').filter((line) => new RegExp(`:${port}\\s`).test(line)).join('\n') || 'Порт сайта не слушается')
-  else say('netstat/ss недоступны; соединение проверяется ниже')
+  if (listeners.ok) say(listeners.output.split('\n').filter((line) => new RegExp(`:${port}\\s`).test(line)).join('\n') || "Nothing listens on the site's port")
+  else say('netstat and ss are unavailable; the connection is checked below')
 
-  section(4, 'Ответ сайта изнутри')
+  section(4, "The site's answers from inside the container")
   if (validPort) {
     for (const route of ['/api/health', '/', '/admin']) await request(route, port)
-  } else say('!!! PORT должен быть числом от 1 до 65535')
+  } else say('!!! PORT must be a number from 1 to 65535')
 
-  section(5, 'База данных')
+  section(5, 'Database')
   const bin = env.PG_BIN_DIR || '/opt/pg/bin'
   const psql = [path.join(bin, 'psql'), ...(env.PATH || '').split(path.delimiter).map((dir) => path.join(dir, 'psql'))].find(executable)
-  if (!psql) say('psql не найден')
+  if (!psql) say('psql not found')
   else {
     say(`psql: ${psql}`)
     const pgEnv = {
@@ -179,8 +181,8 @@ async function main() {
     }
     const version = run(psql, ['--version'], pgEnv)
     show(version)
-    if (!version.ok) say('!!! psql не запускается; SQL-проверки пропущены')
-    else if (!url) say('SQL-проверки пропущены: URL базы пустой или неверный')
+    if (!version.ok) say("!!! psql doesn't run; SQL checks skipped")
+    else if (!url) say('SQL checks skipped: the database URL is empty or invalid')
     else {
       // Match the app's libpqUrl(): these driver options are not supported by psql.
       const pgUrl = new URL(url)
@@ -197,52 +199,52 @@ async function main() {
       const query = (sql) => run(psql, ['-X', '-w', '-d', pgUrl.toString(), '-v', 'ON_ERROR_STOP=1', '-c', sql], pgEnv)
       const connection = query('select version();')
       show(connection)
-      if (!connection.ok) say('!!! Подключение к базе не удалось; остальные SQL-проверки пропущены')
+      if (!connection.ok) say("!!! Couldn't connect to the database; the other SQL checks are skipped")
       else {
         for (const [title, sql] of [
-          ['миграции (последние 25)', 'select id, name, batch, created_at from payload_migrations order by id desc limit 25;'],
-          ['таблицы (число)', "select count(*) from information_schema.tables where table_schema='public';"],
-          ['проекты по видам', 'select kind, count(*) from projects group by kind;'],
-          ['пользователи админки (число)', 'select count(*) from users;'],
+          ['migrations (latest 25)', 'select id, name, batch, created_at from payload_migrations order by id desc limit 25;'],
+          ['tables (count)', "select count(*) from information_schema.tables where table_schema='public';"],
+          ['projects by kind', 'select kind, count(*) from projects group by kind;'],
+          ['admin users (count)', 'select count(*) from users;'],
         ]) { say(`--- ${title}:`); show(query(sql), 30) }
       }
     }
   }
 
-  section(6, 'Папки и диск')
-  say('Проверка записи от текущего пользователя (см. id выше)')
+  section(6, 'Folders and disk')
+  say('Write checks run as the current user (see id above)')
   for (const dir of new Set([env.MEDIA_DIR || '/data/media', env.BACKUPS_DIR || '/data/backup', '/app/media', '/app/backups', '/app/.next/cache'])) {
     try {
       const count = fs.readdirSync(dir).length
       const probe = fs.mkdtempSync(path.join(dir, '.idp-diag-'))
       fs.rmdirSync(probe)
-      say(`${dir}: есть, файлов ${count}, запись ОК`)
+      say(`${dir}: exists, ${count} entries, writable`)
     } catch (error) { say(`${dir}: !!! ${error.code || error.message}`) }
   }
-  say('--- смонтированные тома:')
-  try { say(fs.readFileSync('/proc/mounts', 'utf8').split('\n').filter((line) => / \/(app|data)(\/| )/.test(line)).join('\n') || '(не найдены)') } catch { say('/proc/mounts недоступен') }
-  say('--- место на диске:')
+  say('--- mounted volumes:')
+  try { say(fs.readFileSync('/proc/mounts', 'utf8').split('\n').filter((line) => / \/(app|data)(\/| )/.test(line)).join('\n') || '(none found)') } catch { say('/proc/mounts unavailable') }
+  say('--- disk space:')
   show(run('df', ['-h', ...new Set(['/', '/app', env.MEDIA_DIR || '/data/media', env.BACKUPS_DIR || '/data/backup'].filter((dir) => fs.existsSync(dir)))]))
-  say(`--- память: свободно ${Math.round(os.freemem() / 1048576)} МБ из ${Math.round(os.totalmem() / 1048576)} МБ`)
+  say(`--- memory: ${Math.round(os.freemem() / 1048576)} MB free of ${Math.round(os.totalmem() / 1048576)} MB`)
 
-  section(7, 'Сеть до базы')
-  if (!url) say('Проверка пропущена: URL базы пустой или неверный')
+  section(7, 'Network to the database')
+  if (!url) say('Skipped: the database URL is empty or invalid')
   else {
     const host = url.searchParams.get('host') || url.hostname.replace(/^\[|\]$/g, '') || 'localhost'
     const dbPort = Number(url.searchParams.get('port') || url.port || 5432)
-    say(`Хост базы: ${host}, порт: ${dbPort}`)
+    say(`Database host: ${host}, port: ${dbPort}`)
     if (host.startsWith('/')) await connect({ path: path.join(host, `.s.PGSQL.${dbPort}`) })
-    else if (!Number.isInteger(dbPort) || dbPort < 1 || dbPort > 65535 || host.includes(',')) say('Проверка TCP пропущена: нестандартный хост или порт')
+    else if (!Number.isInteger(dbPort) || dbPort < 1 || dbPort > 65535 || host.includes(',')) say('TCP check skipped: unusual host or port')
     else {
-      if (['localhost', '127.0.0.1', '::1'].includes(host)) say('!!! Это адрес текущего контейнера. Для отдельного контейнера PostgreSQL укажите его имя (например, db) в DATABASE_URI.')
+      if (['localhost', '127.0.0.1', '::1'].includes(host)) say("!!! This is the site container's own address. PostgreSQL runs in a container of its own: put its name (for example, db) in DATABASE_URI.")
       // Uses the system resolver, including /etc/hosts for localhost, and supports IPv6.
       await connect({ host, port: dbPort })
     }
   }
-  say(`\nСохранено в ${report}`)
+  say(`\nSaved to ${report}`)
 }
 main().catch((error) => {
-  say(`!!! Диагностика прервана: ${error.message}`)
+  say(`!!! Diagnostics stopped: ${error.message}`)
   process.exitCode = 1
 }).finally(() => fs.closeSync(logFile))
 NODE

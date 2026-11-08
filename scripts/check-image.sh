@@ -5,7 +5,8 @@
 # The main case is the layout every setup uses: the site and PostgreSQL 16 in separate containers, with storage at
 # /data/media and /data/backup in the site's and /data/db in the database's, here the database's image with only a
 # password and one disk at /data. On it the check works the site like an editor (uploads a photo, makes, checks and
-# restores a backup), then redeploys both containers on the same storage.
+# restores a backup), then redeploys both containers on the same storage. A new host then takes that backup as an
+# upload and restores it before anything is uploaded there, run as an arbitrary user on disks with a lost+found.
 # Then a database disk mounted straight at /data/db, a managed-style database that wants TLS, and a host that forbids root.
 # Uses throwaway containers and volumes and removes everything it made, so it touches no real data. Needs Docker and curl.
 # Usage: scripts/check-image.sh [--platform linux/amd64]   (the host's platform, when it differs from the local environment)
@@ -27,11 +28,15 @@ db="idp-check-db-$id"
 app="idp-check-app-$id"
 tls="idp-check-tls-$id"
 lf="idp-check-lf-$id"
+new_db="idp-check-new-db-$id"
 vol_media="idp-check-media-$id"
 vol_db="idp-check-db-$id"
 vol_backup="idp-check-backup-$id"
 vol_data="idp-check-data-$id"
 vol_lf="idp-check-lf-$id"
+vol_new_media="idp-check-new-media-$id"
+vol_new_backup="idp-check-new-backup-$id"
+vol_new_db="idp-check-new-db-$id"
 db_url="postgres://idp:check@$db:5432/idp"
 tls_url="postgres://idp:check@$tls:5432/idp"
 secret="check-secret-$id"
@@ -42,8 +47,9 @@ failures=0
 base= token= media_id= file= backup=
 
 cleanup() {
-  docker rm -f "$app" "$db" "$tls" "$lf" >/dev/null 2>&1 || true
-  docker volume rm "$vol_media" "$vol_db" "$vol_backup" "$vol_data" "$vol_lf" >/dev/null 2>&1 || true
+  docker rm -f "$app" "$db" "$tls" "$lf" "$new_db" >/dev/null 2>&1 || true
+  docker volume rm "$vol_media" "$vol_db" "$vol_backup" "$vol_data" "$vol_lf" "$vol_new_media" "$vol_new_backup" "$vol_new_db" \
+    >/dev/null 2>&1 || true
   docker network rm "$net" >/dev/null 2>&1 || true
   docker rmi "$image" "$db_image" >/dev/null 2>&1 || true
   rm -rf "$tmp"
@@ -135,6 +141,13 @@ make_backup() {
   [ -n "$backup" ] && docker exec "$app" test -f "/data/backup/$backup"
 }
 check_backup() { api POST "/api/v1/backups/$backup/verify" >/dev/null && wait_for_job; }
+download_backup() { api GET "/api/v1/backups/$backup/download" -o "$tmp/$backup" && [ -s "$tmp/$backup" ]; }
+# Sent as the admin page sends it; the site keeps a backup's own name
+upload_backup() {
+  backup=$(api POST /api/v1/backups/upload -H 'Content-Type: application/octet-stream' -H "X-File-Name: $backup" \
+    --data-binary @"$tmp/$backup" | json name)
+  [ -n "$backup" ]
+}
 delete_photo() { api DELETE "/api/v1/media/$media_id" >/dev/null && page_gone "/api/v1/media/file/$file"; }
 # A restore ends the site's process on purpose; the container starts it again by itself
 restore_backup() {
@@ -220,6 +233,7 @@ if wait_for_site 8080; then
     check "keeps the photo at /data/media" docker exec "$app" test -f "/data/media/$file"
     check "makes a backup at /data/backup" make_backup
     check "the backup checks out, including a trial restore" check_backup
+    check "downloads the backup" download_backup
     check "deletes the photo" delete_photo
     if restore_backup && wait_for_site 8080; then
       echo "  ok    restores the backup and starts the site again by itself"
@@ -250,6 +264,36 @@ else
   fail "the site didn't answer"
 fi
 docker rm -f "$app" >/dev/null
+
+# Where a restore has its own work to do: the site saves the current state first, with no uploads to save yet
+echo "A new host: the backup above, uploaded and restored before anything is uploaded here"
+echo "  run as an arbitrary user, on disks whose root has a lost+found only root can open"
+if [ -s "$tmp/$backup" ]; then
+  for v in "$vol_new_media" "$vol_new_backup" "$vol_new_db"; do docker volume create "$v" >/dev/null; done
+  for v in "$vol_new_media" "$vol_new_backup"; do
+    docker run --rm --user 0 -v "$v":/v --entrypoint sh "$image" -c 'chown 100:0 /v && chmod 775 /v && mkdir -m 700 /v/lost+found'
+  done
+  start_db "$new_db" -e POSTGRES_PASSWORD=check -v "$vol_new_db":/data "$db_image" || exit 1
+  docker run -d --name "$app" --network "$net" $platform -p 127.0.0.1::3000 --user 12345:0 \
+    -e DATABASE_URI="postgres://idp:check@$new_db:5432/idp" -e PAYLOAD_SECRET="$secret" -e NEXT_PUBLIC_SITE_URL=https://check.example \
+    -v "$vol_new_media":/data/media -v "$vol_new_backup":/data/backup "$image" >/dev/null
+  if wait_for_site 3000 && first_admin; then
+    check "takes the backup as an upload" upload_backup
+    if restore_backup && wait_for_site 3000; then
+      echo "  ok    restores it and starts the site again by itself"
+      check "the photo's record is there" page_opens "/api/v1/media/$media_id"
+      check "the photo itself is there" page_opens "/api/v1/media/file/$file"
+      check "the disk's lost+found stays" docker exec "$app" test -d /data/media/lost+found
+    else
+      fail "restore on the new host"
+    fi
+  else
+    fail "the new host's site didn't answer, or its first admin wasn't created"
+  fi
+  docker rm -f "$app" "$new_db" >/dev/null
+else
+  fail "no backup from the first site to restore"
+fi
 
 echo "A database disk mounted straight at /data/db, with an empty lost+found on it"
 docker volume create "$vol_lf" >/dev/null

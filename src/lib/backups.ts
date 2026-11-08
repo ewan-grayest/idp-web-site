@@ -29,6 +29,13 @@ const TABLE_COUNTS_SQL =
 /** Leftovers of an interrupted restore inside the upload folder start with this, and are never backed up */
 const MEDIA_TEMP_PREFIX = '.idp-restore-'
 
+/**
+ * Whether an entry at the top of the upload folder is the site's own: never a restore's leftovers, nor the lost+found
+ * a host's disk can have at its root. That one can be root's only, and a host that runs the image as another user
+ * then could neither read it into a backup ("tar: ./lost+found: Permission denied") nor move it aside in a restore.
+ */
+export const isUploadEntry = (name: string) => !name.startsWith(MEDIA_TEMP_PREFIX) && name !== 'lost+found'
+
 // Folders chosen at run time: the ignore comments keep Next.js from bundling the whole project into the server build
 export const backupDir = () => path.resolve(/*turbopackIgnore: true*/ dataDirs().backup)
 const mediaDir = () => path.resolve(/*turbopackIgnore: true*/ dataDirs().media)
@@ -273,7 +280,7 @@ export async function createBackup(step: Step, opts: { label?: string; by?: stri
 
     step('savingMedia')
     await fs.mkdir(mediaDir(), { recursive: true })
-    const entries = (await fs.readdir(mediaDir())).filter((e) => !e.startsWith(MEDIA_TEMP_PREFIX))
+    const entries = (await fs.readdir(mediaDir())).filter(isUploadEntry)
     const mediaTar = path.join(work, 'media.tar')
     if (entries.length) await run('tar', ['-C', mediaDir(), '-cf', mediaTar, ...entries.map((e) => `./${e}`)])
     // No uploads yet, as on a new host before the first restore, whose safety backup lands here. The image's BusyBox
@@ -421,9 +428,9 @@ export async function verifyBackup(name: string, deep: boolean, step: Step) {
 /** The site's own connection pool (payload.db.pool) */
 export type DbPool = { on: (event: 'error', fn: (e: Error) => void) => unknown }
 
-async function moveInto(from: string, to: string, skip: (n: string) => boolean = () => false) {
-  for (const entry of await fs.readdir(from)) {
-    if (skip(entry)) continue
+/** Moves the site's own entries (isUploadEntry) from one folder into another; the rest stay where they are */
+async function moveUploads(from: string, to: string) {
+  for (const entry of (await fs.readdir(from)).filter(isUploadEntry)) {
     await fs.rename(path.join(from, entry), path.join(to, entry))
   }
 }
@@ -501,8 +508,9 @@ export async function restoreBackup(
     swapped = true
 
     await fs.mkdir(parked, { recursive: true })
-    await moveInto(media, parked, (n) => n.startsWith(MEDIA_TEMP_PREFIX))
-    await moveInto(staging, media)
+    // The host's lost+found stays in place, and one in the backup (an older backup could hold it) is left out
+    await moveUploads(media, parked)
+    await moveUploads(staging, media)
     step('restored', { tables: u.manifest.tables, files: unpacked })
 
     await fs.rm(staging, { recursive: true, force: true })

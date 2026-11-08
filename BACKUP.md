@@ -66,7 +66,8 @@ Each backup is one file, `idp-<local|prod>-<date>_<time>.tar`, with a `.sha256` 
 in the backup volume. Inside:
 
 - `db.dump`: the whole database (`pg_dump` custom format, compressed)
-- `media.tar`: everything in the media storage (`/data/media` in the site's container)
+- `media.tar`: everything in the media storage (`/data/media` in the site's container), except the `lost+found`
+  folder a host's disk can have, which may be readable by root only
 - `db-counts.txt`: the number of rows in every table, used to prove a restore is complete
 - `manifest.txt`: when and where it was made, PostgreSQL version, last database migration, number of media files
 - `SHA256SUMS`: a checksum for each of the files above
@@ -184,4 +185,5 @@ On the production server, a daily disk snapshot from the hosting provider is a g
 Run `scripts/verify-backup.sh --deep --latest` after changing anything about backups, and once a month restore
 a backup into a spare copy of the site to make sure the whole procedure still works.
 `scripts/check-image.sh` does a quick version of that: in a throwaway copy, it makes, checks and restores a backup
-through the admin's API and waits for the site to restart.
+through the admin's API and waits for the site to restart. Then it uploads that backup to a new, empty site and restores
+it there before anything is uploaded, as when moving to a new host.

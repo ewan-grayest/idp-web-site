@@ -1545,13 +1545,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "home_show_name": {
-          "name": "home_show_name",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        },
         "social_hashtag": {
           "name": "social_hashtag",
           "type": "varchar",
@@ -1589,6 +1582,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "publish_on_site": {
+          "name": "publish_on_site",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
         }
       },
       "indexes": {
@@ -8247,6 +8247,44 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.home": {
+      "name": "home",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "show_slide_names": {
+          "name": "show_slide_names",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -8265,7 +8303,7 @@
       "values": [
         "residential",
         "public",
-        "archive"
+        "product"
       ]
     },
     "public.enum_social_posts_scope": {
@@ -8376,6 +8414,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "99edd63b-eb4a-417a-87ac-e5912d247586",
+  "id": "d8dc2afb-066e-4967-bc14-73ed85b39b17",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

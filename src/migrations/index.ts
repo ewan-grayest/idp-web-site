@@ -12,7 +12,7 @@ import * as migration_20261102_200136_spec_compliance from './20261102_200136_sp
 import * as migration_20261102_221628_home_show_name from './20261102_221628_home_show_name';
 import * as migration_20261105_225500_product_design_publish from './20261105_225500_product_design_publish';
 import * as migration_20261107_192830_personal_data_law from './20261107_192830_personal_data_law';
-import * as migration_20261108_083000_restore_projects_after_master from './20261108_083000_restore_projects_after_master';
+import * as migration_20261108_120000_align_project_schema from './20261108_120000_align_project_schema';
 
 export const migrations = [
   {
@@ -86,8 +86,8 @@ export const migrations = [
     name: '20261107_192830_personal_data_law'
   },
   {
-    up: migration_20261108_083000_restore_projects_after_master.up,
-    down: migration_20261108_083000_restore_projects_after_master.down,
-    name: '20261108_083000_restore_projects_after_master'
+    up: migration_20261108_120000_align_project_schema.up,
+    down: migration_20261108_120000_align_project_schema.down,
+    name: '20261108_120000_align_project_schema'
   },
 ];

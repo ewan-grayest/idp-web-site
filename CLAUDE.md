@@ -78,6 +78,7 @@ One layout in every setup: prod and dev, local and remote, `Dockerfile` and comp
 - Translatable required fields use `...requiredInRussian`, not `required: true`, so a translation can stay unfinished.
 - Internal links use `Link` from `@/i18n/Link`. Data helpers build plain unprefixed paths (`/studio#team`).
 - Language: `getT()` / `getLocale()` on the server, `useI18n()` on the client. Always pass `locale` to Payload queries.
+- Code comments and documentation (README, `docs/`, the other `.md` files) are in English, whatever language the conversation is in. Name a Russian label by quoting it in «», as in «Резервные копии». Text meant for visitors, staff or a lawyer (dictionaries, `tr()` labels, seed data, legal drafts) stays in its own language.
 
 **Next.js and Payload.**
 - Pages that read the CMS set `export const dynamic = 'force-dynamic'`, so edits show immediately.

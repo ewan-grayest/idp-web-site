@@ -209,8 +209,6 @@ All are read when the container starts: change one and recreate the container (`
 | `POSTGRES_PASSWORD` | The database container, and the compose files in `deploy/`. `openssl rand -hex 32`. PostgreSQL reads it only when it creates the database, so changing it later also needs `ALTER USER` in the database | Every page fails with `password authentication failed` |
 | `NEXT_PUBLIC_SITE_URL` | Site address: `https://example.ru` | Empty: links and share addresses point to `localhost`, with a warning in the log |
 | `SITE_DOMAIN` | `docker-compose.prod.yml` only. Domain without the scheme: `example.ru` | Caddy can't get a certificate |
-| `NEXT_PUBLIC_STUDIO_PHONE` | Optional fallback phone | |
-| `NEXT_PUBLIC_PROMO_VIDEO_URL` | Optional, used when no video is uploaded | |
 | `APP_BIND` | `docker-compose.behind-proxy.yml` only. Where the proxy reaches the site, default `127.0.0.1:3000` | |
 
 The image already sets the rest, so leave these alone unless the host needs otherwise:

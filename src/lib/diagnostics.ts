@@ -31,7 +31,7 @@ type Context = {
   openedAt?: string
 }
 
-/** One row per setting the site reads, in the order of "Required settings" in the README */
+/** One row per setting the site reads, those of "Required settings" in the README first */
 export function checkSettings(env: NodeJS.ProcessEnv, ctx: Context = {}): Check[] {
   const get = (name: string) => env[name]?.trim() || ''
   const production = env.NODE_ENV === 'production'

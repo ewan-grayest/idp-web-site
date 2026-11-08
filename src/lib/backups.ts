@@ -276,7 +276,10 @@ export async function createBackup(step: Step, opts: { label?: string; by?: stri
     const entries = (await fs.readdir(mediaDir())).filter((e) => !e.startsWith(MEDIA_TEMP_PREFIX))
     const mediaTar = path.join(work, 'media.tar')
     if (entries.length) await run('tar', ['-C', mediaDir(), '-cf', mediaTar, ...entries.map((e) => `./${e}`)])
-    else await run('tar', ['-C', mediaDir(), '-cf', mediaTar, '-T', '/dev/null'])
+    // No uploads yet, as on a new host before the first restore, whose safety backup lands here. The image's BusyBox
+    // tar refuses to write an archive with nothing in it ("tar: empty archive"), so write the empty archive itself:
+    // the end-of-archive zero blocks, padded to one 10 KiB record, which every tar lists and unpacks as empty
+    else await fs.writeFile(mediaTar, Buffer.alloc(10240))
     const mediaFiles = await tarFileCount(mediaTar)
 
     const manifest = [

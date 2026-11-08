@@ -12,6 +12,7 @@ import type { Payload } from 'payload'
 
 import { migrations } from '../migrations'
 import { backupDir, listBackups } from './backups'
+import { dataDirs } from './dataDirs'
 import { type Check, checkSettings, worstStatus } from './diagnostics'
 import { logStartedAt, recentLogs, redact } from './logBuffer'
 import { SITE_VERSION } from './version'
@@ -136,7 +137,7 @@ export type Diagnostics = Awaited<ReturnType<typeof runDiagnostics>>
 
 /** Everything the page shows. `openedAt` is the address the admin was opened at */
 export async function runDiagnostics(payload: Payload, openedAt?: string) {
-  const media = path.resolve(/*turbopackIgnore: true*/ process.env.MEDIA_DIR || 'media')
+  const media = path.resolve(/*turbopackIgnore: true*/ dataDirs().media)
   const checks = (
     await Promise.all([databaseChecks(payload), folderCheck('mediaDir', media), folderCheck('backupsDir', backupDir()), backupToolsCheck(), lastBackupCheck()])
   ).flat()

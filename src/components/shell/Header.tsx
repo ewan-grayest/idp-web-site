@@ -194,7 +194,10 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
   return (
     <header className={styles.header} data-spec="0.1">
       <div className={styles.left}>
-        <Link href="/" className={styles.logo} aria-label={t.header.home} data-spec="0.1.1"><span>ID</span></Link>
+        {/* 0.1.1 opens the site menu, as before 2026-11-02; Home is the menu's first link (Ewan, 2026-11-11) */}
+        <SiteMenu buttonClassName={styles.logo} phone={phone} email={studioEmail} spec="0.1.1">
+          <span>ID</span>
+        </SiteMenu>
         <span className="spec-id">0.1.1</span>
 
         {mode === 'search' ? (
@@ -289,7 +292,6 @@ export function Header({ title, phone, email: studioEmail }: { title: string; ph
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
-        <SiteMenu buttonClassName={styles.iconBtn} phone={phone} email={studioEmail}><span aria-hidden>☰</span></SiteMenu>
         <span className="spec-id">0.1.3–5</span>
       </div>
 

@@ -8,14 +8,15 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 const panel = (page: import('@playwright/test').Page) => page.locator('[data-site-menu-panel]')
 
-test('The separate menu button leads to every main section; the ID logo leads home', async ({ page }) => {
+test('The ID logo opens the menu, which leads to every main section; Home has none', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('[data-site-menu]')).toHaveCount(0)
   await page.goto('/studio')
   await page.waitForLoadState('networkidle')
-  // Spec 0.1.1 is a Home link. The supplemental menu has its own button.
+  // The ID logo 0.1.1 at the top left is the menu button, and there is no other one (Ewan, 2026-11-11)
   await expect(page.locator('header [data-site-menu]')).toHaveCount(1)
-  await expect(page.locator('header [data-spec="0.1.1"]')).toHaveAttribute('href', '/')
+  await expect(page.locator('header [data-site-menu]')).toHaveAttribute('data-spec', '0.1.1')
+  await expect(page.locator('header [data-site-menu]')).toHaveText('ID')
   await page.locator('header [data-site-menu]').click()
   const menu = page.getByRole('dialog', { name: 'Меню' })
   await expect(menu).toBeVisible()

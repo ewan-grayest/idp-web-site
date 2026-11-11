@@ -239,4 +239,3 @@ Run TypeScript ones with `npx payload run <file>`. All import scripts are additi
 Trust the code. Fix these in the README when convenient.
 
 - "No automatic redirect by browser language": `src/proxy.ts` does redirect, since Ewan's 2026-10-26 decision.
-- "the header's last button opens every section": the header logo button opens the site menu.

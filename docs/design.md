@@ -94,7 +94,7 @@ Breakpoints: phone 360–767, tablet 768–1279, desktop 1280–1919, wide 1920+
 ## Shared components
 
 **Header 0.1** (`shell/Header.tsx`). Fixed, on `--c-surface`, hairline below; hidden on Home and Promo.
-- Logo 0.1.1: greyscale at rest, colour on hover. It opens the site menu; the spec had it link Home.
+- Logo 0.1.1: greyscale at rest, colour on hover. It opens the site menu, and there is no other menu button; the spec had it link Home (Ewan, 2026-11-11).
 - Section title 0.1.2: the page title, replaced on scroll by the nearest section above the header line that has `data-header-title`.
 - Then the icon buttons: call 0.1.3 (reveals phone 0.1.6), mail 0.1.4 (opens the email field 0.1.7 and consent 0.1.8–0.1.10, and becomes the send button), search 0.1.5 (opens the search form), theme. On phones the theme switch moves into the menu.
 
@@ -144,7 +144,7 @@ Page frame: `SiteChrome` adds header, `main` and footer everywhere except Home a
 | `#6d6d6d`, `#d2d2d2` as literal colours | Their heirs `--c-muted`, `--c-line`, per theme | Tokens v1.0 |
 | Grey text on green footer | Graphite (spec colour is 2.5:1) | Confirmed in `Footer.module.css` |
 | One dark theme | Light and dark with a switch | Ewan, 2026-10-22 |
-| Header logo goes Home | Logo opens the site menu; Home is its first entry | Site menu work, 2026-10-25 |
+| Header logo goes Home | Logo opens the site menu; Home is its first entry | Site menu work, 2026-10-25; Ewan, 2026-11-11 |
 | Home logo 1.1 opens promo | Opens Studio/Team; video plays by itself per session | Ewan, 2026-10-25 |
 | Both sliders labelled "public interiors" | Left public, right residential | `lib/homeSlides.ts` |
 | Consent box behaviour 0.1.9 | Unticked by default, remembered once ticked | Confirmed, `lib/leads.ts` |

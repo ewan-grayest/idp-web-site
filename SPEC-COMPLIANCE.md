@@ -6,7 +6,7 @@ Source: `../technical specifications.pptx` (five slides). The current user brief
 
 | Spec role / elements | Stable route | Implementation |
 | --- | --- | --- |
-| 0.1.1–0.1.14 · fixed contextual header, phone, consented enquiry, site search | All content pages | `src/components/shell/Header.tsx`; logo links Home; separate supplemental menu |
+| 0.1.1–0.1.14 · fixed contextual header, phone, consented enquiry, site search | All content pages | `src/components/shell/Header.tsx`; the logo opens the supplemental site menu, whose first link is Home (Ewan, 2026-11-11) |
 | 0.2 / 0.3.1–0.3.8 · content / full footer navigation | All content pages | `SiteChrome.tsx`, `Footer.tsx`, `src/lib/site.ts`; Archive included; ID Lab inactive |
 | 1 / 1.1 / 1.2 / 1.3 / 1.2.1 / 1.3.1 | `/` | `HomeSliders.tsx`; opposing 50/50 project sliders, pause/expand on hover, logo +20%, swipe, progress, reduced-motion support |
 | 2 / 2.1–2.3 | `/promo` | `PromoVideo.tsx`; fullscreen film, playback/sound, Escape/close, team link; CMS upload and behavior options |

@@ -1,4 +1,4 @@
-.panel { position: fixed; z-index: 90; bottom: 12px; right: 12px; width: min(280px, calc(100vw - 24px)); max-height: 45svh; overflow: auto; padding: 16px; background: #202020; border: 1px solid #8dc63f; color: #d2d2d2; font: 400 12px/18px Roboto, sans-serif; box-shadow: 0 4px 30px #0006; }
+.panel { position: fixed; z-index: 90; bottom: 12px; right: 12px; width: min(280px, calc(100vw - 24px)); max-height: 45svh; overflow: auto; padding: 16px; background: #202020; border: 1px solid #8dc63f; color: #d2d2d2; font: 400 12px/18px var(--font-sans); box-shadow: 0 4px 30px #0006; }
 .top { display: flex; align-items: center; justify-content: space-between; }
 .top button { background: transparent; border: 0; color: inherit; font-size: 24px; cursor: pointer; min-width: 44px; min-height: 44px; }
 .panel p { margin: 4px 0 12px; }

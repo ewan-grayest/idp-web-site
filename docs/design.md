@@ -5,14 +5,14 @@ Describes the design as built. Last checked against the code on 2026-11-03.
 ## Sources, in order of precedence
 
 1. **Owner decisions**: dated `(Ewan, YYYY-MM-DD)` in code comments and in the README's "Content and scope decisions".
-2. **Design tokens v1.0**: `src/styles/tokens.css`. They replace the spec's type and most of its colours.
+2. **Design tokens v1.0**: `src/styles/tokens.css`. They replace most of the spec's colours and add the type sizes the spec leaves open; the typeface is the spec's Roboto.
 3. **Technical specification**: `../technical specifications.pptx`, in the parent `IDP Site/` folder, not in this repo. It defines the page numbers and component IDs. Six slides, in Russian.
 
 The README also names a "Tools and tech stack" doc and an "IDP Site design" canvas. Neither is in the repo, and the code and this file do not depend on them.
 
 ## Direction
 
-Editorial and photo-led, for an interior design studio. Light theme: warm paper, ink text, serif display type. Dark theme: warm graphite, tuned to match. Photos are wide and bleed to the edges. The spec's green `#8dc63f` is the single accent. Corners are nearly square (`--radius: 2px`).
+Editorial and photo-led, for an interior design studio. Light theme: warm paper, ink text, light-weight Roboto display type. Dark theme: warm graphite, tuned to match. Photos are wide and bleed to the edges. The spec's green `#8dc63f` is the single accent. Corners are nearly square (`--radius: 2px`).
 
 ## Colour
 
@@ -49,20 +49,24 @@ Always dark, via `.theme-dark`: Home, Promo and the photo viewer.
 
 ## Type
 
-Serif: Cormorant Garamond. Sans: Manrope. Both are self-hosted through `@fontsource`, imported in `src/app/(frontend)/[locale]/layout.tsx`, Latin and Cyrillic only. Chinese falls back to system CJK fonts. Only the weights imported there exist: serif 300, 300 italic, 400; sans 400, 500, 600, 700.
+Roboto throughout, as spec slide 1 asks, with body text at the spec's 10pt (13.333px). The fonts must be free and as in the spec (Ewan, 2026-11-11): Roboto is under the SIL Open Font License 1.1, which allows commercial use and serving it from our own site. Use no other typeface, and check the licence before adding one.
+
+- Self-hosted through `@fontsource-variable/roboto`, imported in `src/app/(frontend)/[locale]/layout.tsx`: no font CDN. The variable font holds every weight from 100 to 900 and italics, so any weight, and bold or italic in admin rich text, renders as drawn. The browser downloads only the alphabets and styles a page uses.
+- The stack is `--font-sans` in `tokens.css`; `--font` and `--font-serif` are the same stack, kept as names for headings. Component CSS uses these variables, never the name `Roboto`.
+- Chinese: Roboto has no CJK glyphs, so the visitor's system font takes over (PingFang, Microsoft YaHei, Noto Sans CJK and similar). Nothing is downloaded for it.
 
 | Token | Desktop | Phone (≤767px) |
 |---|---|---|
-| `--t-display` | serif 300, 64/68 | 44/48 |
-| `--t-h1` | serif 300, 48/52 | 36/40 |
-| `--t-h2` | serif 400, 34/40 | 28/34 |
-| `--t-h3` | sans 600, 20/28 | same |
-| `--t-lead` | sans 400, 18/30 | same |
-| `--t-body` | sans 400, 16/27 | same |
-| `--t-small` | sans 400, 13/20 | same |
-| `--t-label` | sans 600, 12/16; caps, `.14em` tracking | same |
-| `--t-title` | serif 400, 22/28; header section title 0.1.2 | 18/24 |
-| `--t-quote` | serif italic 300, 26/34 | 21/28 |
+| `--t-display` | 300, 64/68 | 44/48 |
+| `--t-h1` | 300, 48/52 | 36/40 |
+| `--t-h2` | 400, 34/40 | 28/34 |
+| `--t-h3` | 600, 20/28 | same |
+| `--t-lead` | 400, 18/30 | same |
+| `--t-body` | 400, 13.333/22: the spec's 10pt | same |
+| `--t-small` | 400, 13/20 | same |
+| `--t-label` | 600, 12/16; caps, `.14em` tracking | same |
+| `--t-title` | 400, 22/28; header section title 0.1.2 | 18/24 |
+| `--t-quote` | italic 300, 26/34 | 21/28 |
 
 Chinese (`:lang(zh)` in `globals.css`): no synthesised italics, no letter-spacing, strict line breaking. Long words wrap and hyphenate according to `<html lang>`.
 
@@ -139,7 +143,6 @@ Page frame: `SiteChrome` adds header, `main` and footer everywhere except Home a
 
 | Spec | As built | Decided |
 |---|---|---|
-| Roboto 10pt body | Cormorant Garamond and Manrope, type scale above | Tokens v1.0 |
 | Header height from logo (15%) | Slim `--header-h` | Tokens v0.2 |
 | `#6d6d6d`, `#d2d2d2` as literal colours | Their heirs `--c-muted`, `--c-line`, per theme | Tokens v1.0 |
 | Grey text on green footer | Graphite (spec colour is 2.5:1) | Confirmed in `Footer.module.css` |

@@ -21,9 +21,7 @@
     "node": ">=20.9"
   },
   "dependencies": {
-    "@fontsource/cormorant-garamond": "^5.3.0",
-    "@fontsource/manrope": "^5.3.0",
-    "@fontsource/roboto": "^5.3.0",
+    "@fontsource-variable/roboto": "^5.3.0",
     "@payloadcms/db-postgres": "^3.92.0",
     "@payloadcms/next": "^3.92.0",
     "@payloadcms/richtext-lexical": "^3.92.0",

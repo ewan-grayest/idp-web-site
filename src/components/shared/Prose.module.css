@@ -1,4 +1,4 @@
-/* Admin rich text: body type, serif headings, green list markers and link underlines */
+/* Admin rich text: body type, display-type headings, green list markers and link underlines */
 .prose { max-width: 760px; color: var(--c-soft); font: var(--t-body); }
 .prose > :first-child { margin-top: 0; }
 .prose > :last-child { margin-bottom: 0; }

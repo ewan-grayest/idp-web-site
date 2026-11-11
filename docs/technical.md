@@ -15,7 +15,7 @@ Describes the system as built. Last checked against the code on 2026-11-03. For 
 | Tests | Vitest, Playwright |
 | Runtime | Node 22 on Alpine in Docker; Node ≥ 20.9 for development |
 
-Declared but unused anywhere in `src`, `scripts` or `tests`: `embla-carousel-react`, `photoswipe`, `@fontsource/roboto`. Check before relying on them.
+Declared but unused anywhere in `src`, `scripts` or `tests`: `embla-carousel-react`, `photoswipe`. Check before relying on them.
 
 Next 16 differs from older versions; `AGENTS.md` requires reading `node_modules/next/dist/docs/` first. Relevant here: `src/proxy.ts` is the old middleware, and `next/root-params` provides the locale.
 

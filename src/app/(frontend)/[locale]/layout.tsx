@@ -1,18 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import { headers } from 'next/headers'
-// Self-hosted Roboto, including Cyrillic. No font CDN requests.
-import '@fontsource/roboto/cyrillic-300.css'
-import '@fontsource/roboto/cyrillic-400.css'
-import '@fontsource/roboto/cyrillic-500.css'
-import '@fontsource/roboto/cyrillic-600.css'
-import '@fontsource/roboto/cyrillic-700.css'
-import '@fontsource/roboto/cyrillic-300-italic.css'
-import '@fontsource/roboto/latin-300.css'
-import '@fontsource/roboto/latin-400.css'
-import '@fontsource/roboto/latin-500.css'
-import '@fontsource/roboto/latin-600.css'
-import '@fontsource/roboto/latin-700.css'
-import '@fontsource/roboto/latin-300-italic.css'
+// Roboto, the spec's typeface (slide 1), self-hosted: no font CDN requests. Free under the SIL Open Font
+// License 1.1, which allows commercial use and serving the files from our own site (Ewan, 2026-11-11).
+// Variable font: one file per alphabet holds every weight from 100 to 900, so any weight in the CSS or
+// bold/italic in admin rich text renders as drawn rather than faked by the browser. The browser fetches only
+// the alphabets (Latin, Cyrillic, ...) and styles a page uses: 65 KB for a Russian page, about 60 KB more
+// where an arrow or other symbol (such as «↗») needs Roboto's symbol files.
+import '@fontsource-variable/roboto/wght.css'
+import '@fontsource-variable/roboto/wght-italic.css'
 import '@/styles/globals.css'
 
 import { CookieNotice } from '@/components/shell/CookieNotice'

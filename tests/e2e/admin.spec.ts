@@ -98,6 +98,7 @@ test('RU / EN / 中 in the header switch the whole admin, field names included',
 
   await choose('en', 'English')
   await expect(tab('Main')).toBeVisible()
+  // Field labels carry no spec numbers since v0.1.1 (src/collections/Projects.ts)
   await expect(page.getByText('Show in the Home slider', { exact: true })).toBeVisible()
   if (!isMobile) await expect(contentLanguage('Content language')).toBeVisible()
   // The content languages are named in the interface language too

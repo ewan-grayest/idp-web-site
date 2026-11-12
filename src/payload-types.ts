@@ -1241,7 +1241,7 @@ export interface Home {
 export interface Studio {
   id: number;
   /**
-   * Shows over Home on a visitor's first visit and at /promo; the switches below set how. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.
+   * Shows over Home on a visitor's first visit and at /promo; the switches below set how. When it ends, is closed or is clicked, Home opens. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.
    */
   promoVideo?: (number | null) | Media;
   /**
@@ -1253,6 +1253,14 @@ export interface Studio {
    * Browsers do not let a video start with sound by itself until the visitor has clicked or tapped: it then plays muted with a hint, and the first click or tap turns the sound on. Off: the video plays muted and the sound button turns it on.
    */
   promoSound?: boolean | null;
+  /**
+   * Full-screen under the play button: while the video loads, waits for a click, or the browser does not start it by itself.
+   */
+  promoBackground?: ('frame' | 'image') | null;
+  /**
+   * Fills the screen, as the video does. A GIF moves; visitors who asked their system for less motion see its first frame.
+   */
+  promoBackgroundImage?: (number | null) | Media;
   mission?: string | null;
   vision?: string | null;
   history?:
@@ -1393,6 +1401,8 @@ export interface StudioSelect<T extends boolean = true> {
   introOnFirstVisit?: T;
   promoAutoplay?: T;
   promoSound?: T;
+  promoBackground?: T;
+  promoBackgroundImage?: T;
   mission?: T;
   vision?: T;
   history?:

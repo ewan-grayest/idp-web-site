@@ -9,7 +9,8 @@ import { getPromoVideo } from '@/lib/studio'
 /**
  * Page 1 · Home: two opposing sliders and the floating logo; on the first visit the promo video plays over them.
  * The video plays once per browser session (every new visit) unless switched off in the admin; /?intro plays it again
- * (to check it or to show it to someone).
+ * (to check it or to show it to someone). Its end, Close or a click on it show Home, which then stays without it for the
+ * rest of the session, as it does once the visitor has watched it at /promo.
  */
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,16 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   return (
     <>
       {/* First in the page so keyboard and screen reader users meet it before the sliders behind it */}
-      {intro && <PromoVideo sources={intro.sources} placeholder={intro.placeholder} autoplay={intro.autoplay} sound={intro.sound} intro />}
+      {intro && (
+        <PromoVideo
+          sources={intro.sources}
+          placeholder={intro.placeholder}
+          autoplay={intro.autoplay}
+          sound={intro.sound}
+          background={intro.background}
+          intro
+        />
+      )}
       <HomeSliders left={left} right={right} />
     </>
   )

@@ -104,7 +104,6 @@ const zh: Dictionary = {
   },
   promo: {
     play: '播放',
-    pause: '暂停',
     close: '关闭视频',
     team: '我们的团队',
     soundOn: '打开声音',

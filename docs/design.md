@@ -93,7 +93,7 @@ Breakpoints: phone 360–767, tablet 768–1279, desktop 1280–1919, wide 1920+
 - **Section rise** (`components/shared/Rise.tsx`): each `section` after the first rises 64px on scroll, using lazily loaded GSAP ScrollTrigger. Direct children only.
 - **Timeline dock** (`shared/useDock.ts`): dock-style magnification on desktop pointers.
 - **Home**: 6-second autoplay toward the logo, in `HomeSliders.tsx`.
-- **Reduced motion**: duration tokens go to 0 and `globals.css` flattens transitions. JS checks it too: no Rise, no Home autoplay, and the promo video shows a play button instead of starting.
+- **Reduced motion**: duration tokens go to 0 and `globals.css` flattens transitions. JS checks it too: no Rise, no Home autoplay, the promo video shows a play button instead of starting, and a GIF behind it holds its first frame.
 
 ## Shared components
 
@@ -127,7 +127,7 @@ Numbers are the spec's page roles, keyed in `src/lib/routes.ts`. Russian address
 | # | Address | Page | Design notes |
 |---|---|---|---|
 | 1 | `/` | Home | Two 50/50 full-screen sliders (left public, right residential) with a floating logo. Pointing expands a half and pauses. Phones stack them. Always dark, no header or footer. |
-| 2 | `/promo` | Promo video | Full-screen, always dark. Also plays over Home once per browser session. |
+| 2 | `/promo` | Promo video | Full-screen, always dark. Also plays over Home once per browser session. Its end, Close, Escape or a click on it show Home; stopped, a click starts it. Until it starts: its first frame, or an image or GIF chosen in Studio → Promo video. |
 | 3 | `/studio` | Studio and team | Mission, team strip with an open card, history timeline, journal covers, map and address, partner tiles. |
 | 4 | `/team/[slug]` | Person | Wide photo, role, name, quote, interests, achievements, projects, "ask me". Bare `/team` is still a stand-in. |
 | 5, 8, 16 | `/projects/{residential,public}/[slug]`, `/id-lab/[slug]` | Project | Shared template: strip and viewer, author, tags, concept/preview/process stages, sharing and short link, achievements, CTAs, recommendations. Price CTA 5.7-b appears on public projects only (page 8). |

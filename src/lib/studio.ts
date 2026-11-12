@@ -6,6 +6,7 @@ import { getLocale } from '@/i18n/server'
 import type { Person, Project } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
 import { promoVideoSetting } from './hosting'
+import { promoBackgroundUrl, type VideoSource } from './promo'
 import { mediaUrl, partnerPath, personPath, projectPath } from './projects'
 import { getSettings } from './settings'
 import { asVisitor } from './published'
@@ -65,9 +66,6 @@ export async function getTeam(filter: { project?: string; tag?: string }) {
   return { members: docs.map(toMember), label }
 }
 
-/** One <source> of the promo video. */
-export type VideoSource = { src: string; type?: string }
-
 /**
  * Wordless 8 s clip until the studio's video is uploaded. H.264 MP4 first: Safari and Chrome on a Mac decode it in
  * hardware. The codecs in the type let browsers without H.264 (open-source Chromium, used by the tests) skip to WebM.
@@ -85,6 +83,8 @@ export type PromoVideoData = {
   firstVisit: boolean
   autoplay: boolean
   sound: boolean
+  /** The image shown until the video starts; none: the video's first frame (Ewan, 2026-11-12) */
+  background?: string
 }
 
 export async function getPromoVideo(): Promise<PromoVideoData> {
@@ -93,12 +93,14 @@ export async function getPromoVideo(): Promise<PromoVideoData> {
     ...asVisitor,
     slug: 'studio',
     depth: 1,
-    select: { promoVideo: true, introOnFirstVisit: true, promoAutoplay: true, promoSound: true },
+    select: { promoVideo: true, introOnFirstVisit: true, promoAutoplay: true, promoSound: true, promoBackground: true, promoBackgroundImage: true },
   })
   const options = {
     firstVisit: studio.introOnFirstVisit !== false,
     autoplay: studio.promoAutoplay !== false,
     sound: studio.promoSound !== false,
+    // «Картинку» with no image picked falls back to the first frame
+    background: studio.promoBackground === 'image' ? promoBackgroundUrl(studio.promoBackgroundImage) : undefined,
   }
   const file = studio.promoVideo
   if (file && typeof file === 'object' && file.url) {

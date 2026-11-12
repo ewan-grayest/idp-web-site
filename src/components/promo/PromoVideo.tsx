@@ -6,24 +6,33 @@ import { useEffect, useRef, useState } from 'react'
 import { CloseIcon, PlayIcon, SoundIcon } from '@/components/shell/Icons'
 import { useI18n } from '@/i18n/client'
 import { Link } from '@/i18n/Link'
+import { firstFrameSrc, type VideoSource } from '@/lib/promo'
 import { INTRO_COOKIE } from '@/lib/site'
-import type { VideoSource } from '@/lib/studio'
 import styles from './PromoVideo.module.css'
 
-/** Once the intro has shown, coming back to Home in the same tab (back button) does not show it again. */
+/** Once the video has shown, coming back to Home in the same tab (back button) does not show it again. */
 let introShown = false
 
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 /**
- * Page 2 · Promo: 2.1 Close, 2.2 play/pause, 2.3 "Our team". Clicking the video toggles playback;
- * a double click or double tap closes it (Ewan, 2026-10-26), as do Close and Escape.
- * `autoplay` and `sound` come from the admin (Studio → Promo video, both on by default). With autoplay off it waits on
- * its first frame with the play button. With sound on it starts with sound; browsers allow that only once the visitor
- * has clicked or tapped on the site, so on a first visit it starts muted with a hint, and the first click, tap or key
- * press anywhere turns the sound on. With sound off it plays muted and the sound button turns it on.
+ * Page 2 · Promo: 2.1 Close, 2.2 Play, 2.3 "Our team".
+ * The end of the video, Close, Escape or a click on the playing video leave it for Home: the intro fades away to the Home
+ * page under it, the Promo page goes there (Ewan, 2026-11-12; until then a click paused it and a double click closed it).
+ * While the video is stopped, a click anywhere on it starts it, as the play button does. The second click of a double
+ * click is ignored, so a double click on the play button does not start the video and close it at once.
+ * Once it has shown, on Home or at /promo, Home does not play it by itself again in this browser session.
+ * `autoplay` and `sound` come from the admin (Studio → Promo video, both on by default). With autoplay off it waits with
+ * the play button. With sound on it starts with sound; browsers allow that only once the visitor has clicked or tapped on
+ * the site, so on a first visit it starts muted with a hint, and the first click, tap or key press anywhere turns the
+ * sound on; that click leaves the video playing, as the hint promises. With sound off it plays muted and the sound button
+ * turns it on.
  * Safari aborts play() while the video is still loading, so an aborted start is tried again once the video can play.
- * If the browser refuses even a muted start (Safari in Low Power Mode or set to Never Auto-Play), the play button shows
- * and one click on it starts the video with sound.
- * `intro`: the same video over Home on a visitor's first visit; closing it, Escape or the end of the video shows Home.
+ * If the browser refuses even a muted start (Safari in Low Power Mode or set to Never Auto-Play), or pauses the video by
+ * itself, the play button shows and one click on it starts the video with sound.
+ * `background`: the image shown until the video starts, a GIF included; without it, the video's first frame
+ * (Ewan, 2026-11-12).
+ * `intro`: the same video over Home on a visitor's first visit.
  */
 export function PromoVideo({
   sources,
@@ -31,12 +40,14 @@ export function PromoVideo({
   intro,
   autoplay = true,
   sound = true,
+  background,
 }: {
   sources: VideoSource[]
   placeholder?: boolean
   intro?: boolean
   autoplay?: boolean
   sound?: boolean
+  background?: string
 }) {
   const { t, href } = useI18n()
   const router = useRouter()
@@ -44,33 +55,44 @@ export function PromoVideo({
   const [open, setOpen] = useState(() => !(intro && introShown))
   const [closing, setClosing] = useState(false)
   const [playing, setPlaying] = useState(autoplay)
+  // The video has really begun: the background gives way to it
+  const [started, setStarted] = useState(false)
   const [muted, setMuted] = useState(!sound)
   const [progress, setProgress] = useState(0)
   // Muted by the browser, not by the visitor: the next click, tap or key turns the sound on
   const [blocked, setBlocked] = useState(false)
   const unlockedAt = useRef(0)
   const lastTap = useRef(0)
+  const left = useRef(false)
+  // The visitor pressed play: starts even for visitors whose system asks for less motion
+  const asked = useRef(false)
 
-  const close = () => {
+  // Over Home: fades away to it. The Promo page: goes Home
+  const leave = () => {
+    if (left.current) return
+    left.current = true
+    if (!intro) return router.push(href('/'))
     setClosing(true)
     setPlaying(false)
     setTimeout(() => setOpen(false), 600)
   }
 
-  // Promo page: Close goes Home, so does a double click
-  const leave = () => (intro ? close() : router.push(href('/')))
+  // Started inside the click, as Safari wants; the effect below deals with a refusal
+  const play = () => {
+    asked.current = true
+    video.current?.play().catch(() => {})
+    setPlaying(true)
+  }
 
-  // A click or tap on the video or the play button; a second one within 0.4 s closes the video
-  function tap(action: () => void) {
+  // A click or tap on the video or the play button
+  function tap() {
     const now = Date.now()
-    if (now - lastTap.current < 400) {
-      lastTap.current = 0
-      return leave()
-    }
+    if (now - lastTap.current < 500) return
     lastTap.current = now
-    // The click that turned the sound on keeps a playing video playing; a stopped one it starts, as the visitor expects
-    if (playing && now - unlockedAt.current < 600) return
-    action()
+    if (!playing) return play()
+    // The click that turned the sound on keeps the video playing
+    if (now - unlockedAt.current < 600) return
+    leave()
   }
 
   useEffect(() => {
@@ -94,18 +116,15 @@ export function PromoVideo({
   }, [blocked, playing])
 
   useEffect(() => {
-    if (!intro || !open) return
+    if (!open) return
+    // Seen: Home does not play it by itself again in this browser session, also after /promo
     introShown = true
     document.cookie = `${INTRO_COOKIE}=1; Path=/; SameSite=Lax`
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && leave()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [intro, open])
-
-  // Visitors whose system asks for less motion get the first frame and the play button instead
-  useEffect(() => {
-    if (intro && window.matchMedia('(prefers-reduced-motion: reduce)').matches) setPlaying(false)
-  }, [intro])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- leave() only reads refs and props that never change here
+  }, [open])
 
   // Sound switched off in the admin: muted from the start (and a muted video may always start by itself)
   useEffect(() => {
@@ -116,6 +135,9 @@ export function PromoVideo({
     const v = video.current
     if (!v) return
     if (!playing) return v.pause()
+    // Visitors whose system asks for less motion get the background and the play button instead, checked before any
+    // start so the background stays
+    if (intro && !asked.current && reducedMotion()) return setPlaying(false)
     let stopped = false
     let aborts = 0
     let unwait = () => {}
@@ -168,9 +190,9 @@ export function PromoVideo({
       <button
         type="button"
         className={styles.screen}
-        aria-label={playing ? t.promo.pause : t.promo.play}
-        onClick={() => tap(() => setPlaying((p) => !p))}
-        data-close-on-double
+        aria-label={playing ? t.promo.close : t.promo.play}
+        onClick={tap}
+        data-promo-screen
       >
         <video
           ref={video}
@@ -179,14 +201,19 @@ export function PromoVideo({
           data-sound={sound}
           playsInline
           preload="auto"
+          onPlaying={() => setStarted(true)}
+          // Paused by the browser once it had begun (a phone locked, the tab sent to the background): the play button.
+          // Not before it begins, when Safari may abort and retry the start
+          onPause={(e) => started && !e.currentTarget.ended && !left.current && setPlaying(false)}
           onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))}
           onVolumeChange={(e) => setMuted(e.currentTarget.muted)}
-          onEnded={() => (intro ? close() : setPlaying(false))}
+          onEnded={leave}
         >
           {sources.map((s) => (
-            <source key={s.src} src={s.src} type={s.type} />
+            <source key={s.src} src={background ? s.src : firstFrameSrc(s.src)} type={s.type} />
           ))}
         </video>
+        {background && <Background src={background} hidden={started} />}
       </button>
 
       {placeholder && <span className={styles.placeholder}>{t.promo.placeholder}</span>}
@@ -198,19 +225,13 @@ export function PromoVideo({
       )}
 
       {!playing && !closing && (
-        <button
-          type="button"
-          className={styles.play}
-          aria-label={t.promo.play}
-          onClick={() => tap(() => setPlaying(true))}
-          data-spec="2.2"
-        >
+        <button type="button" className={styles.play} aria-label={t.promo.play} onClick={tap} data-spec="2.2">
           <PlayIcon />
         </button>
       )}
 
       {intro ? (
-        <button type="button" className={styles.close} aria-label={t.promo.close} onClick={close} data-spec="2.1">
+        <button type="button" className={styles.close} aria-label={t.promo.close} onClick={leave} data-spec="2.1">
           <CloseIcon />
         </button>
       ) : (
@@ -243,5 +264,36 @@ export function PromoVideo({
         {t.promo.team}
       </Link>
     </div>
+  )
+}
+
+/**
+ * The background image until the video starts. For visitors whose system asks for less motion it is drawn once onto a
+ * canvas, which keeps a GIF still: drawing an animated image takes its first frame.
+ */
+function Background({ src, hidden }: { src: string; hidden: boolean }) {
+  const image = useRef<HTMLImageElement>(null)
+  const still = useRef<HTMLCanvasElement>(null)
+
+  const draw = () => {
+    const img = image.current
+    const canvas = still.current
+    if (!img?.naturalWidth || !canvas || !reducedMotion()) return
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    canvas.getContext('2d')?.drawImage(img, 0, 0)
+  }
+
+  // An image already loaded when the page came to life fires no load event for React to see
+  useEffect(() => {
+    if (image.current?.complete) draw()
+  }, [src])
+
+  return (
+    <span className={styles.background} data-hidden={hidden || undefined} data-promo-background aria-hidden>
+      {/* eslint-disable-next-line @next/next/no-img-element -- full-screen, any format, a GIF must keep moving */}
+      <img ref={image} src={src} alt="" className={styles.image} fetchPriority="high" onLoad={draw} />
+      <canvas ref={still} className={styles.still} />
+    </span>
   )
 }

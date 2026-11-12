@@ -136,6 +136,21 @@ export const Projects: CollectionConfig = {
                 ),
               },
             },
+            {
+              // Back on each project, with a site-wide override in «Настройки сайта и интеграции» → «Главная» (Ewan, 2026-11-12)
+              name: 'homeShowName',
+              type: 'checkbox',
+              defaultValue: true,
+              label: tr('Показывать название на слайде главной', 'Show the name on the Home slide', '在首页幻灯片上显示名称'),
+              admin: {
+                condition: (_, sibling) => sibling?.onHome === true,
+                description: tr(
+                  'Снимите галочку, чтобы на слайде остались только фото и «Смотреть проект». Действует, пока в «Настройки сайта и интеграции» → «Главная» выбрано «Как задано в каждом проекте». Название по-прежнему есть на странице проекта и в списках.',
+                  'Untick to leave only the photo and «Смотреть проект» (view project) on the slide. Applies while «Настройки сайта и интеграции» (site settings) → «Главная» (Home) is set to «Как задано в каждом проекте» (as set on each project). The name still shows on the project page and in lists.',
+                  '取消勾选后，幻灯片上只保留照片和“Смотреть проект”（查看项目）。仅当“Настройки сайта и интеграции”（网站设置）→“Главная”（首页）设为“Как задано в каждом проекте”（按各项目的设置）时生效。项目页面和列表中仍显示名称。',
+                ),
+              },
+            },
             { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, label: tr('Теги', 'Tags', '标签') },
             { name: 'socialHashtag', type: 'text', label: 'Instagram hashtag' },
           ],

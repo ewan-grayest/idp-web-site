@@ -13,6 +13,7 @@ import * as migration_20261102_221628_home_show_name from './20261102_221628_hom
 import * as migration_20261105_225500_product_design_publish from './20261105_225500_product_design_publish';
 import * as migration_20261107_192830_personal_data_law from './20261107_192830_personal_data_law';
 import * as migration_20261108_120000_align_project_schema from './20261108_120000_align_project_schema';
+import * as migration_20261112_215326_site_settings_tabs_slide_names from './20261112_215326_site_settings_tabs_slide_names';
 
 export const migrations = [
   {
@@ -78,16 +79,21 @@ export const migrations = [
   {
     up: migration_20261105_225500_product_design_publish.up,
     down: migration_20261105_225500_product_design_publish.down,
-    name: '20261105_225500_product_design_publish'
+    name: '20261105_225500_product_design_publish',
   },
   {
     up: migration_20261107_192830_personal_data_law.up,
     down: migration_20261107_192830_personal_data_law.down,
-    name: '20261107_192830_personal_data_law'
+    name: '20261107_192830_personal_data_law',
   },
   {
     up: migration_20261108_120000_align_project_schema.up,
     down: migration_20261108_120000_align_project_schema.down,
-    name: '20261108_120000_align_project_schema'
+    name: '20261108_120000_align_project_schema',
+  },
+  {
+    up: migration_20261112_215326_site_settings_tabs_slide_names.up,
+    down: migration_20261112_215326_site_settings_tabs_slide_names.down,
+    name: '20261112_215326_site_settings_tabs_slide_names'
   },
 ];

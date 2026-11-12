@@ -18,7 +18,6 @@ import { Partners } from './collections/Partners'
 import { Issues } from './collections/Issues'
 import { Press } from './collections/Press'
 import { Careers, LegalDocs, Lifestyle } from './collections/entries'
-import { Home } from './globals/Home'
 import { Studio } from './globals/Studio'
 import { PageTexts } from './globals/PageTexts'
 import { SiteSettings } from './globals/SiteSettings'
@@ -70,7 +69,7 @@ export default buildConfig({
   },
   // Admin side menu order: projects and team, then each page's section, then enquiries, files and users
   collections: [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, SocialPosts, Reviews, Leads, Consents, Media, Users],
-  globals: [Home, Studio, PageTexts, SiteSettings],
+  globals: [Studio, PageTexts, SiteSettings],
   // /api/v1/backups and /api/v1/diagnostics: see src/endpoints/
   endpoints: [...backupEndpoints, ...diagnosticsEndpoints],
   // Payload's usual readable log, with each line also kept for the «Диагностика» page (src/lib/logBuffer.ts)

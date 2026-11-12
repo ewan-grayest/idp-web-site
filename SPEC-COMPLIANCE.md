@@ -47,8 +47,8 @@ The project detail variants use page 5 component IDs because the attachment expl
 | Hashtag | Unfiltered | Studio/GT in Site settings; Person/Project on entity |
 | Map provider | Yandex | Fixed: Google Maps removed for 152-ФЗ (data localization); loads after the visitor's consent |
 | Coordinates / zoom | Studio coordinates | Studio → Contacts |
-| VK integration | **Disabled** | Site settings → Enable VK integration / public app ID |
-| Facebook comment widget | **Removed** (152-ФЗ cross-border transfer; Meta banned in Russia) | App ID field kept but unused |
+| VK integration | **Disabled** | Site settings → Reviews and VK → VK comments under the reviews / VK site or app ID |
+| Facebook comment widget | **Removed** (152-ФЗ cross-border transfer; Meta banned in Russia) | App ID kept in the database, hidden in the admin |
 | Feed / review display | Enabled | Site settings |
 | Social network | VK fallback | Site settings; browser selection remembered |
 | Promo film / first-visit intro / autoplay / sound | Existing CMS values | Studio → Promo video |

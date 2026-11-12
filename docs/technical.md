@@ -79,7 +79,7 @@ Collections, in admin menu order (`payload.config.ts`):
 
 | Slug | Purpose | Key fields | Read access |
 |---|---|---|---|
-| `projects` | Pages 5/8/16 | `title`, `slug`, `kind`, `publishOnSite`, `cover`, `onHome`, `homeOrder`, `tags`, `gallery[]` with hotspots, `leadAuthor`, `leadRole`, `summary`, `quote`, `authors`, `concept`/`preview`/`process`, `achievements[]`, `nextStage`, `shortCode` | Public where `publishOnSite` is not false; signed-in staff read all |
+| `projects` | Pages 5/8/16 | `title`, `slug`, `kind`, `publishOnSite`, `cover`, `onHome`, `homeOrder`, `homeShowName`, `tags`, `gallery[]` with hotspots, `leadAuthor`, `leadRole`, `summary`, `quote`, `authors`, `concept`/`preview`/`process`, `achievements[]`, `nextStage`, `shortCode` | Public where `publishOnSite` is not false; signed-in staff read all |
 | `people` | Team strip 3.2, page 4 | `name`, `slug`, `role`, `portrait`, `photo`, `quote`, `interests`, `tags`, `achievements[]`, `onTeam`, `order` | Public |
 | `tags` | Shared by projects, people, partners | `title`, `slug` | Public |
 | `partners` | Page 6, hotspots | `name`, `slug`, `logo`, `text`, `link`, `photo`, `discount`, `projects`, `tags`, `order` | Public |
@@ -92,10 +92,9 @@ Collections, in admin menu order (`payload.config.ts`):
 
 Globals, all publicly readable:
 
-- `home`: `showSlideNames`, one switch for the names on every Home slide.
-
 - `studio`: promo video and its switches `introOnFirstVisit`, `promoAutoplay`, `promoSound`; `mission`, `vision`; `history[]`; `address`, `lat`, `lng`, `zoom`; `phone`, `email`, `partnersPhone`, `partnersEmail`, `social`; `company`, `inn`, `kpp`, `ogrn`, `legalAddress`, `bank`.
 - `page-texts`: `gt`, `payment`, `media`, all rich text.
+- `site-settings` (staff update): `homeSlideNames` (`project`, `show` or `hide`: overrides each project's `homeShowName` on the Home slides, `src/lib/slideNames.ts`); `feedsEnabled`, `studioHashtag`, `partnerHashtag`; `reviewsEnabled`, `defaultNetwork`, `vkEnabled`, `vkAppId`; `limits{…}` (`src/lib/limits.ts`). The admin tabs are layout only. `mapProvider` and `facebookAppId` are hidden and kept for older backups.
 
 Behaviour to preserve:
 

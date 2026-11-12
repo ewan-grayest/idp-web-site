@@ -114,13 +114,11 @@ export interface Config {
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en' | 'zh') | ('ru' | 'en' | 'zh')[];
   globals: {
-    home: Home;
     studio: Studio;
     'page-texts': PageText;
     'site-settings': SiteSetting;
   };
   globalsSelect: {
-    home: HomeSelect<false> | HomeSelect<true>;
     studio: StudioSelect<false> | StudioSelect<true>;
     'page-texts': PageTextsSelect<false> | PageTextsSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
@@ -177,6 +175,10 @@ export interface Project {
    * Lower numbers come first in the slider; no number means last.
    */
   homeOrder?: number | null;
+  /**
+   * Untick to leave only the photo and «Смотреть проект» (view project) on the slide. Applies while «Настройки сайта и интеграции» (site settings) → «Главная» (Home) is set to «Как задано в каждом проекте» (as set on each project). The name still shows on the project page and in lists.
+   */
+  homeShowName?: boolean | null;
   tags?: (number | Tag)[] | null;
   socialHashtag?: string | null;
   gallery?:
@@ -809,6 +811,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   cover?: T;
   onHome?: T;
   homeOrder?: T;
+  homeShowName?: T;
   tags?: T;
   socialHashtag?: T;
   gallery?:
@@ -1223,19 +1226,6 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "home".
- */
-export interface Home {
-  id: number;
-  /**
-   * Applies to every slide at once. Off: slides show only the photo and «Смотреть проект» (view project). The name still appears on the project page and in lists, and screen readers still read it.
-   */
-  showSlideNames?: boolean | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "studio".
  */
 export interface Studio {
@@ -1351,38 +1341,68 @@ export interface PageText {
  */
 export interface SiteSetting {
   id: number;
+  /**
+   * Overrides the «Показывать название на слайде главной» (show the name on the Home slide) tick on each project. Without the name a slide keeps its photo and «Смотреть проект» (view project); the name still shows on the project page and in lists, and screen readers still read it.
+   */
+  homeSlideNames: 'project' | 'show' | 'hide';
+  /**
+   * Off: no page shows a feed.
+   */
+  feedsEnabled?: boolean | null;
+  /**
+   * Optional. The feed on the Studio page shows only posts with this hashtag. Empty: every studio post.
+   */
+  studioHashtag?: string | null;
+  /**
+   * Optional. The same for the feed on the Partners page. Team members and projects have their own hashtag field.
+   */
+  partnerHashtag?: string | null;
+  /**
+   * Off: project pages show neither reviews nor the review form.
+   */
+  reviewsEnabled?: boolean | null;
+  /**
+   * Whose reviews show first. A visitor can switch, and their browser remembers the choice.
+   */
+  defaultNetwork?: ('vk' | 'facebook') | null;
+  /**
+   * Adds an «Открыть комментарии в социальной сети» (open social comments) button. The VK widget loads from vk.com only once it is pressed, with a note on VK’s cookies.
+   */
+  vkEnabled?: boolean | null;
+  /**
+   * The number VK gives the site when its widgets are connected. Without it the button does not appear.
+   */
+  vkAppId?: string | null;
+  facebookAppId?: string | null;
   limits: {
-    maxTags: number;
+    /**
+     * The Studio page (/studio).
+     */
     studioPosts: number;
+    /**
+     * Each team member’s page.
+     */
     personPosts: number;
+    /**
+     * The Partners page (/partners).
+     */
     partnerPosts: number;
+    /**
+     * Each project’s page.
+     */
     projectPosts: number;
+    /**
+     * How many of the latest approved reviews to show.
+     */
     latestReviews: number;
+    /**
+     * How many tags a visitor can pick at once: residential and public interiors, and ID Lab.
+     */
+    maxTags: number;
   };
   mapProvider: 'yandex' | 'google';
-  feedsEnabled?: boolean | null;
-  reviewsEnabled?: boolean | null;
-  studioHashtag?: string | null;
-  partnerHashtag?: string | null;
-  defaultNetwork?: ('vk' | 'facebook') | null;
-  vkEnabled?: boolean | null;
-  vkAppId?: string | null;
-  /**
-   * Not used: the Facebook comments widget is off (Russian personal data law, cross-border transfer).
-   */
-  facebookAppId?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "home_select".
- */
-export interface HomeSelect<T extends boolean = true> {
-  showSlideNames?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1448,25 +1468,26 @@ export interface PageTextsSelect<T extends boolean = true> {
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
+  homeSlideNames?: T;
+  feedsEnabled?: T;
+  studioHashtag?: T;
+  partnerHashtag?: T;
+  reviewsEnabled?: T;
+  defaultNetwork?: T;
+  vkEnabled?: T;
+  vkAppId?: T;
+  facebookAppId?: T;
   limits?:
     | T
     | {
-        maxTags?: T;
         studioPosts?: T;
         personPosts?: T;
         partnerPosts?: T;
         projectPosts?: T;
         latestReviews?: T;
+        maxTags?: T;
       };
   mapProvider?: T;
-  feedsEnabled?: T;
-  reviewsEnabled?: T;
-  studioHashtag?: T;
-  partnerHashtag?: T;
-  defaultNetwork?: T;
-  vkEnabled?: T;
-  vkAppId?: T;
-  facebookAppId?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

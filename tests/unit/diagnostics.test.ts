@@ -85,7 +85,7 @@ describe('diagnostics texts', () => {
     const envs: NodeJS.ProcessEnv[] = [
       good,
       {} as NodeJS.ProcessEnv,
-      { ...good, PAYLOAD_SECRET: EXAMPLE_SECRET, NEXT_PUBLIC_SITE_URL: 'example.ru', KEEP_LAST: 'x', DISABLE_LOGGING: 'true', NEXT_PUBLIC_PROMO_VIDEO_URL: 'nope' },
+      { ...good, PAYLOAD_SECRET: EXAMPLE_SECRET, NEXT_PUBLIC_SITE_URL: 'example.ru', KEEP_LAST: 'x', DISABLE_LOGGING: 'true' },
     ]
     const keys = new Set(envs.flatMap((env) => checkSettings(env).map((c) => c.key)))
     for (const [lang, t] of Object.entries(diagnosticsTexts)) {

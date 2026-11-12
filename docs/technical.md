@@ -103,7 +103,7 @@ Behaviour to preserve:
 - Hotspots have no required fields, so an unfinished one never blocks saving. One shows once it has coordinates and a name or partner (`toPhotos`).
 - `leads.consent` must be true on the server. Visitors cannot set `status`.
 - Slugs on `lifestyle`, `careers` and `legal` are validated; the others are only `required` and `unique`.
-- Empty contacts fall back to `src/lib/site.ts` (`getContacts`). The phone falls back through admin, then `NEXT_PUBLIC_STUDIO_PHONE`, then the constant.
+- Empty contacts fall back to `src/lib/site.ts` (`getContacts`). The phone and the promo video are set in the admin only: an empty phone shows the constant, a missing video the placeholder clip.
 - Home slides fall back to numbered placeholders if no projects are ticked or the query fails (`getHomeSlides`).
 
 ## Data access
@@ -172,8 +172,6 @@ Full database and media backups, as one `.tar` format shared by the admin page a
 | `DATABASE_URI` | App | Required: the database is always another container or the host's. `entrypoint.sh` also accepts `DATABASE_URL`, which many hosts set |
 | `PAYLOAD_SECRET` | App | Required |
 | `NEXT_PUBLIC_SITE_URL` | App | Absolute links, metadata base. Read at run time through `lib/hosting.ts` |
-| `NEXT_PUBLIC_STUDIO_PHONE` | App | Phone fallback. Read at run time |
-| `NEXT_PUBLIC_PROMO_VIDEO_URL` | App | Used when no video is uploaded. Read at run time |
 | `MEDIA_DIR` | App | Upload folder. `/data/media` in every container; empty in dev, so `media/` (`lib/dataDirs.ts`) |
 | `BACKUPS_DIR`, `BACKUP_MODE`, `KEEP_LAST`, `KEEP_MONTHLY`, `PG_BIN_DIR`, `BACKUPS_HOST_LABEL` | Backups | See `lib/backups.ts` |
 | `SITE_DOMAIN`, `POSTGRES_PASSWORD`, `APP_BIND` | `deploy/` | Production only |

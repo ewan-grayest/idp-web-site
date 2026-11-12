@@ -5,7 +5,6 @@ import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
 import type { Person, Project } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
-import { promoVideoSetting } from './hosting'
 import { mediaUrl, partnerPath, personPath, projectPath } from './projects'
 import { getSettings } from './settings'
 import { asVisitor } from './published'
@@ -77,7 +76,7 @@ const placeholderVideo: VideoSource[] = [
   { src: '/promo-placeholder.webm', type: 'video/webm; codecs="vp9"' },
 ]
 
-/** Page 2 video: the upload in Студия → Промо-видео, else the build-time URL, else the placeholder clip. */
+/** Page 2 video: the upload in «Студия» → «Промо-видео», else the placeholder clip. */
 export type PromoVideoData = {
   sources: VideoSource[]
   placeholder: boolean
@@ -104,8 +103,7 @@ export async function getPromoVideo(): Promise<PromoVideoData> {
   if (file && typeof file === 'object' && file.url) {
     return { sources: [{ src: file.url, type: file.mimeType ?? undefined }], placeholder: false, ...options }
   }
-  const url = promoVideoSetting()
-  return url ? { sources: [{ src: url }], placeholder: false, ...options } : { sources: placeholderVideo, placeholder: true, ...options }
+  return { sources: placeholderVideo, placeholder: true, ...options }
 }
 
 /** Everything else on page 3: mission 3.1, history 3.3, journal 3.4, contacts 3.5, partners 3.7. */

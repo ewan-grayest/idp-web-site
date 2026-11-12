@@ -6,6 +6,9 @@
  * A backup is one tar: manifest.txt, SHA256SUMS, db.dump (pg_dump custom format), db-counts.txt (rows per table)
  * and media.tar (everything in the upload folder). The PostgreSQL 16 tools come from the postgres:16-alpine image
  * (see Dockerfile), in /opt/pg.
+ *
+ * No step waits forever: every connection has time limits (toolUrl), a program that reports nothing for QUIET_LIMIT_MS
+ * is stopped, and a running task can be stopped from the page until a restore starts switching the site.
  */
 import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
@@ -17,7 +20,7 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 
 import { migrations } from '../migrations'
-import { BackupError, type Message } from './backupMessages'
+import { BackupError, messageText, type Message } from './backupMessages'
 import { dataDirs } from './dataDirs'
 import { libpqUrl } from './hosting'
 
@@ -51,26 +54,126 @@ const PG_BIN = path.resolve(/*turbopackIgnore: true*/ process.env.PG_BIN_DIR || 
 const pgEnv = () => ({ ...process.env, LD_LIBRARY_PATH: path.resolve(PG_BIN, '../lib') })
 const pgTool = (name: string) => (existsSync(path.join(PG_BIN, name)) ? path.join(PG_BIN, name) : name)
 
-/** Run a program; resolves with stdout, rejects with its stderr */
-function run(cmd: string, args: string[], opts: { env?: NodeJS.ProcessEnv } = {}) {
+// ---------- limits: no step waits forever ----------
+
+/**
+ * A program that writes nothing for this long is stopped, and the task fails naming it. pg_dump, pg_restore and tar run
+ * verbose, so they report every table, index and file; psql reports when its one command is done. Ten minutes is far
+ * beyond the largest table or video of this site on a slow disk, and short enough that a stuck task ends by itself.
+ */
+export const QUIET_LIMIT_MS = 10 * 60_000
+
+/**
+ * libpq settings for every connection the backup tools make. Without them a connection to a database container that
+ * went away (restarted, out of memory, moved by the host) waits for an answer for hours: libpq has no connect timeout of
+ * its own, and the system's TCP keepalive starts after two hours. With them a lost database is noticed within a minute
+ * or two. The name shows the tools' sessions in pg_stat_activity. A setting already in DATABASE_URI wins.
+ */
+const TOOL_CONNECTION: Record<string, string> = {
+  connect_timeout: '15',
+  keepalives: '1',
+  keepalives_idle: '20',
+  keepalives_interval: '5',
+  keepalives_count: '6',
+  tcp_user_timeout: '60000',
+  application_name: 'idp-backups',
+}
+
+/** The database address for the PostgreSQL tools, with TOOL_CONNECTION's limits; `db` swaps the database name */
+export function toolUrl(uri: string, db?: string) {
+  const url = new URL(libpqUrl(uri, db))
+  for (const [key, value] of Object.entries(TOOL_CONNECTION)) if (!url.searchParams.has(key)) url.searchParams.set(key, value)
+  return url.toString()
+}
+
+/** A statement of psql that waits this long for a lock fails with PostgreSQL's own message instead of waiting on */
+const LOCK_LIMIT = '60s'
+
+type RunOptions = {
+  env?: NodeJS.ProcessEnv
+  /** Each line the program writes, on either stream. Return true for a progress line, to keep it out of an error's text */
+  onLine?: (line: string) => boolean | void
+  /** Clean-up that must run after the task was stopped from the page: the «Stop» button does not end it */
+  uncancellable?: boolean
+}
+
+/**
+ * Run a program; resolves with stdout, rejects with its stderr. Stopped (SIGTERM, then SIGKILL) when it writes nothing
+ * for QUIET_LIMIT_MS, or when the task is stopped from the page.
+ */
+function run(cmd: string, args: string[], opts: RunOptions = {}) {
+  const tool = path.basename(cmd)
+  const signal = opts.uncancellable ? undefined : store.controller?.signal
   return new Promise<string>((resolve, reject) => {
-    const child = spawn(cmd, args, { env: opts.env ?? process.env, stdio: ['pipe', 'pipe', 'pipe'] })
+    if (signal?.aborted) return reject(new BackupError('cancelled'))
+    const child = spawn(cmd, args, { env: opts.env ?? process.env, stdio: ['ignore', 'pipe', 'pipe'] })
     let out = ''
     let err = ''
-    child.stdout.on('data', (d) => (out += d))
-    child.stderr.on('data', (d) => (err += d))
-    child.stdin.end()
-    child.on('error', (e) =>
-      reject(new Error((e as NodeJS.ErrnoException).code === 'ENOENT' ? `${cmd} is not installed in the site image` : e.message)),
-    )
-    child.on('close', (code) => (code === 0 ? resolve(out) : reject(new Error(err.trim() || `${path.basename(cmd)} exited with ${code}`))))
+    let stopped: BackupError | null = null
+    const stop = (reason: BackupError) => {
+      if (stopped) return
+      stopped = reason
+      child.kill('SIGTERM')
+      setTimeout(() => child.kill('SIGKILL'), 5000).unref()
+    }
+    let quiet: NodeJS.Timeout | undefined
+    const awake = () => {
+      clearTimeout(quiet)
+      quiet = setTimeout(() => stop(new BackupError('stalled', { tool, minutes: QUIET_LIMIT_MS / 60_000 })), QUIET_LIMIT_MS)
+    }
+    awake()
+    const onAbort = () => stop(new BackupError('cancelled'))
+    signal?.addEventListener('abort', onAbort, { once: true })
+    // Whole lines to onLine. All of stdout is the result; stderr's other lines, the last 16 KB of them, are the error
+    const rest = { out: '', err: '' }
+    const read = (stream: 'out' | 'err') => (chunk: Buffer) => {
+      awake()
+      if (stream === 'out') out += chunk
+      const parts = (rest[stream] + chunk).split('\n')
+      rest[stream] = parts.pop() ?? ''
+      for (const line of parts) {
+        if (!opts.onLine?.(line) && stream === 'err') err = (err + line + '\n').slice(-16384)
+      }
+    }
+    child.stdout.on('data', read('out'))
+    child.stderr.on('data', read('err'))
+    const done = () => {
+      clearTimeout(quiet)
+      signal?.removeEventListener('abort', onAbort)
+      err += rest.err
+    }
+    child.on('error', (e) => {
+      done()
+      reject(new Error((e as NodeJS.ErrnoException).code === 'ENOENT' ? `${cmd} is not installed in the site image` : e.message))
+    })
+    child.on('close', (code, sig) => {
+      done()
+      if (stopped) reject(stopped)
+      else if (code === 0) resolve(out)
+      else reject(new Error(err.trim() || `${tool} exited with ${code ?? sig}`))
+    })
   })
 }
 
 async function sha256(file: string) {
   const hash = createHash('sha256')
-  await pipeline(createReadStream(file), hash)
+  await pipeline(createReadStream(file), hash, { signal: store.controller?.signal })
   return hash.digest('hex')
+}
+
+/** Bytes as a short size, for messages */
+const sizeText = (n: number) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(n / 1e6))} MB`)
+
+/**
+ * Stops before a step that would fill a disk, instead of failing with it full after minutes of work.
+ * Some room is kept on top, for the site's own writes meanwhile.
+ */
+async function ensureSpace(dir: string, bytes: number) {
+  const disk = await fs.statfs(dir).catch(() => null)
+  if (!disk) return
+  const free = disk.bavail * disk.bsize
+  const need = bytes + 100e6
+  if (free < need) throw new BackupError('noSpace', { folder: dir, need: sizeText(need), free: sizeText(free) })
 }
 
 const stamp = (d = new Date()) => {
@@ -84,13 +187,17 @@ const isoLocal = (d = new Date()) => {
 }
 
 /** Database connection settings from DATABASE_URI; `db` swaps the database name (for the maintenance db and temp copies) */
-const dbUrl = (db?: string) => libpqUrl(process.env.DATABASE_URI || '', db)
+const dbUrl = (db?: string) => toolUrl(process.env.DATABASE_URI || '', db)
 const dbName = () => decodeURIComponent(new URL(process.env.DATABASE_URI || '').pathname.slice(1))
 const ident = (s: string) => `"${s.replace(/"/g, '""')}"`
 const lit = (s: string) => `'${s.replace(/'/g, "''")}'`
 
-const psql = (sql: string, db?: string) =>
-  run(pgTool('psql'), ['-X', '-q', '-At', '-v', 'ON_ERROR_STOP=1', '-d', dbUrl(db), '-c', sql], { env: pgEnv() })
+/** One SQL command. Each -c is its own transaction, as CREATE and DROP DATABASE need */
+const psql = (sql: string, db?: string, opts: RunOptions = {}) =>
+  run(pgTool('psql'), ['-X', '-q', '-At', '-v', 'ON_ERROR_STOP=1', '-d', dbUrl(db), '-c', `set lock_timeout = '${LOCK_LIMIT}'`, '-c', sql], {
+    env: pgEnv(),
+    ...opts,
+  })
 
 const tableCounts = (db?: string) => psql(TABLE_COUNTS_SQL, db)
 
@@ -126,6 +233,36 @@ async function tarFileCount(file: string) {
   return list.split('\n').filter((l) => l && !l.endsWith('/')).length
 }
 
+/** A line `tar -v` writes for a file (not a folder, nor one of its own messages) */
+export const isTarFileLine = (line: string) => !!line && !line.endsWith('/') && !line.startsWith('tar: ')
+
+/** A verbose report of pg_dump or pg_restore, as opposed to its errors and warnings, which an error message keeps */
+export const isToolChatter = (tool: string, line: string) =>
+  line.startsWith(`${tool}: `) && !/^[^:]+: (error|warning|detail|hint|fatal):/.test(line)
+
+/** How many objects pg_restore will create or fill, from its list (`pg_restore -l`); privileges are left out (--no-privileges) */
+export function restoreItems(list: string) {
+  return list.split('\n').filter((l) => /^\d+;/.test(l) && !/^\d+; \d+ \d+ (DEFAULT )?ACL /.test(l)).length
+}
+
+export type RestoreItem = { phase: 'schema' | 'data' | 'indexes'; name: string }
+
+/**
+ * The object a line of `pg_restore -v` starts on, or null for its other lines. Tables and types come first, then each
+ * table's rows, then the indexes and the links between tables (constraints), which can take as long as the rows.
+ */
+export function restoreLine(line: string): RestoreItem | null {
+  const unqualified = (name: string) => name.replace(/^[^ ."]+\./, '').split(' ').pop() || name
+  const data = line.match(/^pg_restore: processing data for table "(.+)"$/)
+  if (data) return { phase: 'data', name: unqualified(data[1]) }
+  const executing = line.match(/^pg_restore: executing (.+) (\S+)$/)
+  if (executing) return { phase: 'data', name: unqualified(executing[2]) }
+  const creating = line.match(/^pg_restore: creating (.+?) "(.+)"$/)
+  if (!creating) return null
+  const late = /^(INDEX|CONSTRAINT|FK CONSTRAINT|CHECK CONSTRAINT|TRIGGER|RULE|POLICY|INDEX ATTACH|MATERIALIZED VIEW DATA)$/
+  return { phase: late.test(creating[1]) ? 'indexes' : 'schema', name: unqualified(creating[2]) }
+}
+
 /** Records a task step for the admin page (see backupMessages.ts) */
 export type Step = (key: string, vars?: Message['vars']) => void
 
@@ -136,20 +273,54 @@ export type Job = {
   id: string
   kind: JobKind
   name?: string
-  state: 'running' | 'done' | 'failed' | 'restarting'
+  state: 'running' | 'done' | 'failed' | 'cancelled' | 'restarting'
   steps: Message[]
+  /** How the current step is getting on (a percentage, the table or file count), shown under the steps */
+  detail?: Message
   error?: Message
   result?: string
   startedAt: string
   finishedAt?: string
+  /** «Stop» works now: until a restore starts switching the site */
+  cancellable: boolean
+  /** «Stop» was pressed; the running program is being ended */
+  stopping?: boolean
   by?: string
 }
 
-type Store = { job: Job | null; checks: Record<string, { ok: boolean; deep: boolean; at: string; note?: Message }> }
+type Store = {
+  job: Job | null
+  checks: Record<string, { ok: boolean; deep: boolean; at: string; note?: Message }>
+  /** Ends the running task's programs when «Stop» is pressed */
+  controller?: AbortController
+}
 const store: Store = ((globalThis as { __idpBackups?: Store }).__idpBackups ??= { job: null, checks: {} })
 
 export const currentJob = () => store.job
 export const lastChecks = () => store.checks
+
+/** How the current step is getting on; replaced by the next one and cleared by the next step */
+const progress: Step = (key, vars) => {
+  if (store.job?.state === 'running') store.job.detail = { key, vars }
+}
+
+const stopWanted = () => !!store.controller?.signal.aborted
+
+/** From here on the task can't be stopped: a restore is switching the site, and ends with either data in place */
+function noWayBack(job: Job) {
+  job.cancellable = false
+  if (stopWanted()) throw new BackupError('cancelled')
+}
+
+/** «Stop» on the page: ends the task's running program; the task then cleans up and ends as stopped */
+export function cancelJob(id: string) {
+  const job = store.job
+  if (!job || job.id !== id || job.state !== 'running') throw new BackupError('notRunning')
+  if (!job.cancellable) throw new BackupError('tooLate')
+  job.stopping = true
+  store.controller?.abort()
+  return job
+}
 
 const lockDir = () => path.join(backupDir(), '.lock')
 
@@ -177,12 +348,31 @@ const releaseLock = () => fs.rm(lockDir(), { recursive: true, force: true })
 const asMessage = (e: unknown): Message =>
   e instanceof BackupError ? { key: e.key, vars: e.vars } : { key: 'tool', vars: { detail: e instanceof Error ? e.message : String(e) } }
 
-/** Start a job in the background; the admin page polls its steps */
+/**
+ * Start a job in the background; the admin page polls its steps. Each step also goes to the log, so the «Диагностика»
+ * page and the host's log show how far a task got.
+ */
 export function startJob(kind: JobKind, by: string | undefined, name: string | undefined, work: (step: Step, job: Job) => Promise<string>) {
   if (store.job?.state === 'running' || store.job?.state === 'restarting') throw new BackupError('busy')
-  const job: Job = { id: randomBytes(6).toString('hex'), kind, name, state: 'running', steps: [], startedAt: new Date().toISOString(), by }
+  const job: Job = {
+    id: randomBytes(6).toString('hex'),
+    kind,
+    name,
+    state: 'running',
+    steps: [],
+    startedAt: new Date().toISOString(),
+    cancellable: true,
+    by,
+  }
+  const controller = new AbortController()
   store.job = job
-  const step: Step = (key, vars) => void job.steps.push({ key, vars })
+  store.controller = controller
+  const label = `Backups (${kind}${name ? ` ${name}` : ''})`
+  const step: Step = (key, vars) => {
+    job.steps.push({ key, vars })
+    job.detail = undefined
+    console.info(`${label}: ${messageText({ key, vars })}`)
+  }
   ;(async () => {
     try {
       await takeLock()
@@ -197,10 +387,16 @@ export function startJob(kind: JobKind, by: string | undefined, name: string | u
       job.result = await work(step, job)
       if (job.state === 'running') job.state = 'done'
     } catch (e) {
-      job.state = 'failed'
-      job.error = asMessage(e)
+      // Stopped from the page: whichever error the ended program left, the task simply stopped
+      job.state = controller.signal.aborted ? 'cancelled' : 'failed'
+      job.error = controller.signal.aborted ? { key: 'cancelled' } : asMessage(e)
+      console[controller.signal.aborted ? 'warn' : 'error'](`${label}: ${messageText(job.error)}`)
     } finally {
+      job.detail = undefined
+      job.cancellable = false
       job.finishedAt = new Date().toISOString()
+      // A stopped task's signal would otherwise also stop what runs outside tasks, such as an upload's checksum
+      if (store.controller === controller) store.controller = undefined
       await releaseLock().catch(() => {})
     }
   })()
@@ -270,9 +466,18 @@ export async function createBackup(step: Step, opts: { label?: string; by?: stri
   const mode = siteMode()
   const name = `idp-${mode}${opts.label ? `-${opts.label}` : ''}-${stamp()}.tar`
   const work = await fs.mkdtemp(path.join(dir, '.work-'))
+  const part = path.join(dir, `${name}.part`)
   try {
     step(opts.label === 'pre-restore' ? 'savingCurrent' : 'savingDb')
-    await run(pgTool('pg_dump'), ['-d', dbUrl(), '-Fc', '-Z', '6', '-f', path.join(work, 'db.dump')], { env: pgEnv() })
+    // Verbose, so it reports each table: the page shows which one, and a pg_dump gone quiet is noticed (run)
+    await run(pgTool('pg_dump'), ['-v', '-d', dbUrl(), '-Fc', '-Z', '6', '-f', path.join(work, 'db.dump')], {
+      env: pgEnv(),
+      onLine: (line) => {
+        const table = line.match(/^pg_dump: dumping contents of table "(?:[^".]+\.)?(.+)"$/)
+        if (table) progress('dumpProgress', { name: table[1] })
+        return isToolChatter('pg_dump', line)
+      },
+    })
     const counts = await tableCounts()
     await fs.writeFile(path.join(work, 'db-counts.txt'), counts)
     const pgVersion = (await psql('show server_version')).trim()
@@ -285,7 +490,15 @@ export async function createBackup(step: Step, opts: { label?: string; by?: stri
     await fs.mkdir(mediaDir(), { recursive: true })
     const entries = (await fs.readdir(mediaDir())).filter(isUploadEntry)
     const mediaTar = path.join(work, 'media.tar')
-    if (entries.length) await run('tar', ['-C', mediaDir(), '-cf', mediaTar, ...entries.map((e) => `./${e}`)])
+    let saved = 0
+    if (entries.length) {
+      await run('tar', ['-C', mediaDir(), '-cvf', mediaTar, ...entries.map((e) => `./${e}`)], {
+        onLine: (line) => {
+          if (isTarFileLine(line)) progress('filesProgress', { done: ++saved })
+          return !line.startsWith('tar: ')
+        },
+      })
+    }
     // No uploads yet, as on a new host before the first restore, whose safety backup lands here. The image's BusyBox
     // tar refuses to write an archive with nothing in it ("tar: empty archive"), so write the empty archive itself:
     // the end-of-archive zero blocks, padded to one 10 KiB record, which every tar lists and unpacks as empty
@@ -313,17 +526,20 @@ export async function createBackup(step: Step, opts: { label?: string; by?: stri
     const sums = await Promise.all(files.map(async (f) => `${await sha256(path.join(/*turbopackIgnore: true*/ work, f))}  ${f}`))
     await fs.writeFile(path.join(work, 'SHA256SUMS'), `${sums.join('\n')}\n`)
 
-    const part = path.join(dir, `${name}.part`)
     await run('tar', ['-C', work, '-cf', part, 'manifest.txt', 'SHA256SUMS', 'db.dump', 'db-counts.txt', 'media.tar'])
+    const sum = await sha256(part)
+    if (stopWanted()) throw new BackupError('cancelled')
     await fs.rename(part, path.join(dir, name))
     await fs.chmod(path.join(dir, name), 0o600).catch(() => {})
-    await fs.writeFile(path.join(dir, `${name}.sha256`), `${await sha256(path.join(dir, name))}  ${name}\n`, { mode: 0o600 })
+    await fs.writeFile(path.join(dir, `${name}.sha256`), `${sum}  ${name}\n`, { mode: 0o600 })
     step('saved', { name, tables, files: mediaFiles })
 
     if (!opts.label) await rotate(step)
     return name
   } finally {
     await fs.rm(work, { recursive: true, force: true })
+    // A backup stopped or failed while being written: its unfinished file would only take space
+    await fs.rm(part, { force: true })
   }
 }
 
@@ -357,6 +573,8 @@ type Unpacked = { work: string; manifest: Record<string, string> }
 /** Check the outer checksum, unpack and check every file inside; the caller removes `work` */
 async function unpackAndCheck(name: string, step: Step): Promise<Unpacked> {
   const file = backupPath(name)
+  // Unpacked beside the backups, as big as the backup itself
+  await ensureSpace(backupDir(), (await fs.stat(file)).size)
   if (existsSync(`${file}.sha256`)) {
     const want = (await fs.readFile(`${file}.sha256`, 'utf8')).split(/\s+/)[0]
     if (want !== (await sha256(file))) throw new BackupError('damaged')
@@ -387,26 +605,83 @@ async function unpackAndCheck(name: string, step: Step): Promise<Unpacked> {
   }
 }
 
+/**
+ * A restore and a full check each make a database of their own. Says so at once when the database account can't,
+ * rather than after minutes of work: the account needs CREATEDB, and the maintenance database `postgres`.
+ */
+async function checkCanCreateDatabases() {
+  const can = (await psql('select rolsuper or rolcreatedb from pg_roles where rolname = current_user')).trim()
+  if (can !== 't') throw new BackupError('noCreateDb')
+  await psql('select 1', 'postgres').catch((e) => {
+    if (e instanceof BackupError) throw e
+    throw new BackupError('noMaintenanceDb', { detail: (e as Error).message.split('\n')[0] })
+  })
+}
+
+/**
+ * While pg_restore has reported nothing for a minute or more, logs what its database session is doing each minute:
+ * waiting for a lock or the disk, or no session at all (the connection is gone). The «Диагностика» page and the host's
+ * log then tell a slow restore from a stuck one.
+ */
+function watchSession(db: string, lastLine: () => number) {
+  let asking = false
+  const timer = setInterval(async () => {
+    const quiet = Math.round((Date.now() - lastLine()) / 1000)
+    if (quiet < 60 || asking) return
+    asking = true
+    const sql = `select coalesce(string_agg(format('%s, waiting for %s %s, for %ss: %s', state, coalesce(wait_event_type, 'nothing'), wait_event, extract(epoch from now() - query_start)::int, left(query, 100)), '; '), 'none') from pg_stat_activity where datname = ${lit(db)}`
+    const what = await psql(sql, 'postgres', { uncancellable: true }).catch((e) => `unknown (${(e as Error).message.split('\n')[0]})`)
+    asking = false
+    console.warn(`Backups: pg_restore has reported nothing for ${quiet} s. Its database session: ${what.trim()}`)
+  }, 60_000)
+  return () => clearInterval(timer)
+}
+
 /** Restore the dump into a new database `db` and compare every table's rows with the backup */
 async function loadIntoNewDatabase(u: Unpacked, db: string, step: Step) {
   await psql(`create database ${ident(db)}`, 'postgres')
-  await run(pgTool('pg_restore'), ['-d', dbUrl(db), '--no-owner', '--no-privileges', '--exit-on-error', path.join(u.work, 'db.dump')], {
-    env: pgEnv(),
-  }).catch((e) => {
+  const dump = path.join(u.work, 'db.dump')
+  const total = restoreItems(await run(pgTool('pg_restore'), ['-l', dump], { env: pgEnv() }))
+  let done = 0
+  let lastLine = Date.now()
+  const unwatch = watchSession(db, () => lastLine)
+  try {
+    await run(pgTool('pg_restore'), ['-v', '-d', dbUrl(db), '--no-owner', '--no-privileges', '--exit-on-error', dump], {
+      // pg_restore commits each object on its own, and on a slow disk waiting for every commit to reach the disk was
+      // most of the time. Safe for this copy: a crash before the switch only loses the copy, which the next task drops
+      // (cleanLeftovers), and the switch's own commit writes everything before it to the disk
+      env: { ...pgEnv(), PGOPTIONS: `${process.env.PGOPTIONS ?? ''} -c synchronous_commit=off`.trim() },
+      onLine: (line) => {
+        lastLine = Date.now()
+        const item = restoreLine(line)
+        if (item) {
+          done++
+          progress('loadProgress', { percent: Math.min(99, Math.floor((done / Math.max(total, 1)) * 100)), phase: item.phase, name: item.name })
+        }
+        return isToolChatter('pg_restore', line)
+      },
+    })
+  } catch (e) {
+    if (e instanceof BackupError) throw e
     throw new BackupError('dumpBad', { detail: (e as Error).message.split('\n').slice(-3).join(' ') })
-  })
+  } finally {
+    unwatch()
+  }
+  progress('countingRows')
   const want = await fs.readFile(path.join(u.work, 'db-counts.txt'), 'utf8')
   const got = await tableCounts(db)
   if (want.trim() !== got.trim()) throw new BackupError('countsDiffer')
   step('dbLoads', { tables: want.split('\n').filter(Boolean).length })
 }
 
-const dropDatabase = (db: string) => psql(`drop database if exists ${ident(db)} with (force)`, 'postgres')
+/** Also ends whatever still uses it, such as a pg_restore stopped from the page whose last command still runs */
+const dropDatabase = (db: string) => psql(`drop database if exists ${ident(db)} with (force)`, 'postgres', { uncancellable: true })
 
 export async function verifyBackup(name: string, deep: boolean, step: Step) {
   let u: Unpacked | null = null
   const temp = `${dbName()}_check_${randomBytes(3).toString('hex')}`
   try {
+    if (deep) await checkCanCreateDatabases()
     u = await unpackAndCheck(name, step)
     if (deep) {
       step('testLoad')
@@ -442,12 +717,16 @@ async function moveUploads(from: string, to: string) {
  * Replace the database and the upload folder with a backup. Everything is prepared beside the live site first
  * (a new database, a hidden folder of files) and checked; only then are they swapped in, within seconds.
  * The app then restarts itself (Docker starts it again), so nothing keeps old data in memory and newer migrations apply.
+ * Until the switch, the task can be stopped and any failure leaves the site as it was.
+ *
+ * `safety: false` skips saving the current state first (a «До восстановления» backup), which the page offers as a
+ * choice, checked by default (Ewan, 2026-11-12). A site with no tables yet has nothing to save either way.
  */
 export async function restoreBackup(
   name: string,
   step: Step,
   job: Job,
-  opts: { by?: string; pool?: DbPool } = {},
+  opts: { by?: string; pool?: DbPool; safety?: boolean } = {},
 ) {
   const { by } = opts
   const live = dbName()
@@ -461,14 +740,21 @@ export async function restoreBackup(
   let swapped = false
   try {
     step('checking', { name })
+    // What would otherwise stop the restore only after the long steps
+    await checkCanCreateDatabases()
     u = await unpackAndCheck(name, step)
     const lastMigration = u.manifest.last_migration
     if (lastMigration && lastMigration !== 'dev' && !migrations.some((m) => m.name === lastMigration)) {
       throw new BackupError('newerCode', { migration: lastMigration })
     }
+    const mediaTar = path.join(u.work, 'media.tar')
+    const mediaBytes = (await fs.stat(mediaTar)).size
+    await fs.mkdir(media, { recursive: true })
+    await ensureSpace(media, mediaBytes)
 
     const hasTables = (await psql("select count(*) from information_schema.tables where table_schema = 'public'")).trim() !== '0'
-    if (hasTables) {
+    if (hasTables && opts.safety === false) step('safetySkipped')
+    else if (hasTables) {
       const safety = await createBackup(step, { label: 'pre-restore', by })
       step('currentSaved', { name: safety })
     }
@@ -478,11 +764,21 @@ export async function restoreBackup(
     await loadIntoNewDatabase(u, fresh, step)
 
     step('unpackingMedia')
+    // Again, since the backup saved just before may have taken room on the same disk
+    await ensureSpace(media, mediaBytes)
     await fs.mkdir(staging, { recursive: true })
-    await run('tar', ['-xf', path.join(u.work, 'media.tar'), '-C', staging])
+    let extracted = 0
+    await run('tar', ['-xvf', mediaTar, '-C', staging], {
+      onLine: (line) => {
+        if (isTarFileLine(line)) progress('filesProgress', { done: ++extracted, total: u!.manifest.media_files })
+        return !line.startsWith('tar: ')
+      },
+    })
     const unpacked = (await run('find', [staging, '-type', 'f'])).split('\n').filter(Boolean).length
     if (String(unpacked) !== u.manifest.media_files) throw new BackupError('mediaCount', { got: unpacked, want: u.manifest.media_files })
 
+    // Past this point «Stop» is refused: the switch ends with either the old or the restored data in place
+    noWayBack(job)
     step('switching')
     // The site's own idle database connections are cut next; without a listener their error would crash the app
     opts.pool?.on('error', () => {})
@@ -531,6 +827,8 @@ export async function restoreBackup(
     if (!swapped) {
       await dropDatabase(fresh).catch(() => {})
       await fs.rm(staging, { recursive: true, force: true }).catch(() => {})
+      // Said plainly, as the reader's first worry; a stop says it already
+      if (!stopWanted()) step('unchanged')
     }
     throw e
   } finally {

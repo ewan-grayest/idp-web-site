@@ -37,9 +37,9 @@ export const Studio: GlobalConfig = {
               filterOptions: { mimeType: { contains: 'video' } },
               admin: {
                 description: tr(
-                  'Показывается на главной при первом визите и по адресу /promo; как именно, задают переключатели ниже. MP4 (H.264) работает во всех браузерах. Пока файла нет, показывается заглушка.',
-                  'Shows over Home on a visitor\'s first visit and at /promo; the switches below set how. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.',
-                  '访客首次访问时在首页播放，也可在 /promo 观看；播放方式由下方开关设置。MP4 (H.264) 适用于所有浏览器。未上传文件时播放占位视频。',
+                  'Показывается на главной при первом визите и по адресу /promo; как именно, задают переключатели ниже. Когда видео закончилось, его закрыли или по нему нажали, открывается главная. MP4 (H.264) работает во всех браузерах. Пока файла нет, показывается заглушка.',
+                  'Shows over Home on a visitor\'s first visit and at /promo; the switches below set how. When it ends, is closed or is clicked, Home opens. MP4 (H.264) works in every browser. Until a file is added, a placeholder plays.',
+                  '访客首次访问时在首页播放，也可在 /promo 观看；播放方式由下方开关设置。视频播放结束、被关闭或被点击后显示首页。MP4 (H.264) 适用于所有浏览器。未上传文件时播放占位视频。',
                 ),
               },
             },
@@ -73,6 +73,41 @@ export const Studio: GlobalConfig = {
                   'Браузеры не дают видео самому начать со звуком, пока посетитель ничего не нажал: тогда оно идёт без звука с подсказкой, и звук включается от первого нажатия. Выключено: видео идёт без звука, его можно включить кнопкой.',
                   'Browsers do not let a video start with sound by itself until the visitor has clicked or tapped: it then plays muted with a hint, and the first click or tap turns the sound on. Off: the video plays muted and the sound button turns it on.',
                   '在访客点击之前，浏览器不允许视频自动带声音播放：此时视频静音播放并显示提示，首次点击即开启声音。关闭后视频静音播放，可用声音按钮开启。',
+                ),
+              },
+            },
+            // Ewan, 2026-11-12: what the visitor sees until the video starts, the first frame unless an image is chosen
+            {
+              name: 'promoBackground',
+              type: 'radio',
+              defaultValue: 'frame',
+              label: tr('Фон до начала видео', 'Background until the video starts', '视频开始前的背景'),
+              options: [
+                { value: 'frame', label: tr('Первый кадр видео', 'The first frame of the video', '视频第一帧') },
+                { value: 'image', label: tr('Картинку (JPG, PNG, WebP или GIF)', 'An image (JPG, PNG, WebP or GIF)', '图片（JPG、PNG、WebP 或 GIF）') },
+              ],
+              admin: {
+                layout: 'vertical',
+                description: tr(
+                  'На весь экран под кнопкой воспроизведения: пока видео загружается, ждёт нажатия или браузер не запускает его сам.',
+                  'Full-screen under the play button: while the video loads, waits for a click, or the browser does not start it by itself.',
+                  '全屏显示在播放按钮下方：视频加载中、等待点击或浏览器未自动播放时显示。',
+                ),
+              },
+            },
+            {
+              name: 'promoBackgroundImage',
+              type: 'upload',
+              relationTo: 'media',
+              required: true,
+              label: tr('Фоновая картинка', 'Background image', '背景图片'),
+              filterOptions: { mimeType: { contains: 'image' } },
+              admin: {
+                condition: (_, sibling) => sibling?.promoBackground === 'image',
+                description: tr(
+                  'Заполняет экран, как видео. GIF двигается; посетители, которые попросили систему уменьшить движение, видят его первый кадр.',
+                  'Fills the screen, as the video does. A GIF moves; visitors who asked their system for less motion see its first frame.',
+                  '像视频一样铺满屏幕。GIF 会动；系统设置为减少动态效果的访客只看到其第一帧。',
                 ),
               },
             },

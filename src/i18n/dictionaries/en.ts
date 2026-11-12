@@ -103,7 +103,6 @@ const en: Dictionary = {
   },
   promo: {
     play: 'Play',
-    pause: 'Pause',
     close: 'Close the video',
     team: 'Our team',
     soundOn: 'Turn the sound on',

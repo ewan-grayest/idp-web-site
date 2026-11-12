@@ -92,7 +92,7 @@ Collections, in admin menu order (`payload.config.ts`):
 
 Globals, all publicly readable:
 
-- `studio`: promo video and its switches `introOnFirstVisit`, `promoAutoplay`, `promoSound`; `mission`, `vision`; `history[]`; `address`, `lat`, `lng`, `zoom`; `phone`, `email`, `partnersPhone`, `partnersEmail`, `social`; `company`, `inn`, `kpp`, `ogrn`, `legalAddress`, `bank`.
+- `studio`: promo video and its switches `introOnFirstVisit`, `promoAutoplay`, `promoSound`; what shows until it starts, `promoBackground` (`frame` or `image`) and `promoBackgroundImage`; `mission`, `vision`; `history[]`; `address`, `lat`, `lng`, `zoom`; `phone`, `email`, `partnersPhone`, `partnersEmail`, `social`; `company`, `inn`, `kpp`, `ogrn`, `legalAddress`, `bank`.
 - `page-texts`: `gt`, `payment`, `media`, all rich text.
 - `site-settings` (staff update): `homeSlideNames` (`project`, `show` or `hide`: overrides each project's `homeShowName` on the Home slides, `src/lib/slideNames.ts`); `feedsEnabled`, `studioHashtag`, `partnerHashtag`; `reviewsEnabled`, `defaultNetwork`, `vkEnabled`, `vkAppId`; `limits{…}` (`src/lib/limits.ts`). The admin tabs are layout only. `mapProvider` and `facebookAppId` are hidden and kept for older backups.
 
@@ -131,7 +131,7 @@ To add a language: its code in `locales.ts`, a dictionary, the admin language an
 | `idp-theme` | localStorage | Chosen theme |
 | `idp.consent` | localStorage | Consent box remembered |
 | `idp-locale` | Cookie, 1 year | Language the visitor picked |
-| `idp-intro-session` | Session cookie | Promo video already played |
+| `idp-intro-session` | Session cookie | Promo video already shown, over Home or at `/promo` |
 
 Window events: `idp:theme` (theme changed), `idp:enquire` (open the enquiry form). Query flags: `?ids=1` (spec badges), `/?intro` (replay video), `?tags=a,b` (project filter).
 

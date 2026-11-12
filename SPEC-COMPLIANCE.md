@@ -9,7 +9,7 @@ Source: `../technical specifications.pptx` (five slides). The current user brief
 | 0.1.1–0.1.14 · fixed contextual header, phone, consented enquiry, site search | All content pages | `src/components/shell/Header.tsx`; the logo opens the supplemental site menu, whose first link is Home (Ewan, 2026-11-11) |
 | 0.2 / 0.3.1–0.3.8 · content / full footer navigation | All content pages | `SiteChrome.tsx`, `Footer.tsx`, `src/lib/site.ts`; Archive included; ID Lab inactive |
 | 1 / 1.1 / 1.2 / 1.3 / 1.2.1 / 1.3.1 | `/` | `HomeSliders.tsx`; opposing 50/50 project sliders, pause/expand on hover, logo +20%, swipe, progress, reduced-motion support |
-| 2 / 2.1–2.3 | `/promo` | `PromoVideo.tsx`; fullscreen film, playback/sound, Escape/close, team link; CMS upload and behavior options |
+| 2 / 2.1–2.3 | `/promo` | `PromoVideo.tsx`; fullscreen film, playback/sound, Escape/close/click to Home, team link; CMS upload, behavior options and background until it starts |
 | 3.1–3.8 | `/studio` | Mission/vision, horizontal expandable `TeamStrip`, newest-left `Timeline`, horizontal `Journal`, selectable map, enquiry, partner logos, capped feed |
 | 4.1.1–4.1.5 / 4.2 / 4.3 / 4.4 / 4.5 | `/team/[slug]` | Person photo, role, name, quote, interests, achievements, projects/tags, contextual enquiry, capped person feed |
 | Team index alias | `/team` → `/studio#team` | Permanent redirect; no unfinished stand-in |
@@ -51,7 +51,7 @@ The project detail variants use page 5 component IDs because the attachment expl
 | Facebook comment widget | **Removed** (152-ФЗ cross-border transfer; Meta banned in Russia) | App ID kept in the database, hidden in the admin |
 | Feed / review display | Enabled | Site settings |
 | Social network | VK fallback | Site settings; browser selection remembered |
-| Promo film / first-visit intro / autoplay / sound | Existing CMS values | Studio → Promo video |
+| Promo film / first-visit intro / autoplay / sound / background | Existing CMS values | Studio → Promo video |
 | Contacts and social profile links | Existing CMS values | Studio → Contacts |
 
 Feed limits are applied after entity and exact hashtag filtering. Anonymous visitors cannot publish feed items or approve their own reviews. Lead records are staff-only; public reviews do not reveal origin URLs or consent records.

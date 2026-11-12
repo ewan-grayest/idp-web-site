@@ -14,6 +14,7 @@ import * as migration_20261105_225500_product_design_publish from './20261105_22
 import * as migration_20261107_192830_personal_data_law from './20261107_192830_personal_data_law';
 import * as migration_20261108_120000_align_project_schema from './20261108_120000_align_project_schema';
 import * as migration_20261112_215326_site_settings_tabs_slide_names from './20261112_215326_site_settings_tabs_slide_names';
+import * as migration_20261112_222002_promo_background from './20261112_222002_promo_background';
 
 export const migrations = [
   {
@@ -94,6 +95,11 @@ export const migrations = [
   {
     up: migration_20261112_215326_site_settings_tabs_slide_names.up,
     down: migration_20261112_215326_site_settings_tabs_slide_names.down,
-    name: '20261112_215326_site_settings_tabs_slide_names'
+    name: '20261112_215326_site_settings_tabs_slide_names',
+  },
+  {
+    up: migration_20261112_222002_promo_background.up,
+    down: migration_20261112_222002_promo_background.down,
+    name: '20261112_222002_promo_background'
   },
 ];

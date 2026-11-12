@@ -14,16 +14,22 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('The promo starts muted, and the first click or tap turns the sound on without pausing it', async ({ page }) => {
+test('The promo starts muted; the first click or tap turns the sound on without closing it, the next one closes it', async ({ page }) => {
   await page.goto('/')
   const video = page.locator('[data-spec="2"][data-intro] video')
   await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(0.3)
   expect(await video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(true)
-  const box = (await page.locator('[data-close-on-double]').boundingBox())!
+  const box = (await page.locator('[data-promo-screen]').boundingBox())!
   if (test.info().project.name === 'phone') await page.touchscreen.tap(box.width / 2, box.height / 2)
   else await page.mouse.click(box.width / 2, box.height / 2)
   await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(false)
   await page.waitForTimeout(500)
   expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(false)
   await expect(page.locator('[data-spec="2"][data-intro]')).toBeVisible()
+  // The next click closes it and shows Home (Ewan, 2026-11-12)
+  await page.waitForTimeout(200)
+  if (test.info().project.name === 'phone') await page.touchscreen.tap(box.width / 2, box.height / 2)
+  else await page.mouse.click(box.width / 2, box.height / 2)
+  await expect(page.locator('[data-spec="2"]')).toHaveCount(0)
+  await expect(page.locator('[data-spec="1.2"]')).toBeVisible()
 })

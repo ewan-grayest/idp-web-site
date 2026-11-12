@@ -11,4 +11,3 @@ export const previewProject = (d: Doc, a: Args) => (d.slug && d.kind ? at(projec
 export const previewPerson = (d: Doc, a: Args) => (d.slug ? at(personPath(String(d.slug)), a) : null)
 export const previewPartner = (d: Doc, a: Args) => (d.slug ? at(`${pages[6].path}#${d.slug}`, a) : null)
 export const previewTeamPage = (_d: Doc, a: Args) => at(pages[3].path, a)
-export const previewHome = (_d: Doc, a: Args) => at(pages[1].path, a)

@@ -13,7 +13,6 @@ import { Reviews } from '@/collections/Reviews'
 import { SocialPosts } from '@/collections/SocialPosts'
 import { Tags } from '@/collections/Tags'
 import { Users } from '@/collections/Users'
-import { Home } from '@/globals/Home'
 import { PageTexts } from '@/globals/PageTexts'
 import { SiteSettings } from '@/globals/SiteSettings'
 import { Studio } from '@/globals/Studio'
@@ -50,7 +49,7 @@ function adminText(nodes: Node[], out: string[] = []): string[] {
   return out
 }
 
-const all = [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, SocialPosts, Reviews, Leads, Consents, Media, Users, Home, Studio, PageTexts, SiteSettings] as unknown as Node[]
+const all = [Projects, People, Tags, Partners, Issues, Press, Lifestyle, Careers, LegalDocs, SocialPosts, Reviews, Leads, Consents, Media, Users, Studio, PageTexts, SiteSettings] as unknown as Node[]
 
 describe('admin field names', () => {
   // Payload lists the fields that failed to save as one comma-separated line and splits it on every comma,
@@ -64,5 +63,33 @@ describe('admin field names', () => {
   it('carry no spec numbers', () => {
     const bad = adminText(all).filter((l) => /\d+\.\d+|\(\d+\)/.test(l))
     expect(bad).toEqual([])
+  })
+})
+
+type SettingsField = Node & { name?: string; type?: string; admin?: { description?: unknown; hidden?: boolean } }
+
+/** Every field an editor fills in, through tabs, rows and groups. */
+function dataFields(nodes: SettingsField[], out: SettingsField[] = []): SettingsField[] {
+  for (const n of nodes) {
+    if (n.admin?.hidden) continue
+    if (n.name && n.type !== 'group') out.push(n)
+    dataFields((n.fields ?? []) as SettingsField[], out)
+    dataFields((n.tabs ?? []) as SettingsField[], out)
+  }
+  return out
+}
+
+describe('site settings', () => {
+  // The form looked unfinished: English-only names, two fields both called «Hashtag», bare «vk» / «facebook» (Ewan, 2026-11-12)
+  it('name every field in Russian, English and Chinese, each Russian name once', () => {
+    const fields = dataFields(SiteSettings.fields as SettingsField[])
+    expect(fields.length).toBeGreaterThan(0)
+    const untranslated = fields.filter((f) => {
+      const l = f.label as Record<string, unknown> | undefined
+      return !l || typeof l !== 'object' || !['ru', 'en', 'zh'].every((k) => typeof l[k] === 'string' && (l[k] as string).trim() !== '')
+    })
+    expect(untranslated.map((f) => f.name)).toEqual([])
+    const ru = fields.map((f) => (f.label as Record<string, string>).ru)
+    expect(ru.filter((l, i) => ru.indexOf(l) !== i)).toEqual([])
   })
 })

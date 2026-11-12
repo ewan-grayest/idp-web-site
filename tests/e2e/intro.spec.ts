@@ -3,13 +3,19 @@ import { expect, test, type Page } from '@playwright/test'
 // Home plays the promo video (page 2) by itself on each new visit, once per browser session.
 // Without an upload in Студия → Промо-видео it is the placeholder clip from public/.
 
-/** Where the browser kept the sound off, the first click only turns it on, as the hint says (promo-sound.spec.ts) */
+/** The Promo page goes Home through the router, which can take a few seconds on a busy dev server */
+const home = 15_000
+
+/**
+ * Where the browser kept the sound off, the first click only turns it on, as the hint says (promo-sound.spec.ts).
+ * Read from the video, not the hint: the silent placeholder clip the tests play shows none
+ */
 async function turnSoundOn(page: Page) {
-  await page.waitForTimeout(300)
-  if (!(await page.locator('[data-sound-hint]').count())) return
+  const video = page.locator('[data-spec="2"] video')
+  if (!(await video.evaluate((v: HTMLVideoElement) => v.muted && v.dataset.sound === 'true'))) return
   await page.locator('[data-promo-screen]').click({ position: { x: 100, y: 200 } })
-  await expect(page.locator('[data-sound-hint]')).toHaveCount(0)
-  expect(await page.locator('[data-spec="2"] video').evaluate((v: HTMLVideoElement) => [v.paused, v.muted])).toEqual([false, false])
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(false)
+  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(false)
   await page.waitForTimeout(700)
 }
 
@@ -108,7 +114,7 @@ test('A click on the Promo page goes Home, and Home then opens without the video
   await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(0.3)
   await turnSoundOn(page)
   await page.locator('[data-promo-screen]').click({ position: { x: 100, y: 200 } })
-  await expect(page).toHaveURL(/\/en$/)
+  await expect(page).toHaveURL(/\/en$/, { timeout: home })
   await expect(page.locator('[data-spec="1.2"]')).toBeVisible()
   await expect(page.locator('[data-spec="2"]')).toHaveCount(0)
 })
@@ -120,13 +126,14 @@ test('The Promo page goes Home when the video ends; Escape does too', async ({ p
   await video.evaluate((v: HTMLVideoElement) => {
     v.currentTime = v.duration - 0.3
   })
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, { timeout: home })
   await expect(page.locator('[data-spec="1.2"]')).toBeVisible()
   await expect(page.locator('[data-spec="2"]')).toHaveCount(0)
   await page.goto('/promo')
-  await page.waitForLoadState('networkidle')
+  // Playing: the page has come to life and listens for Escape
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(0.3)
   await page.keyboard.press('Escape')
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, { timeout: home })
 })
 
 test('Until the video starts, its first frame is the background', async ({ page }) => {

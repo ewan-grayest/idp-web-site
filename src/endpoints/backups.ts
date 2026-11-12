@@ -1,6 +1,7 @@
 /**
  * /api/v1/backups: the admin's «Резервные копии» page. Signed-in admin users only, except a running task's steps.
- * Long tasks (make, check, restore) run in the background; the page follows their steps at GET /backups/job/:id.
+ * Long tasks (make, check, restore) run in the background; the page follows their steps at GET /backups/job/:id,
+ * and stops one at POST /backups/job/:id/cancel. Answers carry the server's time, for the page's elapsed time.
  */
 import { createReadStream } from 'node:fs'
 import fs from 'node:fs/promises'
@@ -11,6 +12,7 @@ import { BackupError } from '../lib/backupMessages'
 import {
   backupPath,
   backupSettings,
+  cancelJob,
   createBackup,
   type DbPool,
   currentJob,
@@ -48,7 +50,9 @@ export const backupEndpoints: Endpoint[] = [
   {
     path: '/backups',
     method: 'get',
-    handler: guarded(async () => json({ backups: await listBackups(), job: currentJob(), checks: lastChecks(), settings: backupSettings() })),
+    handler: guarded(async () =>
+      json({ backups: await listBackups(), job: currentJob(), checks: lastChecks(), settings: backupSettings(), now: new Date().toISOString() }),
+    ),
   },
   {
     path: '/backups',
@@ -65,8 +69,21 @@ export const backupEndpoints: Endpoint[] = [
       const job = currentJob()
       if (!job || job.id !== String(req.routeParams?.id ?? '')) return json({ job: null }, 404)
       const { by: _by, ...shown } = job
-      return json({ job: shown })
+      return json({ job: shown, now: new Date().toISOString() })
     },
+  },
+  {
+    // «Stop»: signed in, since it is only offered before a restore switches the database the sign-in is checked against
+    path: '/backups/job/:id/cancel',
+    method: 'post',
+    handler: guarded(async (req) => {
+      try {
+        const { by: _by, ...shown } = cancelJob(String(req.routeParams?.id ?? ''))
+        return json({ job: shown }, 202)
+      } catch (e) {
+        return fail(e, 409)
+      }
+    }),
   },
   {
     path: '/backups/upload',
@@ -89,11 +106,13 @@ export const backupEndpoints: Endpoint[] = [
     path: '/backups/:name/restore',
     method: 'post',
     handler: guarded(async (req, name) => {
-      const body = (await req.json?.().catch(() => ({}))) as { confirm?: string } | undefined
+      const body = (await req.json?.().catch(() => ({}))) as { confirm?: string; safety?: boolean } | undefined
       if (body?.confirm !== name) return fail('Confirm the restore first')
       await fs.access(backupPath(name))
       const pool = (req.payload.db as { pool?: DbPool }).pool
-      return json({ job: startJob('restore', who(req), name, (step, job) => restoreBackup(name, step, job, { by: who(req), pool })) }, 202)
+      // The current state is saved first unless the page says not to
+      const safety = body.safety !== false
+      return json({ job: startJob('restore', who(req), name, (step, job) => restoreBackup(name, step, job, { by: who(req), pool, safety })) }, 202)
     }),
   },
   {

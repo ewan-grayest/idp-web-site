@@ -1,10 +1,11 @@
 'use client'
 /* «Резервные копии»: make, list, download, upload, check, restore and delete full backups of the site.
-   The work happens on the server (src/lib/backups.ts); this page starts tasks and shows their steps. */
+   The work happens on the server (src/lib/backups.ts); this page starts tasks and shows their steps, how the current
+   step is getting on, the time taken, and «Stop» while a task can still be stopped. */
 import { Button, useConfig, useTranslation } from '@payloadcms/ui'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-import { messageText, type Message } from '@/lib/backupMessages'
+import { duration, messageText, type Message } from '@/lib/backupMessages'
 import styles from './Backups.module.css'
 import { useBackupTexts } from './texts'
 
@@ -24,9 +25,14 @@ type Job = {
   id: string
   kind: 'create' | 'verify' | 'restore' | 'upload'
   name?: string
-  state: 'running' | 'done' | 'failed' | 'restarting'
+  state: 'running' | 'done' | 'failed' | 'cancelled' | 'restarting'
   steps: Message[]
+  detail?: Message
   error?: Message
+  startedAt: string
+  finishedAt?: string
+  cancellable?: boolean
+  stopping?: boolean
 }
 type Check = { ok: boolean; deep: boolean; at: string; note?: Message }
 /** An error answer from /api/v1/backups: a message key when the server knows one */
@@ -36,6 +42,8 @@ type Data = {
   job: Job | null
   checks: Record<string, Check>
   settings: { folder: string; mode: string; keepLast: number; keepMonthly: number; restartsAfterRestore: boolean }
+  /** The server's time at the last answer, for the task's elapsed time */
+  now?: string
 }
 
 const sizeText = (n: number) =>
@@ -52,6 +60,8 @@ export function BackupsPanel() {
   const [notice, setNotice] = useState('')
   const [restoring, setRestoring] = useState<string | null>(null)
   const [understood, setUnderstood] = useState(false)
+  // Save the current state first («До восстановления»): checked each time the dialog opens
+  const [safety, setSafety] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [upload, setUpload] = useState<number | null>(null)
   const [restart, setRestart] = useState<'waiting' | 'back' | null>(null)
@@ -87,7 +97,7 @@ export function BackupsPanel() {
     let failures = 0
     const timer = setInterval(async () => {
       let res: Response
-      let body: { job?: Job | null }
+      let body: { job?: Job | null; now?: string }
       try {
         res = await fetch(`${base}/job/${following.id}`, { credentials: 'include', cache: 'no-store' })
         body = await res.json()
@@ -100,8 +110,8 @@ export function BackupsPanel() {
       setQuiet(false)
       if (res.ok && body.job) {
         const next = body.job
-        setData((d) => d && { ...d, job: next })
-        if (next.state === 'done' || next.state === 'failed') load().catch((e) => setError(e.message))
+        setData((d) => d && { ...d, job: next, now: body.now })
+        if (next.state === 'done' || next.state === 'failed' || next.state === 'cancelled') load().catch((e) => setError(e.message))
       } else if (res.status === 404 && body.job === null) {
         clearInterval(timer)
         const seen = latest.current
@@ -175,7 +185,17 @@ export function BackupsPanel() {
   }
   const kindText = { regular: t.kindRegular, 'pre-restore': t.kindPre, uploaded: t.kindUploaded, other: t.kindOther }
   const jobTitle = job && { create: t.jobCreate, verify: t.jobVerify, restore: t.jobRestore, upload: t.upload }[job.kind]
-  const jobState = job && { running: t.jobRunning, done: t.jobDone, failed: t.jobFailed, restarting: t.jobRestarting }[job.state]
+  const jobState = job && { running: t.jobRunning, done: t.jobDone, failed: t.jobFailed, cancelled: t.jobCancelled, restarting: t.jobRestarting }[job.state]
+  // Time since the task started, by the server's clock: to its end, or to the last answer while it runs
+  const elapsed = job && duration(Date.parse(job.finishedAt ?? data?.now ?? job.startedAt) - Date.parse(job.startedAt))
+
+  const stop = async (id: string) => {
+    setError('')
+    const res = await fetch(`${base}/job/${id}/cancel`, { method: 'POST', credentials: 'include' })
+    const out = await res.json().catch(() => ({}))
+    if (res.ok && out.job) setData((d) => d && { ...d, job: out.job })
+    else setError(failure(out, res.statusText))
+  }
 
   if (restart) {
     return (
@@ -235,14 +255,28 @@ export function BackupsPanel() {
           <h2>
             {jobTitle}
             {job.name ? `: ${job.name}` : ''} — {jobState}
+            {elapsed && <span className={styles.elapsed}> {elapsed}</span>}
           </h2>
           <ol>
             {job.steps.map((s, i) => (
               <li key={i}>{messageText(s, i18n.language)}</li>
             ))}
           </ol>
-          {job.error && <p className={styles.error}>{messageText(job.error, i18n.language)}</p>}
+          {job.state === 'running' && job.detail && (
+            <p className={styles.detail} data-job-detail>
+              {messageText(job.detail, i18n.language)}
+            </p>
+          )}
+          {job.error && <p className={job.state === 'cancelled' ? styles.stopped : styles.error}>{messageText(job.error, i18n.language)}</p>}
           {quiet && job.state === 'running' && <p role="status">{t.notAnswering}</p>}
+          {job.state === 'running' && job.cancellable && (
+            <div className={styles.stopRow}>
+              <Button buttonStyle="secondary" size="small" margin={false} disabled={job.stopping} onClick={() => stop(job.id)} id="backup-job-stop">
+                {job.stopping ? t.stopping : t.stop}
+              </Button>
+              <span className={styles.muted}>{job.kind === 'restore' ? t.stopHintRestore : t.stopHint}</span>
+            </div>
+          )}
         </section>
       )}
 
@@ -298,6 +332,7 @@ export function BackupsPanel() {
                             onClick={() => {
                               setRestoring(restoring === b.name ? null : b.name)
                               setUnderstood(false)
+                              setSafety(true)
                             }}
                           >
                             {t.restore}
@@ -323,7 +358,11 @@ export function BackupsPanel() {
                               <strong>{when(b)}</strong> · {b.name}
                             </p>
                             <p>{t.restoreWarn}</p>
-                            <p>{t.restoreSafety}</p>
+                            <label className={styles.check}>
+                              <input type="checkbox" id="backup-restore-safety" checked={safety} onChange={(e) => setSafety(e.target.checked)} />
+                              {t.restoreSafetyOption}
+                            </label>
+                            <p className={safety ? undefined : styles.warning}>{safety ? t.restoreSafety : t.restoreNoSafety}</p>
                             <p>{t.restoreAfter}</p>
                             <label className={styles.check}>
                               <input type="checkbox" id="backup-restore-understood" checked={understood} onChange={(e) => setUnderstood(e.target.checked)} />
@@ -337,7 +376,7 @@ export function BackupsPanel() {
                                 id="backup-restore-go"
                                 onClick={() => {
                                   setRestoring(null)
-                                  post(`${base}/${encodeURIComponent(b.name)}/restore`, { confirm: b.name })
+                                  post(`${base}/${encodeURIComponent(b.name)}/restore`, { confirm: b.name, safety })
                                 }}
                               >
                                 {t.restoreGo}

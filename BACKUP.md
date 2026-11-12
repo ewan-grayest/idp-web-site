@@ -23,13 +23,16 @@ Open `/admin/backups` (side menu → Обслуживание → Резервн
 | Загрузить копию с компьютера | Uploads a backup `.tar` (for example one downloaded from the other site). A file that is not a site backup is refused. |
 | Скачать | Downloads the backup file, to keep a copy on another disk. |
 | Проверить | Checks every checksum and test-loads the database into a temporary copy, comparing every table's rows. The site is not touched. |
-| Восстановить… | Asks for confirmation, then restores (below). |
+| Восстановить… | Asks for confirmation and whether to save the current state first, then restores (below). |
 | Удалить | Deletes the file, after a second click. |
 
 A restore from the admin:
 
-1. Checks the backup and that the site code is new enough for it.
-2. Saves the current state as a «До восстановления» (`…-pre-restore-…`) backup.
+1. Checks the backup, that the site code is new enough for it, that the database account may create databases
+   (`CREATEDB` and the maintenance database `postgres`), and that the disks have room to unpack it.
+2. Saves the current state as a «До восстановления» (`…-pre-restore-…`) backup, unless you untick «Сначала сохранить
+   текущее состояние…» in the dialog (ticked each time it opens). Without it the restore is quicker and takes no disk
+   space for the copy, but the current data can't be brought back unless you have another backup.
 3. Loads the backup into a new database beside the live one and checks every table's rows,
    and unpacks the media beside the live files. The live site is untouched until both are ready.
 4. Switches the site to the restored database and files within a second.
@@ -40,6 +43,24 @@ From step 4 on, the session you started the restore with no longer exists: the a
 follows the task by its id instead, so it still shows every step and the restart. If the site stops answering partway,
 the page says so and waits; if it comes back without the task, the page says the task stopped. A restore changes the
 site's data only at step 4.
+
+### How far a task got, stopping it, and time limits
+
+- The page shows the time since the task started and how the current step is getting on: the table being saved,
+  a percentage with the table or index being loaded, the number of files unpacked.
+- «Остановить» ends a task. A backup or a check can be stopped at any time; a restore until step 4. The site's data
+  does not change: a half-written backup file, the restore's new database and its unpacked files are removed.
+- No step waits forever. A program that reports nothing for 10 minutes (`QUIET_LIMIT_MS` in `src/lib/backups.ts`) is
+  stopped and the task fails, naming it; pg_dump, pg_restore and tar report every table, index and file. A connection
+  to the database gives up after 15 seconds, and one lost midway (the database container restarted or ran out of
+  memory, for one) is noticed within a minute or two instead of the two hours the system would wait. A database
+  command waiting for a lock gives up after a minute with PostgreSQL's own message.
+- Every step also goes to the site's log, which the «Диагностика» page shows. While loading the database is quiet for
+  a minute or more, the log says each minute what its database session is doing: waiting for a lock or the disk, or no
+  session at all (the connection is gone). That tells a slow restore from a stuck one.
+- A failed restore says whether the site's data changed. Before step 4 it never does.
+- Loading the database does not wait for the disk after each of its many small commits (`synchronous_commit=off` for
+  that session only), which on a host's slow network disk was most of the time. The switch in step 4 writes it all to disk.
 
 The admin and the scripts keep backups in the same place: the persistent Docker volume `backup` (`site_backup`, or
 `deploy_backup` in production; see "Where the data is kept" in the README), mounted in the site's container at

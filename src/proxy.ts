@@ -9,6 +9,7 @@ import { browserLocale, CHOICE_COOKIE, defaultLocale, isLocale, PATH_HEADER } fr
  * - /ru/studio redirects to /studio, so each page has one Russian address.
  * Pages get the address without the prefix in a header, for the other-language links.
  * A first visit to a Russian address follows the browser's language (see browserLocale): /studio → /en/studio.
+ * A browser that names no language, or none the site has, gets English (Ewan, 2026-11-12).
  * A language the visitor picked (CHOICE_COOKIE, set by the language links) wins over the browser.
  */
 export function proxy(request: NextRequest) {

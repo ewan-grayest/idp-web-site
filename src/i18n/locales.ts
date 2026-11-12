@@ -41,11 +41,11 @@ export const CHOICE_COOKIE = 'idp-locale'
 
 /**
  * The site language for a browser's Accept-Language (Ewan, 2026-10-26): the visitor's most preferred of
- * Russian, Chinese and English, in their own order; English when none of them is listed.
- * No header (search engines, scripts) keeps the default, Russian.
+ * Russian, Chinese and English, in their own order. English when none of them is listed, and also when the
+ * browser names no language at all (Ewan, 2026-11-12; until then that kept Russian).
  */
 export function browserLocale(acceptLanguage: string | null | undefined): Locale {
-  if (!acceptLanguage?.trim()) return defaultLocale
+  if (!acceptLanguage?.trim()) return 'en'
   const ranked = acceptLanguage
     .split(',')
     .map((part, i) => {

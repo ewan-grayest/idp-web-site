@@ -104,8 +104,9 @@ stops_with() {
   out=$(docker run --rm $platform "$@" 2>&1) && return 1
   echo "$out" | grep -q "$want"
 }
-page_mentions() { curl -fsS "$base$1" | grep -q "$2"; }
-page_opens() { curl -fsSL -o /dev/null "$base$1"; }
+# As a Russian browser: with no Accept-Language the site sends Russian addresses on to /en (src/proxy.ts)
+page_mentions() { curl -fsS -H 'Accept-Language: ru' "$base$1" | grep -q "$2"; }
+page_opens() { curl -fsSL -H 'Accept-Language: ru' -o /dev/null "$base$1"; }
 page_gone() { ! curl -fs -o /dev/null "$base$1"; }
 site_user_is() { [ "$(docker exec "$app" stat -c %u /proc/1)" = "$1" ]; }
 docker_says_healthy() {

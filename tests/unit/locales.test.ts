@@ -49,8 +49,11 @@ describe('browserLocale', () => {
     expect(browserLocale('en;q=0.5,zh;q=0.9')).toBe('zh')
     expect(browserLocale('ru;q=0,en')).toBe('en')
   })
-  it('keeps Russian when the browser says nothing (search engines, scripts)', () => {
-    expect(browserLocale(null)).toBe('ru')
-    expect(browserLocale('')).toBe('ru')
+  it('gives English when the browser names no language (Ewan, 2026-11-12)', () => {
+    expect(browserLocale(null)).toBe('en')
+    expect(browserLocale(undefined)).toBe('en')
+    expect(browserLocale('')).toBe('en')
+    expect(browserLocale('  ')).toBe('en')
+    expect(browserLocale('*')).toBe('en')
   })
 })

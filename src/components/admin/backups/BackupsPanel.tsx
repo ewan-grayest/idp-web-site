@@ -60,8 +60,8 @@ export function BackupsPanel() {
   const [notice, setNotice] = useState('')
   const [restoring, setRestoring] = useState<string | null>(null)
   const [understood, setUnderstood] = useState(false)
-  // Save the current state first («До восстановления»): checked each time the dialog opens
-  const [safety, setSafety] = useState(true)
+  // Save the current state first («До восстановления»): off each time the dialog opens (Ewan, 2026-11-12)
+  const [safety, setSafety] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [upload, setUpload] = useState<number | null>(null)
   const [restart, setRestart] = useState<'waiting' | 'back' | null>(null)
@@ -332,7 +332,7 @@ export function BackupsPanel() {
                             onClick={() => {
                               setRestoring(restoring === b.name ? null : b.name)
                               setUnderstood(false)
-                              setSafety(true)
+                              setSafety(false)
                             }}
                           >
                             {t.restore}

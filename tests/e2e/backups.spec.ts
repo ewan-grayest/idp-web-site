@@ -60,15 +60,15 @@ test('A backup made from the admin page checks out, downloads and deletes', asyn
   await finished(page, job.id)
   await expect(row).toContainText(/в порядке|OK|正常/)
 
-  // Restoring asks whether to save the current state first, ticked each time the dialog opens. Nothing is restored here
+  // Restoring offers to save the current state first, off each time the dialog opens. Nothing is restored here
   await row.getByRole('button', { name: /Восстановить|Restore|恢复/ }).click()
   const safety = page.locator('#backup-restore-safety')
-  await expect(safety).toBeChecked()
-  await safety.uncheck()
+  await expect(safety).not.toBeChecked()
+  await safety.check()
   await expect(page.locator('#backup-restore-go')).toBeDisabled()
   await page.getByRole('button', { name: /Отмена|Cancel|取消/ }).click()
   await row.getByRole('button', { name: /Восстановить|Restore|恢复/ }).click()
-  await expect(safety).toBeChecked()
+  await expect(safety).not.toBeChecked()
   await page.getByRole('button', { name: /Отмена|Cancel|取消/ }).click()
 
   const download = await page.request.get(`/api/v1/backups/${name}/download`)

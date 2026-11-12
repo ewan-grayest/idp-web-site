@@ -30,8 +30,8 @@ A restore from the admin:
 
 1. Checks the backup, that the site code is new enough for it, that the database account may create databases
    (`CREATEDB` and the maintenance database `postgres`), and that the disks have room to unpack it.
-2. Saves the current state as a «До восстановления» (`…-pre-restore-…`) backup, unless you untick «Сначала сохранить
-   текущее состояние…» in the dialog (ticked each time it opens). Without it the restore is quicker and takes no disk
+2. Saves the current state as a «До восстановления» (`…-pre-restore-…`) backup, only if you tick «Сначала сохранить
+   текущее состояние…» in the dialog (off each time it opens). Without it the restore is quicker and takes no disk
    space for the copy, but the current data can't be brought back unless you have another backup.
 3. Loads the backup into a new database beside the live one and checks every table's rows,
    and unpacks the media beside the live files. The live site is untouched until both are ready.

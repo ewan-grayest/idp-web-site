@@ -53,7 +53,7 @@ Path aliases: `@/*` → `src/*`, `@payload-config` → `src/payload.config.ts`.
 | `/...`, visitor wants another language | GET only: 307 to `/en/...` or `/zh/...` |
 | `/...` otherwise | Rewrite to `/ru/...`, address unchanged, sets `x-idp-path` |
 
-"Wants" means the `idp-locale` cookie if set, otherwise `browserLocale(Accept-Language)`: the visitor's most preferred of ru, en, zh; English if none is listed; Russian if there is no header, as with search engines. Unprefixed responses send `Vary: Accept-Language, Cookie`.
+"Wants" means the `idp-locale` cookie if set, otherwise `browserLocale(Accept-Language)`: the visitor's most preferred of ru, en, zh; English if none is listed, and English if there is no header, as with search engines and scripts (Ewan, 2026-11-12). Unprefixed responses send `Vary: Accept-Language, Cookie`.
 
 Page routes are under `src/app/(frontend)/[locale]/`:
 
@@ -233,9 +233,3 @@ Run TypeScript ones with `npx payload run <file>`. All import scripts are additi
 
 - `POST /leads` has no rate limiting or spam protection, and leads send no notification; staff read them in the admin.
 - Placeholders in `lib/site.ts`: Facebook URL. The map point and legal drafts need checking.
-
-### README statements that no longer match the code
-
-Trust the code. Fix these in the README when convenient.
-
-- "No automatic redirect by browser language": `src/proxy.ts` does redirect, since Ewan's 2026-10-26 decision.

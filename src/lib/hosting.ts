@@ -20,8 +20,6 @@ export function normalizeSiteUrl(value?: string) {
 }
 
 export const siteUrl = () => normalizeSiteUrl(setting('NEXT_PUBLIC_SITE_URL'))
-export const studioPhoneSetting = () => setting('NEXT_PUBLIC_STUDIO_PHONE')
-export const promoVideoSetting = () => setting('NEXT_PUBLIC_PROMO_VIDEO_URL')
 
 /**
  * The database address for pg_dump, pg_restore and psql; `db` swaps the database name.

@@ -9,8 +9,6 @@ services:
     environment:
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET to a long random string}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?Set NEXT_PUBLIC_SITE_URL to the site address, e.g. https://example.ru}
-      NEXT_PUBLIC_STUDIO_PHONE: ${NEXT_PUBLIC_STUDIO_PHONE:-}
-      NEXT_PUBLIC_PROMO_VIDEO_URL: ${NEXT_PUBLIC_PROMO_VIDEO_URL:-}
       DATABASE_URI: postgres://idp:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD to a long random string}@db:5432/idp
       # The same paths in every setup ("Data locations" in CLAUDE.md)
       MEDIA_DIR: /data/media

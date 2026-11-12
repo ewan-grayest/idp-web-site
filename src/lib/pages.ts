@@ -8,7 +8,6 @@ import type { Media, Project } from '@/payload-types'
 import type { ProjectKind } from './routes'
 import { coverOf, mediaUrl, toCard, type CollectionCard } from './projects'
 import type { Rich } from './rich'
-import { studioPhoneSetting } from './hosting'
 import { partnersEmail, partnersPhone, social, studioEmail, studioPhone } from './site'
 import { getSettings } from './settings'
 import { asVisitor } from './published'
@@ -27,7 +26,7 @@ export const getContacts = cache(async () => {
     select: { phone: true, email: true, partnersPhone: true, partnersEmail: true, social: true, address: true, lat: true, lng: true, zoom: true },
   })
   return {
-    phone: s.phone || studioPhoneSetting() || studioPhone,
+    phone: s.phone || studioPhone,
     email: s.email || studioEmail,
     partnersPhone: s.partnersPhone || partnersPhone,
     partnersEmail: s.partnersEmail || partnersEmail,

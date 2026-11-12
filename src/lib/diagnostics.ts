@@ -87,15 +87,6 @@ export function checkSettings(env: NodeJS.ProcessEnv, ctx: Context = {}): Check[
   if (production) rows.push({ id: 'NODE_ENV', status: 'ok', key: 'value', vars: { value: nodeEnv } })
   else rows.push({ id: 'NODE_ENV', status: inImage ? 'error' : 'info', key: inImage ? 'nodeEnvImage' : 'nodeEnvDev', vars: { value: nodeEnv || '—' } })
 
-  // Optional ones
-  const phone = get('NEXT_PUBLIC_STUDIO_PHONE')
-  rows.push(phone ? { id: 'NEXT_PUBLIC_STUDIO_PHONE', status: 'ok', key: 'value', vars: { value: phone } } : { id: 'NEXT_PUBLIC_STUDIO_PHONE', status: 'info', key: 'optionalUnset' })
-
-  const video = get('NEXT_PUBLIC_PROMO_VIDEO_URL')
-  if (!video) rows.push({ id: 'NEXT_PUBLIC_PROMO_VIDEO_URL', status: 'info', key: 'optionalUnset' })
-  else if (!/^(https?:\/\/|\/)/i.test(video)) rows.push({ id: 'NEXT_PUBLIC_PROMO_VIDEO_URL', status: 'warn', key: 'urlInvalid', vars: { value: video } })
-  else rows.push({ id: 'NEXT_PUBLIC_PROMO_VIDEO_URL', status: 'ok', key: 'value', vars: { value: video } })
-
   // Folders: whether they exist and can be written to is a live check
   for (const [name, fallback] of [
     ['MEDIA_DIR', 'media'],

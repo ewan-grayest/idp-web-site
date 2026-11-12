@@ -63,11 +63,13 @@ for (const [locale, where] of [
 }
 
 // Playwright's request fixture sends no Accept-Language, like search engines and scripts (Ewan, 2026-11-12)
-test('A client that names no language gets English', async ({ request }) => {
+test('A client that names no language gets English', async ({ request, baseURL }) => {
+  // Location may be relative
+  const target = (res: { headers(): Record<string, string> }) => new URL(res.headers().location, baseURL).pathname
   const none = await request.get('/studio', { maxRedirects: 0 })
   expect(none.status()).toBe(307)
-  expect(new URL(none.headers().location!).pathname).toBe('/en/studio')
-  expect((await request.get('/', { maxRedirects: 0 })).headers().location).toMatch(/\/en$/)
+  expect(target(none)).toBe('/en/studio')
+  expect(target(await request.get('/', { maxRedirects: 0 }))).toBe('/en')
   const russian = await request.get('/studio', { maxRedirects: 0, headers: { 'Accept-Language': 'ru' } })
   expect(russian.status()).toBe(200)
 })

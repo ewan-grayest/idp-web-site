@@ -719,8 +719,8 @@ async function moveUploads(from: string, to: string) {
  * The app then restarts itself (Docker starts it again), so nothing keeps old data in memory and newer migrations apply.
  * Until the switch, the task can be stopped and any failure leaves the site as it was.
  *
- * `safety: false` skips saving the current state first (a «До восстановления» backup), which the page offers as a
- * choice, checked by default (Ewan, 2026-11-12). A site with no tables yet has nothing to save either way.
+ * `safety: true` saves the current state first (a «До восстановления» backup). The page offers it as a choice, off by
+ * default (Ewan, 2026-11-12). A site with no tables yet has nothing to save either way.
  */
 export async function restoreBackup(
   name: string,
@@ -753,7 +753,7 @@ export async function restoreBackup(
     await ensureSpace(media, mediaBytes)
 
     const hasTables = (await psql("select count(*) from information_schema.tables where table_schema = 'public'")).trim() !== '0'
-    if (hasTables && opts.safety === false) step('safetySkipped')
+    if (hasTables && !opts.safety) step('safetySkipped')
     else if (hasTables) {
       const safety = await createBackup(step, { label: 'pre-restore', by })
       step('currentSaved', { name: safety })

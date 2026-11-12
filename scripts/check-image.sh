@@ -152,9 +152,11 @@ upload_backup() {
 delete_photo() { api DELETE "/api/v1/media/$media_id" >/dev/null && page_gone "/api/v1/media/file/$file"; }
 # A restore ends the site's process on purpose; the container starts it again by itself. Followed as the admin page
 # follows it: by the task's id, without sign-in (the restore replaces the accounts), through «restarting» until the
-# restarted site no longer knows the task
+# restarted site no longer knows the task. `restore_backup safety` saves the current state first, as the dialog's box does
 restore_backup() {
-  job=$(api POST "/api/v1/backups/$backup/restore" -H 'Content-Type: application/json' -d "{\"confirm\":\"$backup\"}" | json job.id)
+  extra=
+  [ "${1:-}" = safety ] && extra=',"safety":true'
+  job=$(api POST "/api/v1/backups/$backup/restore" -H 'Content-Type: application/json' -d "{\"confirm\":\"$backup\"$extra}" | json job.id)
   [ -n "$job" ] || return 1
   i=0 seen=
   while [ $i -lt 120 ]; do
@@ -277,7 +279,8 @@ else
 fi
 docker rm -f "$app" >/dev/null
 
-# Where a restore has its own work to do: the site saves the current state first, with no uploads to save yet
+# Where a restore has its own work to do: the site saves the current state first (asked for, as it is off by default),
+# with no uploads to save yet
 echo "A new host: the backup above, uploaded and restored before anything is uploaded here"
 echo "  run as an arbitrary user, on disks whose root has a lost+found only root can open"
 if [ -s "$tmp/$backup" ]; then
@@ -291,7 +294,7 @@ if [ -s "$tmp/$backup" ]; then
     -v "$vol_new_media":/data/media -v "$vol_new_backup":/data/backup "$image" >/dev/null
   if wait_for_site 3000 && first_admin; then
     check "takes the backup as an upload" upload_backup
-    if restore_backup && wait_for_site 3000; then
+    if restore_backup safety && wait_for_site 3000; then
       echo "  ok    restores it and starts the site again by itself"
       check "the photo's record is there" page_opens "/api/v1/media/$media_id"
       check "the photo itself is there" page_opens "/api/v1/media/file/$file"

@@ -110,8 +110,8 @@ export const backupEndpoints: Endpoint[] = [
       if (body?.confirm !== name) return fail('Confirm the restore first')
       await fs.access(backupPath(name))
       const pool = (req.payload.db as { pool?: DbPool }).pool
-      // The current state is saved first unless the page says not to
-      const safety = body.safety !== false
+      // The current state is saved first only when the page asks for it
+      const safety = body.safety === true
       return json({ job: startJob('restore', who(req), name, (step, job) => restoreBackup(name, step, job, { by: who(req), pool, safety })) }, 202)
     }),
   },

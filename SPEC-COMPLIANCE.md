@@ -62,7 +62,7 @@ Consent boxes (0.1.9, 5.9.3) start unticked every time; reviews also need a sepa
 
 ## Deliberate scope and limits
 
-- Roboto is self-hosted; the three brand colors remain exact design tokens. Light/dark support uses a neutral gray palette.
+- Roboto, the spec's typeface, is self-hosted and free (SIL Open Font License 1.1); body text is the spec's 10pt. The three brand colors remain exact design tokens. Light/dark support uses a neutral gray palette.
 - CMS-approved social posts render without an Instagram API connection. Automatic feed synchronization is not enabled. External post links open in a new tab.
 - VK is optional and off by default. Enabling it requires a registered public site/app ID; its SDK is loaded only on the visitor's request. Live provider sign-in, permissions and cross-posting remain provider-managed and require acceptance testing on a registered domain. The site does not claim to detect private login sessions on other domains.
 - Local reviews require consent and moderation. They are not automatically cross-posted to social networks.

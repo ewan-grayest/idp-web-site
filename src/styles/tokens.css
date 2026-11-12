@@ -1,7 +1,9 @@
 /* ID Project · Roboto and neutral studio palette; spec slide 1. */
 :root {
-  /* Spec design system: Roboto throughout, with system CJK fallbacks. */
-  --font-sans: Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* Spec slide 1: Roboto throughout, body 10pt (Ewan, 2026-11-11: free fonts, as in the spec).
+   * "Roboto Variable" is the self-hosted file (layout.tsx, SIL OFL 1.1); a locally installed Roboto
+   * shows before it loads. Chinese: Roboto has no CJK glyphs, so the visitor's system font takes over. */
+  --font-sans: "Roboto Variable", Roboto, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
   --font-serif: var(--font-sans);
   --font: var(--font-sans);
 
@@ -9,9 +11,9 @@
   --t-h1: 300 48px/52px var(--font-serif);
   --t-h2: 400 34px/40px var(--font-serif);
   --t-h3: 600 20px/28px var(--font-sans);
-  --t-body: 400 13.333px/22px var(--font-sans);
+  --t-body: 400 13.333px/22px var(--font-sans);  /* spec "10pt" */
   --t-lead: 400 18px/30px var(--font-sans);
-  --t-small: 400 13px/20px var(--font-sans);   /* = spec "10pt" */
+  --t-small: 400 13px/20px var(--font-sans);
   --t-label: 600 12px/16px var(--font-sans);   /* caps, letter-spacing .14em */
   --t-title: 400 22px/28px var(--font-serif);  /* header section title 0.1.2 */
   --t-quote: italic 300 26px/34px var(--font-serif);

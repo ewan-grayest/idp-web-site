@@ -13,7 +13,7 @@ export async function SocialFeed({ scope, entity, hashtag, spec }: { scope: Feed
     <div className={styles.heading}><h2>{title}</h2><span>{scope === 'partners' ? 'Get-Together' : 'ID project'}</span></div>
     <ul className={styles.feed}>{items.map((item) => <li key={item.id}>
       <a href={item.url} target="_blank" rel="noopener noreferrer" className={styles.post}>
-        <span className={styles.photo}>{item.image && <Image src={item.image} alt={item.caption} fill sizes="(max-width: 767px) 80vw, 33vw" style={{ objectFit: 'cover' }} />}</span>
+        <span className={styles.photo}>{item.image && <Image src={item.image} alt={item.caption} fill sizes="(max-width: 767px) 80vw, 33vw" style={{ objectFit: 'cover', objectPosition: item.focus }} />}</span>
         <span className={styles.caption}>{item.caption} ↗</span>
       </a>
     </li>)}</ul>

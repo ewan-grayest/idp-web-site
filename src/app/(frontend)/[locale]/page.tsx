@@ -30,6 +30,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           autoplay={intro.autoplay}
           sound={intro.sound}
           background={intro.background}
+          backgroundFocus={intro.backgroundFocus}
           intro
         />
       )}

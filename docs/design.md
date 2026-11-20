@@ -114,7 +114,9 @@ Breakpoints: phone 360–767, tablet 768–1279, desktop 1280–1919, wide 1920+
 
 **Project card**. Photo with a green hover veil and the name; on touch screens the name sits on a dark fade instead. Hover scales the image to 1.03.
 
-**Photo viewer** (`project/Viewer.tsx`). Full-screen, always dark, with shopping hotspots 5.1.3. Custom-built.
+**Photo viewer** (`project/Viewer.tsx`). Full-screen, always dark, with shopping hotspots 5.1.3. Custom-built. A photo whose file has «Показывать теги на сайте» gets a row of tag chips under it (44px, `--c-tag-bg` at rest, green on hover), and the photo gives up that height (`--tags-h`).
+
+**Photo crops**. A photo that covers a box (`object-fit: cover`) is placed at its focal point, set in the admin (`object-position`, `lib/crops.ts`); untouched photos stay centred. Never fix a crop in CSS for one photo: move its focal point.
 
 **Enquiry CTA** (`shared/EnquireButton.tsx`). Calls `openEnquiry()`, which opens the header's enquiry form with a context label and entity, so every lead records where it came from.
 

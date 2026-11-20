@@ -22,7 +22,7 @@ export function Stage({ spec, title, photos, text, flip }: { spec: string; title
         <div className={styles.stageTrack} data-spec={`${spec}.1`}>
           {photos.map((p, k) => (
             <button key={k} type="button" className={styles.stagePhoto} onClick={() => setOpen(k)} aria-label={t.project.openPhoto(title, k + 1)} data-spec={`${spec}.3`}>
-              <Image src={p.thumb} alt={p.alt} fill sizes="(max-width: 767px) 80vw, 40vw" className={styles.cover} />
+              <Image src={p.thumb} alt={p.alt} fill sizes="(max-width: 767px) 80vw, 40vw" className={styles.cover} style={{ objectPosition: p.focus }} />
             </button>
           ))}
         </div>

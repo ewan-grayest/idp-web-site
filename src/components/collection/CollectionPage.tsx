@@ -60,7 +60,7 @@ export async function CollectionPage({ kind, tags: tagsParam }: { kind: ProjectK
                   <li key={c.key} data-shape={c.ratio && c.ratio >= 1.05 ? 'tall' : undefined}>
                     <Link href={c.href} className={styles.card} data-spec="7.2.2">
                       {c.image ? (
-                        <Image src={c.image} alt={c.alt} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className={base.cover} />
+                        <Image src={c.image} alt={c.alt} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className={base.cover} style={{ objectPosition: c.focus }} />
                       ) : (
                         <span className={styles.noImage}>{c.title}</span>
                       )}

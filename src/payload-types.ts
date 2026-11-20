@@ -296,6 +296,14 @@ export interface Media {
    * Optional: what the photo shows, in a few words. If empty, the site uses the project name.
    */
   alt?: string | null;
+  /**
+   * For search engines: the site gives them as the photo’s keywords on project pages. Visitors see them only if ticked below.
+   */
+  tags?: (number | Tag)[] | null;
+  /**
+   * Under the photo in a project’s full screen viewer; each tag opens the projects that have it.
+   */
+  showTags?: boolean | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1114,6 +1122,8 @@ export interface ConsentsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  tags?: T;
+  showTags?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

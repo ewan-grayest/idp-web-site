@@ -11,7 +11,7 @@ import { Timeline } from '@/components/shared/Timeline'
 import { Link } from '@/i18n/Link'
 import { getT } from '@/i18n/server'
 import { getPerson, getPersonProjects, personEvents } from '@/lib/person'
-import { mediaUrl } from '@/lib/projects'
+import { mediaFocus, mediaUrl, pickMedia } from '@/lib/projects'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,7 +36,8 @@ export default async function PersonPage({ params }: Params) {
   const p = await getPerson((await params).slug)
   if (!p) notFound()
 
-  const photo = mediaUrl(p.photo, 'panorama') ?? mediaUrl(p.portrait, 'wide')
+  const picked = pickMedia(p.photo, p.portrait)
+  const photo = picked === p.photo ? mediaUrl(picked, 'panorama') : mediaUrl(picked, 'wide')
   const events = personEvents(p)
   const { projects, tags } = await getPersonProjects(p)
   const t = await getT()
@@ -46,7 +47,7 @@ export default async function PersonPage({ params }: Params) {
       <Rise>
         <section className={`${base.sec} ${base.author}`} data-header-title={p.name} data-spec="4.1">
           <div className={base.portrait} data-spec="4.1.1">
-            {photo ? <Image src={photo} alt="" fill sizes="100vw" priority className={base.cover} /> : <PhotoPlaceholder />}
+            {photo ? <Image src={photo} alt="" fill sizes="100vw" priority className={base.cover} style={{ objectPosition: mediaFocus(picked) }} /> : <PhotoPlaceholder />}
           </div>
           <div className={base.authorPanel}>
             {p.role && (
@@ -90,7 +91,7 @@ export default async function PersonPage({ params }: Params) {
                 {projects.map((pr) => (
                   <li key={pr.key}>
                     <Link href={pr.href} className={person.proj} data-spec="4.3.2">
-                      {pr.image && <Image src={pr.image} alt="" fill sizes="400px" className={person.cover} />}
+                      {pr.image && <Image src={pr.image} alt="" fill sizes="400px" className={person.cover} style={{ objectPosition: pr.focus }} />}
                       <span className={person.projText}>
                         <span className={person.projTitle}>{pr.title}</span>
                         {pr.summary && <span className={person.projSummary}>{pr.summary}</span>}

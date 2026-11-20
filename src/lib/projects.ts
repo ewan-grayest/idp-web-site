@@ -5,6 +5,8 @@ import { headers } from 'next/headers'
 import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
 import type { Media, Partner, Person, Project, Tag } from '@/payload-types'
+import { objectPosition } from './crops'
+import { filterTags, photoTags, shownPhotoTags, shownTagIds } from './photoTags'
 import { pages, personPath, projectKinds, projectPath, type ProjectKind } from './routes'
 import { getSettings } from './settings'
 import { selectTags } from './limits'
@@ -14,9 +16,17 @@ import { asVisitor } from './published'
 export type Photo = {
   url: string
   thumb: string
+  /** The file as uploaded, at `width` × `height` */
+  original: string
   alt: string
   width: number
   height: number
+  /** `object-position` around the photo's focal point, for every box that crops it (lib/crops.ts) */
+  focus?: string
+  /** All the photo's tags, for search engines (lib/photoTags.ts) */
+  keywords: string[]
+  /** The tags shown under the photo in the viewer, each opening the projects with it; empty unless the file says so */
+  tags: { key: number; title: string; href: string }[]
   /** `name`: what it is (sofa, lamp…); `shop`: the partner selling it; no `href` when no partner is picked yet */
   hotspots: { name: string; shop: string; href?: string; logo?: string; x: number; y: number }[]
 }
@@ -30,13 +40,20 @@ export function mediaUrl(m: Media | number | null | undefined, size: 'thumb' | '
   return m.sizes?.[size]?.url || m.url || undefined
 }
 
+/** The first of these that is a file the page can show, for a photo with a fallback (a person's wide photo, else the portrait). */
+export const pickMedia = (...ms: (Media | number | null | undefined)[]): Media | undefined => ms.find((m): m is Media => isObj(m) && !!m.url)
+
+/** Where a box crops this photo: `object-position` around its focal point, undefined for the centre (lib/crops.ts). */
+export const mediaFocus = (m: Media | number | null | undefined) => objectPosition(m)
+
 /** Partner hotspots open the partner on the Partners page (6). */
 export const partnerPath = (p: Partner) => `${pages[6].path}#${p.slug}`
 
 /** Photo descriptions are optional: an empty one falls back to the name shown on the page. */
 export const altOr = (alt: string | null | undefined, fallback: string) => alt?.trim() || fallback
 
-export function toPhotos(rows: PhotoRow[] | null | undefined, fallbackAlt: string): Photo[] {
+/** `kind`: the project's, so a photo's tags open the list of its kind; without it the viewer shows no tags. */
+export function toPhotos(rows: PhotoRow[] | null | undefined, fallbackAlt: string, kind?: ProjectKind): Photo[] {
   return (rows ?? []).flatMap((row) => {
     const m = row.image
     if (!isObj(m) || !m.url) return []
@@ -44,9 +61,13 @@ export function toPhotos(rows: PhotoRow[] | null | undefined, fallbackAlt: strin
       {
         url: mediaUrl(m, 'panorama') ?? m.url,
         thumb: mediaUrl(m, 'thumb') ?? m.url,
+        original: m.url,
         alt: altOr(m.alt, fallbackAlt),
         width: m.width ?? 1600,
         height: m.height ?? 1000,
+        focus: objectPosition(m),
+        keywords: photoTags(m).map((t) => t.title?.trim() ?? '').filter(Boolean),
+        tags: kind ? shownPhotoTags(m).map((t) => ({ key: t.id, title: t.title?.trim() || t.slug, href: tagPath(kind, t) })) : [],
         hotspots: (row.hotspots ?? []).flatMap((h) => {
           // A product needs a place on the photo and something to say: its name, its partner or both.
           // Without a partner it shows as a name only, with no shop link (Ewan, 2026-10-27)
@@ -92,7 +113,7 @@ export async function getProject(kind: ProjectKind, slug: string): Promise<Proje
 }
 
 /** `ratio`: the cover's height to width, so the salon grid (7.2) gives an upright photo an upright frame */
-export type CollectionCard = { key: number; title: string; href: string; image?: string; alt: string; ratio?: number }
+export type CollectionCard = { key: number; title: string; href: string; image?: string; focus?: string; alt: string; ratio?: number }
 
 /** A project's cover, else its first gallery photo. */
 export const coverOf = (p: Project) => (isObj(p.cover) ? p.cover : p.gallery?.find((row) => isObj(row.image))?.image)
@@ -105,6 +126,7 @@ export function toCard(p: Project): CollectionCard {
     title: p.title ?? '',
     href: projectPath(p.kind, p.slug),
     image: mediaUrl(image),
+    focus: mediaFocus(image),
     // The card shows the name already (7.2.4): an empty description keeps screen readers from repeating it
     alt: (isObj(image) && image.alt?.trim()) || '',
     ratio: isObj(image) && image.width && image.height ? image.height / image.width : undefined,
@@ -129,14 +151,25 @@ export async function getCollection(kind: ProjectKind, tagsParam: string | strin
     pagination: false,
   })
 
+  // A project carries its own tags and those its photos show (lib/photoTags.ts). Photos come one level deep, so
+  // their tags are ids: the ones no project names are read here
+  const byId = new Map<number, Tag>()
+  for (const p of docs) for (const t of tagsOf(p)) byId.set(t.id, t)
+  const missing = [...new Set(docs.flatMap(shownTagIds))].filter((id) => !byId.has(id))
+  if (missing.length) {
+    const found = await payload.find({ ...asVisitor, collection: 'tags', locale: await getLocale(), where: { id: { in: missing } }, depth: 0, pagination: false })
+    for (const t of found.docs) byId.set(t.id, t)
+  }
+  const tagsByProject = new Map(docs.map((p) => [p.id, filterTags(p, byId)]))
+
   const tags = new Map<string, Tag>()
-  for (const p of docs) for (const t of tagsOf(p)) tags.set(t.slug, t)
+  for (const p of docs) for (const t of tagsByProject.get(p.id)!) tags.set(t.slug, t)
   const available = [...tags.values()].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
 
   const picked = selectTags(tagsParam, [...tags.keys()], limits.maxTags)
 
   const cards: CollectionCard[] = docs
-    .filter((p) => picked.every((slug) => tagsOf(p).some((t) => t.slug === slug)))
+    .filter((p) => picked.every((slug) => tagsByProject.get(p.id)!.some((t) => t.slug === slug)))
     .map(toCard)
 
   return {
@@ -148,7 +181,7 @@ export async function getCollection(kind: ProjectKind, tagsParam: string | strin
   }
 }
 
-export type Recommendation ={ key: string; badge: string; spec: string; title: string; href: string; image?: string }
+export type Recommendation = { key: string; badge: string; spec: string; title: string; href: string; image?: string; focus?: string }
 
 /**
  * 5.11: up to three cards.
@@ -180,7 +213,8 @@ export async function getRecommendations(p: Project): Promise<Recommendation[]> 
     spec,
     title: doc.title ?? '',
     href: projectPath(doc.kind, doc.slug),
-    image: mediaUrl(doc.cover) ?? mediaUrl(doc.gallery?.[0]?.image),
+    image: mediaUrl(coverOf(doc)),
+    focus: mediaFocus(coverOf(doc)),
   })
 
   const out: Recommendation[] = []

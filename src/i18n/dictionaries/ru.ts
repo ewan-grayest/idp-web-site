@@ -124,6 +124,7 @@ const ru = {
     openFrame: (n: number) => `Открыть кадр ${n}`,
     openPhoto: (stage: string, n: number) => `${stage}: открыть фото ${n}`,
     viewer: 'Изображение проекта',
+    photoTags: 'Теги фото',
     prev: 'Предыдущий кадр',
     next: 'Следующий кадр',
     products: 'Показать или скрыть товары',

@@ -34,7 +34,7 @@ export function TeamStrip({ members }: { members: Member[] }) {
               data-spec="3.2.2"
             >
               <span className={styles.circle}>
-                {p.thumb ? <Image src={p.thumb} alt="" fill sizes="200px" className={styles.cover} /> : <Silhouette />}
+                {p.thumb ? <Image src={p.thumb} alt="" fill sizes="200px" className={styles.cover} style={{ objectPosition: p.thumbFocus }} /> : <Silhouette />}
               </span>
               <span className={styles.who} data-spec="3.2.3">
                 <span className={styles.pname}>{p.name}</span>
@@ -48,7 +48,7 @@ export function TeamStrip({ members }: { members: Member[] }) {
       {m && (
         <div id="team-card" className={styles.card} role="region" aria-label={m.name} data-spec="3.2-a">
           <Link href={m.href} className={styles.cardPhoto} tabIndex={-1} aria-hidden data-spec="3.2.4">
-            {m.photo ? <Image src={m.photo} alt="" fill sizes="(max-width: 767px) 100vw, 50vw" className={styles.cover} /> : <Silhouette />}
+            {m.photo ? <Image src={m.photo} alt="" fill sizes="(max-width: 767px) 100vw, 50vw" className={styles.cover} style={{ objectPosition: m.photoFocus }} /> : <Silhouette />}
           </Link>
           <button type="button" className={styles.close} aria-label={t.common.close} onClick={() => setOpen(null)} data-spec="3.2.5">
             <CloseIcon />

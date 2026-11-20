@@ -9,7 +9,7 @@ import { Link } from '@/i18n/Link'
 import styles from './Timeline.module.css'
 import { useDock } from './useDock'
 
-export type TimelineEvent = { key: string; date: string; title: string; text?: string | null; image?: string; link?: string | null }
+export type TimelineEvent = { key: string; date: string; title: string; text?: string | null; image?: string; focus?: string; link?: string | null }
 
 /**
  * Reusable horizontal achievement/history timeline (3.3, 4.2, 5.8). Newest on the left, as the spec says.
@@ -56,7 +56,7 @@ export function Timeline({ events, spec }: { events: TimelineEvent[]; spec: stri
       <div className={styles.card} role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-event-${i}`}>
         {ev.image && (
           <div className={styles.img} data-spec={`${base}.6`}>
-            <Image src={ev.image} alt="" fill sizes="300px" style={{ objectFit: 'cover' }} />
+            <Image src={ev.image} alt="" fill sizes="300px" style={{ objectFit: 'cover', objectPosition: ev.focus }} />
           </div>
         )}
         <div className={styles.body} data-spec={`${base}.5`}>

@@ -4,7 +4,7 @@ import config from '@payload-config'
 import { getLocale } from '@/i18n/server'
 import type { Person, Project, Tag } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
-import { mediaUrl, projectPath, tagPath, tagsOf } from './projects'
+import { coverOf, mediaFocus, mediaUrl, projectPath, tagPath, tagsOf } from './projects'
 import { asVisitor } from './published'
 
 export async function getPerson(slug: string): Promise<Person | null> {
@@ -23,11 +23,12 @@ export const personEvents = (p: Person): TimelineEvent[] =>
       title: a.title ?? '',
       text: a.text,
       image: mediaUrl(a.image, 'thumb'),
+      focus: mediaFocus(a.image),
       link: project ? projectPath(project.kind, project.slug) : null,
     }
   })
 
-export type PersonProject = { key: string; title: string; summary: string; href: string; image?: string }
+export type PersonProject = { key: string; title: string; summary: string; href: string; image?: string; focus?: string }
 
 /**
  * 4.3: projects this person led or worked on, newest first (4.3.2),
@@ -50,7 +51,8 @@ export async function getPersonProjects(p: Person) {
     title: d.title ?? '',
     summary: d.summary ?? '',
     href: projectPath(d.kind, d.slug),
-    image: mediaUrl(d.cover, 'thumb') ?? mediaUrl(d.gallery?.[0]?.image, 'thumb'),
+    image: mediaUrl(coverOf(d), 'thumb'),
+    focus: mediaFocus(coverOf(d)),
   }))
 
   // A tag links to the collection of the first project that carries it; the person's own tags default to residential

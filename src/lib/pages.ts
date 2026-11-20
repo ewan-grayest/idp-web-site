@@ -6,7 +6,7 @@ import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
 import type { Media, Project } from '@/payload-types'
 import type { ProjectKind } from './routes'
-import { coverOf, mediaUrl, toCard, type CollectionCard } from './projects'
+import { coverOf, mediaFocus, mediaUrl, toCard, type CollectionCard } from './projects'
 import type { Rich } from './rich'
 import { partnersEmail, partnersPhone, social, studioEmail, studioPhone } from './site'
 import { getSettings } from './settings'
@@ -39,7 +39,7 @@ export const getContacts = cache(async () => {
 export type Contacts = Awaited<ReturnType<typeof getContacts>>
 
 /** One entry on the vertical timeline of pages 11, 13 and 14. */
-export type Entry = { slug: string; shortCode?: string | null; date: string; when: string; title: string; images: { url: string; alt: string }[]; text: Rich }
+export type Entry = { slug: string; shortCode?: string | null; date: string; when: string; title: string; images: { url: string; alt: string; focus?: string }[]; text: Rich }
 
 /** Pages 11 (lifestyle), 13 (careers) and 14 (legal): entries, newest first. */
 export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'): Promise<Entry[]> {
@@ -56,7 +56,7 @@ export async function getEntries(collection: 'lifestyle' | 'careers' | 'legal'):
     title: e.title ?? '',
     images: (e.images ?? []).filter(isObj).flatMap((m: Media) => {
       const url = mediaUrl(m, 'wide')
-      return url ? [{ url, alt: m.alt?.trim() || '' }] : []
+      return url ? [{ url, alt: m.alt?.trim() || '', focus: mediaFocus(m) }] : []
     }),
     text: e.text as Rich,
   }))
@@ -98,6 +98,7 @@ export async function getPress() {
       when: dictionaries[locale].common.monthYear(new Date(a.date)),
       url: a.url || undefined,
       image: mediaUrl(photo),
+      focus: mediaFocus(photo),
     }
   })
 }
@@ -146,6 +147,7 @@ export async function getPartners(): Promise<PartnerBlock[]> {
       text: p.text as Rich,
       link: p.link || undefined,
       photo: mediaUrl(p.photo),
+      photoFocus: mediaFocus(p.photo),
       discount: p.discount ?? '',
       projects: all.map((x) => ({ ...toCard(x), kind: x.kind })),
       tags: [...tags].map(([slug, title]) => ({ slug, title, href: `/projects/${all.find((x) => (x.tags ?? []).some((t) => isObj(t) && t.slug === slug))?.kind ?? 'residential'}?tags=${encodeURIComponent(slug)}` })),

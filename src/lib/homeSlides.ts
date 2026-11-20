@@ -3,6 +3,7 @@ import config from '@payload-config'
 
 import { dictionaries } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/server'
+import { objectPosition } from './crops'
 import { projectPath, type ProjectKind } from './routes'
 import { asVisitor } from './published'
 import { getSettings } from './settings'
@@ -15,7 +16,7 @@ export type Slide = {
   hideName?: boolean
   /** The project page; placeholders have none and are not links */
   href?: string
-  image?: { url: string; alt: string; width?: number; height?: number }
+  image?: { url: string; alt: string; width?: number; height?: number; focus?: string }
 }
 
 /** Shown until the studio ticks projects for Home in /admin. */
@@ -52,7 +53,7 @@ export async function getHomeSlides(): Promise<{ left: Slide[]; right: Slide[] }
         // Each project's tick, unless site settings override every slide (Ewan, 2026-11-12)
         hideName: slideNameHidden(settings.homeSlideNames, d.homeShowName),
         href: projectPath(d.kind as ProjectKind, d.slug),
-        image: img?.url ? { url: img.url, alt: cover?.alt?.trim() || d.title || '', width: img.width ?? undefined, height: img.height ?? undefined } : undefined,
+        image: img?.url ? { url: img.url, alt: cover?.alt?.trim() || d.title || '', width: img.width ?? undefined, height: img.height ?? undefined, focus: objectPosition(cover) } : undefined,
       }
     }
     const left = docs.filter((d) => d.kind === 'public').map(toSlide)

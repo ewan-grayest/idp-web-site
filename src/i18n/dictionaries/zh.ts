@@ -117,6 +117,7 @@ const zh: Dictionary = {
     openFrame: (n) => `打开第 ${n} 张照片`,
     openPhoto: (stage, n) => `${stage}：打开第 ${n} 张照片`,
     viewer: '项目图片',
+    photoTags: '照片标签',
     prev: '上一张',
     next: '下一张',
     products: '显示或隐藏产品',

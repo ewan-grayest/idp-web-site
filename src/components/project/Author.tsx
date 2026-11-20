@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { Link } from '@/i18n/Link'
 import { getT } from '@/i18n/server'
 import type { Project } from '@/payload-types'
-import { mediaUrl, personOf, personPath } from '@/lib/projects'
+import { mediaFocus, mediaUrl, personOf, personPath, pickMedia } from '@/lib/projects'
 import styles from './Project.module.css'
 
 /** 5.2 author: full-width portrait 5.2.1, role 5.2.2, name 5.2.3 (both open the Person page), quote 5.2.4, summary 5.2.5. */
@@ -12,13 +12,14 @@ export async function Author({ project }: { project: Project }) {
   if (!person && !project.summary && !project.quote) return null
   const t = await getT()
   const href = person ? personPath(person.slug) : undefined
-  const portrait = mediaUrl(person?.photo, 'panorama') ?? mediaUrl(person?.portrait, 'panorama')
+  const picked = pickMedia(person?.photo, person?.portrait)
+  const portrait = mediaUrl(picked, 'panorama')
 
   return (
     <section className={`${styles.sec} ${styles.author}`} data-header-title={project.title || t.project.about} data-spec="5.2">
       {href ? (
         <Link href={href} className={styles.portrait} aria-label={t.project.openPerson(person!.name ?? '')} data-spec="5.2.1">
-          {portrait ? <Image src={portrait} alt="" fill sizes="100vw" className={styles.cover} /> : <PortraitPlaceholder />}
+          {portrait ? <Image src={portrait} alt="" fill sizes="100vw" className={styles.cover} style={{ objectPosition: mediaFocus(picked) }} /> : <PortraitPlaceholder />}
         </Link>
       ) : (
         <div className={styles.portrait}>

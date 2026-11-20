@@ -16,7 +16,7 @@ export async function Recommendations({ items }: { items: Recommendation[] }) {
       <div className={styles.recs}>
         {items.map((r) => (
           <Link key={r.key} href={r.href} className={styles.card} data-spec={r.spec}>
-            {r.image && <Image src={r.image} alt="" fill sizes="(max-width: 767px) 80vw, 30vw" className={styles.cover} />}
+            {r.image && <Image src={r.image} alt="" fill sizes="(max-width: 767px) 80vw, 30vw" className={styles.cover} style={{ objectPosition: r.focus }} />}
             <span className={styles.cardBadge}>{r.badge}</span>
             <span className={styles.cardOverlay}>{r.title}</span>
           </Link>

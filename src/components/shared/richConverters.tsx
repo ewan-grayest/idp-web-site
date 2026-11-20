@@ -2,7 +2,7 @@ import { LinkJSXConverter, type JSXConvertersFunction } from '@payloadcms/richte
 import Image from 'next/image'
 
 import { Link } from '@/i18n/Link'
-import { coverOf, mediaUrl } from '@/lib/projects'
+import { coverOf, mediaFocus, mediaUrl } from '@/lib/projects'
 import { pages, personPath, projectPath, type ProjectKind } from '@/lib/routes'
 import styles from './Prose.module.css'
 
@@ -42,12 +42,13 @@ export const richConverters: JSXConvertersFunction = ({ defaultConverters }) => 
     if (!isDoc(value)) return null
     const href = docHref(relationTo, value)
     const title = value.title || value.name || ''
-    const image = relationTo === 'projects' ? mediaUrl(coverOf(value as never), 'thumb') : undefined
+    const cover = relationTo === 'projects' ? coverOf(value as never) : undefined
+    const image = mediaUrl(cover, 'thumb')
     const body = (
       <>
         {image && (
           <span className={styles.relPhoto}>
-            <Image src={image} alt="" fill sizes="160px" />
+            <Image src={image} alt="" fill sizes="160px" style={{ objectPosition: mediaFocus(cover) }} />
           </span>
         )}
         <span className={styles.relTitle}>{title}</span>

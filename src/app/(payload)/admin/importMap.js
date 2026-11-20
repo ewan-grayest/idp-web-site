@@ -22,6 +22,9 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { CropGrid as CropGrid_75af0fddbd3d20dd4f0c00cca601c98d } from '../../../components/admin/media/CropGrid'
+import { MediaCell as MediaCell_41b404103a745eff10d7c9265eed6378 } from '../../../components/admin/media/MediaCell'
+import { ThumbModeSwitch as ThumbModeSwitch_b44f5a77569a8c59f414276973f6a64a } from '../../../components/admin/media/ThumbModeSwitch'
 import { AccountMenu as AccountMenu_b93c325b2a001186130a7950fae795ee } from '../../../components/admin/AccountMenu'
 import { AdminActions as AdminActions_697d8efb348e04c41018be756c3cd907 } from '../../../components/admin/AdminActions'
 import { MaintenanceNav as MaintenanceNav_faeb4b96cda38540f797b7ae50cee71c } from '../../../components/admin/MaintenanceNav'
@@ -57,6 +60,9 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "/components/admin/media/CropGrid#CropGrid": CropGrid_75af0fddbd3d20dd4f0c00cca601c98d,
+  "/components/admin/media/MediaCell#MediaCell": MediaCell_41b404103a745eff10d7c9265eed6378,
+  "/components/admin/media/ThumbModeSwitch#ThumbModeSwitch": ThumbModeSwitch_b44f5a77569a8c59f414276973f6a64a,
   "/components/admin/AccountMenu#AccountMenu": AccountMenu_b93c325b2a001186130a7950fae795ee,
   "/components/admin/AdminActions#AdminActions": AdminActions_697d8efb348e04c41018be756c3cd907,
   "/components/admin/MaintenanceNav#MaintenanceNav": MaintenanceNav_faeb4b96cda38540f797b7ae50cee71c,

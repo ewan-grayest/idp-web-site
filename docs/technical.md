@@ -87,7 +87,7 @@ Collections, in admin menu order (`payload.config.ts`):
 | `press` | Page 10 | `title`, `source`, `date`, `url`, `photo`, `project` | Public |
 | `lifestyle`, `careers`, `legal` | Pages 11, 13, 14; one factory in `entries.ts` | `title`, `slug` (`a-z0-9-`), `date`, `images`, `text` | Public |
 | `leads` | Enquiries | `email`, `consent`, `originUrl`, `context`, `entity{type,ref}`, `locale`, `status` | Signed-in; **public create** |
-| `media` | Uploads: images, MP4, WebM | `alt`, sizes | Public |
+| `media` | Uploads: images, MP4, WebM | `alt`, `tags`, `showTags`, `focalX`/`focalY` (Payload's focal point), sizes | Public |
 | `users` | Admin accounts | `email`, `name` | Payload auth default |
 
 Globals, all publicly readable:
@@ -104,6 +104,8 @@ Behaviour to preserve:
 - Slugs on `lifestyle`, `careers` and `legal` are validated; the others are only `required` and `unique`.
 - Empty contacts fall back to `src/lib/site.ts` (`getContacts`). The phone and the promo video are set in the admin only: an empty phone shows the constant, a missing video the placeholder clip.
 - Home slides fall back to numbered placeholders if no projects are ticked or the query fails (`getHomeSlides`).
+- Every photo box with `object-fit: cover` also sets `object-position` from the photo's focal point (`mediaFocus` in `lib/projects.ts`, `objectPosition` in `lib/crops.ts`); helpers return it beside the image URL (`focus`, `photoFocus`…). The admin's cropping grid computes the same crops from `cropFormats` in `lib/crops.ts`, which lists the site's boxes: change both when a box changes shape.
+- Photo tags (`lib/photoTags.ts`): all of a photo's tags go into the project page's JSON-LD as its keywords; visitors see them in the viewer only with `showTags`. `getCollection` counts the tags a project's photos show as the project's own, so the viewer's tag links find it.
 
 ## Data access
 
@@ -152,6 +154,7 @@ Search (`Header.tsx`) queries `projects.title` and `people.name` through REST wi
 - `AdminActions`: "Open site" and "Log out" in the top bar.
 - `LanguageSwitch`, `AdminGuide`: login page and dashboard language help.
 - `HotspotPicker`: click and drag products on a photo.
+- `media/*`, for «Фото и видео»: `ThumbModeSwitch` above the list (`beforeListTable`; square or as the file, kept in `localStorage`), `MediaCell` in place of Payload's file name cell (thumbnail, full screen button; links to the file, or picks it in a file picker through `useListDrawerContext`), `MediaLightbox` (full screen), `CropGrid` (the `cropGrid` UI field: focal point and the site's crops, writing `focalX`/`focalY`, so saving stores the point without remaking the image sizes; Payload's `uploadEdits` too, once its own focal point editor has set one, since that would win on save).
 - `MaintenanceNav`: the «Обслуживание» menu group with «Резервные копии» and «Диагностика».
 - `backups/*`: the `/admin/backups` view.
 - `diagnostics/*`: the `/admin/diagnostics` view: server facts, live checks (database and its version, pending migrations, upload and backup folders writable with free space, `pg_dump`, age of the latest backup), every setting the site reads with what is missing or wrong (`lib/diagnostics.ts`, pure), and the latest log lines. «Скопировать отчёт» puts it all in one text, secrets hidden, for the developer.
@@ -202,7 +205,7 @@ Development never pushes the schema (`push: false`): `npm run dev` and `./start.
 
 ## Testing
 
-**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels, hosting settings, the diagnostics settings check and log buffer, startup migrations.
+**Unit** (`tests/unit`, node environment): routes, locales, leads, short codes, admin labels, hosting settings, the diagnostics settings check and log buffer, startup migrations, crops and photo tags.
 
 **End to end** (`tests/e2e`): runs against its own site on port 3100, started by `scripts/e2e-server.sh` unless `BASE_URL` is set: a dev server with its own database (`idp_e2e` on the local PostgreSQL, created when missing, or `E2E_DATABASE_URI`), uploads and backups (`.e2e/`), filled by `scripts/seed.ts`. Never port 3000 or the `idp` database: the tests sign in, change site-wide settings, add and delete projects and make backups, and they used to do it to the site `./start.sh` runs. Next.js allows one dev server per folder, so stop `npm run dev` first. The browser locale is `ru-RU`, otherwise the proxy would redirect to `/en`. `global-setup.ts` creates one admin per Playwright project, because Payload keeps sessions on the user row and concurrent logins as one user would drop each other.
 

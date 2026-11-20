@@ -41,6 +41,7 @@ export function PromoVideo({
   autoplay = true,
   sound = true,
   background,
+  backgroundFocus,
 }: {
   sources: VideoSource[]
   placeholder?: boolean
@@ -48,6 +49,8 @@ export function PromoVideo({
   autoplay?: boolean
   sound?: boolean
   background?: string
+  /** `object-position` of the background, around its focal point */
+  backgroundFocus?: string
 }) {
   const { t, href } = useI18n()
   const router = useRouter()
@@ -213,7 +216,7 @@ export function PromoVideo({
             <source key={s.src} src={background ? s.src : firstFrameSrc(s.src)} type={s.type} />
           ))}
         </video>
-        {background && <Background src={background} hidden={started} />}
+        {background && <Background src={background} focus={backgroundFocus} hidden={started} />}
       </button>
 
       {placeholder && <span className={styles.placeholder}>{t.promo.placeholder}</span>}
@@ -271,7 +274,7 @@ export function PromoVideo({
  * The background image until the video starts. For visitors whose system asks for less motion it is drawn once onto a
  * canvas, which keeps a GIF still: drawing an animated image takes its first frame.
  */
-function Background({ src, hidden }: { src: string; hidden: boolean }) {
+function Background({ src, focus, hidden }: { src: string; focus?: string; hidden: boolean }) {
   const image = useRef<HTMLImageElement>(null)
   const still = useRef<HTMLCanvasElement>(null)
 
@@ -292,8 +295,8 @@ function Background({ src, hidden }: { src: string; hidden: boolean }) {
   return (
     <span className={styles.background} data-hidden={hidden || undefined} data-promo-background aria-hidden>
       {/* eslint-disable-next-line @next/next/no-img-element -- full-screen, any format, a GIF must keep moving */}
-      <img ref={image} src={src} alt="" className={styles.image} fetchPriority="high" onLoad={draw} />
-      <canvas ref={still} className={styles.still} />
+      <img ref={image} src={src} alt="" className={styles.image} style={{ objectPosition: focus }} fetchPriority="high" onLoad={draw} />
+      <canvas ref={still} className={styles.still} style={{ objectPosition: focus }} />
     </span>
   )
 }

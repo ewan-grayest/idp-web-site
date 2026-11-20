@@ -1,0 +1,134 @@
+/* «Фото и видео» in the admin: thumbnails switch, file name cell, full screen viewer, cropping grid.
+   Colours are Payload's admin variables, so everything follows the admin's light and dark themes; the viewer is
+   always dark, like the site's photo viewer. */
+
+/* Thumbnails switch above the list */
+.switch { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 calc(var(--base) * 0.75); }
+.switchLabel { color: var(--theme-elevation-600); margin-inline-end: 4px; }
+.switchButton {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px;
+  border: 1px solid var(--theme-elevation-150); border-radius: var(--style-radius-s);
+  background: var(--theme-elevation-0); color: var(--theme-text); font: inherit; cursor: pointer;
+}
+.switchButton:hover { border-color: var(--theme-elevation-400); }
+.switchButton[aria-pressed='true'] { background: var(--theme-elevation-800); border-color: var(--theme-elevation-800); color: var(--theme-elevation-0); }
+.switchButton:focus-visible, .zoom:focus-visible, .cellMain:focus-visible { outline: 2px solid var(--theme-success-500); outline-offset: 2px; }
+
+/* File name cell */
+.cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cellMain {
+  display: flex; align-items: center; gap: var(--base); min-width: 0;
+  padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; text-decoration: none;
+}
+.filename { overflow-wrap: anywhere; }
+.thumb {
+  position: relative; flex: none; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  width: 40px; height: 40px; border-radius: var(--style-radius-s);
+  background: var(--theme-elevation-50); color: var(--theme-elevation-500);
+}
+.thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Original proportions: 80px high, from 32 to 240px wide; a very tall or very wide file shows whole, with margins */
+.cell[data-thumbs='original'] .thumb { height: 80px; width: clamp(32px, calc(80px * var(--ratio, 1)), 240px); }
+.cell[data-thumbs='original'] .thumb img, .cell[data-thumbs='original'] .thumb video { object-fit: contain; }
+.zoom {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  padding: 0; border: 1px solid var(--theme-elevation-150); border-radius: 50%;
+  background: var(--theme-elevation-0); color: var(--theme-elevation-800); cursor: zoom-in;
+}
+.zoom:hover { border-color: var(--theme-elevation-500); }
+
+@media (pointer: coarse) {
+  .switchButton { min-height: 44px; }
+  .zoom { width: 44px; height: 44px; }
+}
+
+/* Full screen viewer */
+.lightbox {
+  position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: var(--color-base-1000); color: var(--color-base-0);
+}
+.lightbox::backdrop { background: var(--color-base-1000); }
+.lightboxStage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 64px 72px; }
+.lightboxMedia { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.lightbox:fullscreen .lightboxStage { padding: 0; }
+.lightboxBar {
+  position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 20px;
+  background: linear-gradient(color-mix(in srgb, var(--color-base-1000) 80%, transparent), transparent);
+}
+.lightboxTitle { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lightboxName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.lightboxFacts { color: var(--color-base-300); font-size: 13px; }
+.lightboxLink { color: var(--color-base-0); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.lightboxButton {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0;
+  border: 1.5px solid var(--color-base-300); border-radius: 50%;
+  background: color-mix(in srgb, var(--color-base-1000) 55%, transparent); color: var(--color-base-0); cursor: pointer;
+}
+.lightboxButton:hover, .lightboxButton[aria-pressed='true'] { border-color: var(--color-base-0); }
+.lightboxButton:focus-visible, .lightboxLink:focus-visible { outline: 2px solid var(--theme-success-500); outline-offset: 3px; }
+.lightboxPrev, .lightboxNext { position: absolute; top: 50%; margin-top: -22px; }
+.lightboxPrev { left: 14px; }
+.lightboxNext { right: 14px; }
+
+@media (max-width: 768px) {
+  .lightboxStage { padding: 64px 0; }
+  .lightboxLink { display: none; }
+  .lightboxPrev, .lightboxNext { top: auto; bottom: 16px; margin: 0; }
+  .lightboxPrev { left: 16px; }
+  .lightboxNext { left: 72px; right: auto; }
+}
+
+/* Cropping grid on a file's page */
+.grid { display: flex; flex-direction: column; gap: 14px; margin-bottom: calc(var(--base) * 1.5); }
+.gridHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.gridLabel { font-weight: 600; }
+.gridHelp { margin: 0; color: var(--theme-elevation-600); max-width: 760px; }
+.gridTools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.gridGroups { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 0; padding: 0; border: 0; }
+.gridGroups legend { float: left; margin-inline-end: 8px; padding: 0; color: var(--theme-elevation-600); }
+.gridCheck { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; cursor: pointer; }
+.gridCheck input { width: 18px; height: 18px; margin: 0; accent-color: var(--theme-success-500); }
+.gridPhoto { position: relative; align-self: flex-start; max-width: min(100%, 960px); line-height: 0; cursor: crosshair; user-select: none; touch-action: none; }
+.gridPhoto img { display: block; max-width: 100%; max-height: 70vh; width: auto; height: auto; border-radius: var(--style-radius-s); }
+.gridOverlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.gridDot {
+  position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0; border: 0; background: none; cursor: grab; touch-action: none;
+}
+.gridDot::before, .gridDot::after { content: ''; position: absolute; left: 50%; top: 50%; border-radius: 50%; transform: translate(-50%, -50%); }
+.gridDot::before { width: 26px; height: 26px; border: 3px solid var(--color-base-0); box-shadow: 0 0 0 1.5px var(--color-base-1000), inset 0 0 0 1.5px var(--color-base-1000); }
+.gridDot::after { width: 6px; height: 6px; background: var(--theme-success-500); box-shadow: 0 0 0 1.5px var(--color-base-1000); }
+.gridDot[data-dragging] { cursor: grabbing; }
+.gridDot:focus-visible { outline: 2px solid var(--theme-success-500); outline-offset: 2px; border-radius: 50%; }
+.gridFacts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; color: var(--theme-elevation-700); }
+.gridKey { display: inline-flex; align-items: center; gap: 8px; }
+.gridSwatch { width: 22px; height: 14px; flex: none; border-radius: 2px; }
+.gridSwatch[data-kind='fixed'] { border: 3px solid var(--color-base-0); box-shadow: 0 0 0 1.5px var(--color-base-1000), inset 0 0 0 1px var(--color-base-1000); background: var(--theme-elevation-100); }
+.gridSwatch[data-kind='adaptive'] {
+  border: 1px dashed var(--theme-elevation-600);
+  background: repeating-linear-gradient(45deg, var(--theme-elevation-400) 0 2px, transparent 2px 6px);
+}
+.gridSwatch[data-kind='hidden'] { background: color-mix(in srgb, var(--color-base-1000) 60%, transparent); }
+.gridWarn { margin: 0; color: var(--theme-error-500); }
+.gridButton {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px;
+  border: 1px solid var(--theme-elevation-150); border-radius: var(--style-radius-s);
+  background: var(--theme-elevation-0); color: var(--theme-text); font: inherit; cursor: pointer;
+}
+.gridButton:hover { border-color: var(--theme-elevation-400); }
+.gridButton:focus-visible, .gridCheck input:focus-visible, .preview:focus-visible { outline: 2px solid var(--theme-success-500); outline-offset: 2px; }
+.previewsTitle { margin: 6px 0 0; color: var(--theme-elevation-600); }
+.previews { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.preview {
+  display: flex; flex-direction: column; gap: 6px; width: 132px; padding: 6px; border: 1px solid transparent; border-radius: var(--style-radius-s);
+  background: none; color: inherit; font: inherit; font-size: 12px; line-height: 16px; text-align: start; cursor: pointer;
+}
+.preview:hover { border-color: var(--theme-elevation-150); }
+.preview[aria-pressed='true'] { border-color: var(--theme-success-500); background: var(--theme-elevation-50); }
+.previewBox { position: relative; overflow: hidden; height: 84px; max-width: 120px; background: var(--theme-elevation-100); }
+/* A Home half: the slide is twice as wide as what shows, and the half shows its middle */
+.previewBox > span { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); }
+.previewBox img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+@media (pointer: coarse) {
+  .gridCheck, .gridButton { min-height: 44px; }
+}

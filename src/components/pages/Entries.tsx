@@ -7,7 +7,7 @@ import { useI18n } from '@/i18n/client'
 import styles from './Pages.module.css'
 import { useHashPick } from './useHashPick'
 
-export type EntryHead = { slug: string; when: string; title: string; images: { url: string; alt: string }[] }
+export type EntryHead = { slug: string; when: string; title: string; images: { url: string; alt: string; focus?: string }[] }
 
 /**
  * Pages 11, 13 and 14 (spec slide 3): a vertical timeline x.1.4 with the newest entry on top; the picked entry shows
@@ -80,7 +80,7 @@ export function Entries({ items, bodies, spec }: { items: EntryHead[]; bodies: R
               <ul className={styles.photos} data-spec={`${spec}.2`}>
                 {e.images.map((m, n) => (
                   <li key={n} className={styles.photo}>
-                    <Image src={m.url} alt={m.alt} fill sizes="(max-width: 767px) 80vw, 480px" className={styles.cover} />
+                    <Image src={m.url} alt={m.alt} fill sizes="(max-width: 767px) 80vw, 480px" className={styles.cover} style={{ objectPosition: m.focus }} />
                   </li>
                 ))}
               </ul>

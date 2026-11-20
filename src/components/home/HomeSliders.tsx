@@ -169,7 +169,7 @@ function Half({
           >
             {s.image ? (
               near(k) && (
-                <Image src={s.image.url} alt={s.image.alt} fill sizes="100vw" priority={k === 0} className={styles.img} />
+                <Image src={s.image.url} alt={s.image.alt} fill sizes="100vw" priority={k === 0} className={styles.img} style={{ objectPosition: s.image.focus }} />
               )
             ) : (
               <Placeholder variant={k} />

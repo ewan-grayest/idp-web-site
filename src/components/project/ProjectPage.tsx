@@ -16,7 +16,8 @@ import { Link } from '@/i18n/Link'
 import { localePath } from '@/i18n/locales'
 import { getLocale, getT } from '@/i18n/server'
 import { siteUrl } from '@/lib/hosting'
-import { getProject, getRecommendations, mediaUrl, tagPath, tagsOf, toPhotos } from '@/lib/projects'
+import { imageLd, jsonLdText } from '@/lib/photoTags'
+import { getProject, getRecommendations, mediaFocus, mediaUrl, tagPath, tagsOf, toPhotos } from '@/lib/projects'
 import { pages, projectKinds, projectPath, type ProjectKind } from '@/lib/routes'
 import { getSettings } from '@/lib/settings'
 import { shortPath } from '@/lib/shortCode'
@@ -56,16 +57,30 @@ export async function ProjectPage({ kind, slug }: { kind: ProjectKind; slug: str
     title: a.title ?? '',
     text: a.text,
     image: mediaUrl(a.image, 'thumb'),
+    focus: mediaFocus(a.image),
     link: a.link,
   }))
+  const photos = toPhotos(project.gallery, title, kind)
   const stages = [
     { spec: '5.4', title: t.project.stages.concept, data: project.concept },
     { spec: '5.5', title: t.project.stages.preview, data: project.preview },
     { spec: '5.6', title: t.project.stages.process, data: project.process },
-  ]
+  ].map((s) => ({ ...s, photos: toPhotos(s.data?.photos, `${title} · ${s.title}`, kind) }))
+  // For search engines: the project and its photos, each with the keywords of its tags (Ewan, 2026-11-20)
+  const projectTags = tagsOf(project).map((tag) => tag.title?.trim()).filter(Boolean)
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: title,
+    url,
+    ...(project.summary ? { description: project.summary } : {}),
+    ...(projectTags.length ? { keywords: projectTags.join(', ') } : {}),
+    image: [...photos, ...stages.flatMap((s) => s.photos)].map((p) => imageLd({ ...p, url: p.original }, site)),
+  }
 
   return (
     <article className={styles.page} data-spec={String(pageId)}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText(ld) }} />
       {/* Only signed-in staff get this far with an unpublished project («Предпросмотр» in the admin) */}
       {project.publishOnSite === false && (
         <p className={styles.unpublished} role="note">
@@ -73,7 +88,7 @@ export async function ProjectPage({ kind, slug }: { kind: ProjectKind; slug: str
         </p>
       )}
       <Rise>
-        <Strip photos={toPhotos(project.gallery, title)} kindLabel={t.kinds[kind]} title={title} />
+        <Strip photos={photos} kindLabel={t.kinds[kind]} title={title} />
 
         <Author project={project} />
 
@@ -95,7 +110,7 @@ export async function ProjectPage({ kind, slug }: { kind: ProjectKind; slug: str
         )}
 
         {stages.map((s, k) => (
-          <Stage key={s.spec} spec={s.spec} title={s.title} photos={toPhotos(s.data?.photos, `${title} · ${s.title}`)} text={s.data?.text} flip={k % 2 === 1} />
+          <Stage key={s.spec} spec={s.spec} title={s.title} photos={s.photos} text={s.data?.text} flip={k % 2 === 1} />
         ))}
 
         <section className={`${styles.sec} ${styles.pad}`} data-spec="5.7" data-header-title={t.project.share}>

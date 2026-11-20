@@ -1,7 +1,7 @@
 import { getPayload, type Where } from 'payload'
 import config from '@payload-config'
 import { getLocale } from '@/i18n/server'
-import { mediaUrl } from './projects'
+import { mediaFocus, mediaUrl } from './projects'
 import { getSettings } from './settings'
 
 export type FeedScope = 'studio' | 'person' | 'project' | 'partners'
@@ -21,7 +21,7 @@ export async function getSocialPosts(scope: FeedScope, entity?: number, hashtag?
   // Filter exact hashtag tokens before applying the cap, avoiding partial matches such as #art / #apartment.
   const { docs } = await payload.find({ collection: 'social-posts', locale, where: { and: where }, depth: 1, sort: '-date', pagination: false, overrideAccess: false })
   return docs.filter((post) => !selected || (post.hashtags ?? '').split(/[\s,]+/).map(normalizeHashtag).includes(selected)).slice(0, cap).map((post) => ({
-    id: post.id, caption: post.caption ?? '', url: post.url, image: mediaUrl(post.image), date: post.date,
+    id: post.id, caption: post.caption ?? '', url: post.url, image: mediaUrl(post.image), focus: mediaFocus(post.image), date: post.date,
   }))
 }
 

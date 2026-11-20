@@ -21,6 +21,8 @@ const TagIcon = () => (
  * Close 5.1.4, hotspots on/off 5.1.5. Arrow keys and swipe move between photos; Esc closes.
  * Products are hidden until the visitor turns them on (Ewan, 2026-10-26). On a photo with products the switch is
  * highlighted and blinks once; each label opens towards the middle of the photo and wraps to stay inside it.
+ * Under a photo whose file says «Показывать теги на сайте», its tags, each opening the projects with it; the photo
+ * shrinks to make room for them (Ewan, 2026-11-20).
  */
 export function Viewer({ photos, start, onClose }: { photos: Photo[]; start: number; onClose: () => void }) {
   const { t } = useI18n()
@@ -66,8 +68,8 @@ export function Viewer({ photos, start, onClose }: { photos: Photo[]; start: num
       }}
       data-spec="5.1-a"
     >
-      <div className={styles.stage} data-spec="5.1.2">
-        <div className={styles.frame} style={{ aspectRatio: `${photo.width} / ${photo.height}`, width: `min(100vw, calc(100vh * ${photo.width / photo.height}))` }}>
+      <div className={styles.stage} data-spec="5.1.2" data-has-tags={photo.tags.length > 0 || undefined}>
+        <div className={styles.frame} style={{ aspectRatio: `${photo.width} / ${photo.height}`, width: `min(100vw, calc((100vh - var(--tags-h, 0px)) * ${photo.width / photo.height}))` }}>
           <Image src={photo.url} alt={photo.alt} fill sizes="100vw" className={styles.img} priority />
           {tags &&
             photo.hotspots.map((h, k) => {
@@ -103,6 +105,17 @@ export function Viewer({ photos, start, onClose }: { photos: Photo[]; start: num
               )
             })}
         </div>
+        {photo.tags.length > 0 && (
+          <ul className={styles.photoTags} aria-label={t.project.photoTags} data-photo-tags>
+            {photo.tags.map((tag) => (
+              <li key={tag.key}>
+                <Link href={tag.href} className={styles.photoTag}>
+                  {tag.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <span className={styles.count}>

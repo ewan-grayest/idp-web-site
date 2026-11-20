@@ -15,6 +15,6 @@ export async function generateMetadata(): Promise<Metadata> {
  * Its end, Close or a click on it go Home.
  */
 export default async function PromoPage() {
-  const { sources, placeholder, autoplay, sound, background } = await getPromoVideo()
-  return <PromoVideo sources={sources} placeholder={placeholder} autoplay={autoplay} sound={sound} background={background} />
+  const { sources, placeholder, autoplay, sound, background, backgroundFocus } = await getPromoVideo()
+  return <PromoVideo sources={sources} placeholder={placeholder} autoplay={autoplay} sound={sound} background={background} backgroundFocus={backgroundFocus} />
 }

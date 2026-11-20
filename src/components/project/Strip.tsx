@@ -26,7 +26,7 @@ export function Strip({ photos, kindLabel, title }: { photos: Photo[]; kindLabel
         {photos.length === 0 && <div className={styles.empty}>{t.project.noPhotos}</div>}
         {photos.map((p, k) => (
           <button key={k} type="button" className={styles.frame} onClick={() => setOpen(k)} aria-label={t.project.openFrame(k + 1)}>
-            <Image src={p.url} alt={p.alt} fill sizes="40vw" className={styles.cover} priority={k < 7} />
+            <Image src={p.url} alt={p.alt} fill sizes="40vw" className={styles.cover} style={{ objectPosition: p.focus }} priority={k < 7} />
             <span className={styles.num}>{String(k + 1).padStart(2, '0')}</span>
           </button>
         ))}

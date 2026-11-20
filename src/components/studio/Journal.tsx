@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n/client'
 import { openEnquiry } from '@/lib/enquire'
 import styles from './Studio.module.css'
 
-export type Issue = { key: string; number: number; when: string; title: string; cover?: string; link?: string }
+export type Issue = { key: string; number: number; when: string; title: string; cover?: string; coverFocus?: string; link?: string }
 
 /**
  * 3.4 online journal: covers 3.4.2 scroll sideways, newest on the left; the date and number bar 3.4.3 turns green on hover.
@@ -29,7 +29,7 @@ export function Journal({ issues }: { issues: Issue[] }) {
           <>
             <span className={styles.issueCover}>
               {i.cover ? (
-                <Image src={i.cover} alt="" fill sizes="260px" className={styles.cover} />
+                <Image src={i.cover} alt="" fill sizes="260px" className={styles.cover} style={{ objectPosition: i.coverFocus }} />
               ) : (
                 <span className={styles.issueBlank}>{i.title}</span>
               )}

@@ -6,7 +6,7 @@ import { getLocale } from '@/i18n/server'
 import type { Person, Project } from '@/payload-types'
 import type { TimelineEvent } from '@/components/shared/Timeline'
 import { promoBackgroundUrl, type VideoSource } from './promo'
-import { mediaUrl, partnerPath, personPath, projectPath } from './projects'
+import { mediaFocus, mediaUrl, partnerPath, personPath, pickMedia, projectPath } from './projects'
 import { getSettings } from './settings'
 import { asVisitor } from './published'
 
@@ -20,7 +20,9 @@ export type Member = {
   /** How many achievements 4.2 the person page shows; the card 3.2-a links to them */
   achievements: number
   thumb?: string
+  thumbFocus?: string
   photo?: string
+  photoFocus?: string
 }
 
 const toMember = (p: Person): Member => ({
@@ -31,7 +33,9 @@ const toMember = (p: Person): Member => ({
   href: personPath(p.slug),
   achievements: p.achievements?.length ?? 0,
   thumb: mediaUrl(p.portrait, 'thumb'),
-  photo: mediaUrl(p.photo, 'wide') ?? mediaUrl(p.portrait, 'wide'),
+  thumbFocus: mediaFocus(p.portrait),
+  photo: mediaUrl(pickMedia(p.photo, p.portrait), 'wide'),
+  photoFocus: mediaFocus(pickMedia(p.photo, p.portrait)),
 })
 
 /**
@@ -84,6 +88,8 @@ export type PromoVideoData = {
   sound: boolean
   /** The image shown until the video starts; none: the video's first frame (Ewan, 2026-11-12) */
   background?: string
+  /** `object-position` of that image, around its focal point */
+  backgroundFocus?: string
 }
 
 export async function getPromoVideo(): Promise<PromoVideoData> {
@@ -100,6 +106,7 @@ export async function getPromoVideo(): Promise<PromoVideoData> {
     sound: studio.promoSound !== false,
     // «Картинку» with no image picked falls back to the first frame
     background: studio.promoBackground === 'image' ? promoBackgroundUrl(studio.promoBackgroundImage) : undefined,
+    backgroundFocus: studio.promoBackground === 'image' ? mediaFocus(studio.promoBackgroundImage) : undefined,
   }
   const file = studio.promoVideo
   if (file && typeof file === 'object' && file.url) {
@@ -127,6 +134,7 @@ export async function getStudio() {
       title: e.title ?? '',
       text: e.text,
       image: mediaUrl(e.image, 'thumb'),
+      focus: mediaFocus(e.image),
       link: project ? projectPath(project.kind, project.slug) : null,
     }
   })
@@ -144,6 +152,7 @@ export async function getStudio() {
       when: dictionaries[locale].common.monthYear(new Date(i.date)),
       title: i.title ?? '',
       cover: mediaUrl(i.cover, 'thumb'),
+      coverFocus: mediaFocus(i.cover),
       link: i.link || undefined,
     })),
     partners: partners.docs.map((p) => ({ key: p.slug, name: p.name ?? '', href: partnerPath(p), logo: mediaUrl(p.logo, 'thumb') })),

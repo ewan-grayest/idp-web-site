@@ -29,7 +29,7 @@ export default async function PressPage() {
             {items.map((a) => {
               const face = (
                 <>
-                  {a.image ? <Image src={a.image} alt="" fill sizes="(max-width: 767px) 80vw, 640px" className={styles.cover} /> : <span className={styles.noPhoto} />}
+                  {a.image ? <Image src={a.image} alt="" fill sizes="(max-width: 767px) 80vw, 640px" className={styles.cover} style={{ objectPosition: a.focus }} /> : <span className={styles.noPhoto} />}
                   <span className={styles.articleText}>
                     <span className={styles.articleSource} data-spec="10.4">
                       {a.source} · {a.when}

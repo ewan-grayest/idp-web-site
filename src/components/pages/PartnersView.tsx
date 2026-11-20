@@ -17,6 +17,7 @@ export type PartnerHead = {
   logo?: string
   link?: string
   photo?: string
+  photoFocus?: string
   discount: string
   projects: (CollectionCard & { kind: ProjectKind })[]
   tags: { slug: string; title: string; href: string }[]
@@ -109,7 +110,7 @@ export function PartnersView({ partners, texts }: { partners: PartnerHead[]; tex
             </div>
             {p.photo && (
               <div className={styles.partnerPhoto} data-spec="6.3.5">
-                <Image src={p.photo} alt="" fill sizes="(max-width: 1023px) 100vw, 55vw" className={styles.cover} />
+                <Image src={p.photo} alt="" fill sizes="(max-width: 1023px) 100vw, 55vw" className={styles.cover} style={{ objectPosition: p.photoFocus }} />
               </div>
             )}
           </div>
@@ -124,7 +125,7 @@ export function PartnersView({ partners, texts }: { partners: PartnerHead[]; tex
                   <li key={c.key}>
                     <Link href={c.href} className={styles.projectCard}>
                       <span className={styles.projectPhoto}>
-                        {c.image && <Image src={c.image} alt={c.alt} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className={styles.cover} />}
+                        {c.image && <Image src={c.image} alt={c.alt} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className={styles.cover} style={{ objectPosition: c.focus }} />}
                       </span>
                       <span className={styles.projectKind}>{t.kinds[c.kind]}</span>
                       <span className={styles.projectName}>{c.title}</span>

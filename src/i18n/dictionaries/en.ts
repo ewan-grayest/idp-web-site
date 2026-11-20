@@ -116,6 +116,7 @@ const en: Dictionary = {
     openFrame: (n) => `Open photo ${n}`,
     openPhoto: (stage, n) => `${stage}: open photo ${n}`,
     viewer: 'Project image',
+    photoTags: 'Photo tags',
     prev: 'Previous photo',
     next: 'Next photo',
     products: 'Show or hide products',

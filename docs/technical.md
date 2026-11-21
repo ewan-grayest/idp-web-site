@@ -6,7 +6,7 @@ Describes the system as built. Last checked against the code on 2026-11-03. For 
 
 | Layer | Choice |
 |---|---|
-| App | Next.js 16.4 (App Router, standalone output), React 19, TypeScript 7 |
+| App | Next.js 16.4.6 (App Router, standalone output), React 19, TypeScript 7 |
 | CMS | Payload 3.92, in the same app; Lexical rich text |
 | Database | PostgreSQL 16 through `@payloadcms/db-postgres` |
 | Images | `sharp`, `next/image` (AVIF, WebP); Payload sizes `thumb` 640, `wide` 1920, `panorama` 2880 |

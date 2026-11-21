@@ -36,7 +36,7 @@ test('Home: the open half follows the cursor and the centre brings both back', a
   await page.mouse.move(720, 450, { steps: 12 })
   await page.mouse.down()
   await page.mouse.up()
-  await expect(page).toHaveURL(/\/promo$/)
+  await expect(page).toHaveURL(/\/studio$/)
 })
 
 test('Home: the language list can be reached from an open half', async ({ page, isMobile }) => {

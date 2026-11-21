@@ -35,7 +35,7 @@ try {
   for (const path of ['/', '/promo', '/studio', '/team/sample-architect', '/projects/residential', '/projects/public', '/id-lab', '/projects/residential/sample-loft', '/projects/public/sample-cafe', '/partners', '/press', '/journal', '/payment', '/careers', '/legal', '/media', '/en/studio', '/zh/studio']) await html(path)
   ok('all page roles and RU / EN / ZH routes respond')
   const home = await html('/')
-  assert(home.includes('data-spec="1.1"')); assert(home.includes('href="/promo"')); assert(!home.includes('data-spec="0.1"'))
+  assert(home.includes('data-spec="1.1"')); assert(home.includes('href="/studio"')); assert(!home.includes('data-spec="0.1"'))
   assert(!(await html('/promo')).includes('data-spec="0.1"'))
   ok('Home/Promo shell and logo destination')
   const counts: [string, number][] = [['/studio', 12], ['/team/sample-architect', 12], ['/partners', 12], ['/projects/public/sample-cafe', 3]]

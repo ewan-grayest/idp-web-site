@@ -94,7 +94,7 @@ const en: Dictionary = {
   home: {
     public: 'Public interiors',
     residential: 'Residential interiors',
-    logo: 'ID project: video presentation',
+    logo: 'ID project: studio and team',
     open: 'View project',
     prev: 'Previous project',
     next: 'Next project',

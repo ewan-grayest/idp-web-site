@@ -95,7 +95,7 @@ const zh: Dictionary = {
   home: {
     public: '公共空间室内设计',
     residential: '住宅室内设计',
-    logo: 'ID project：视频介绍',
+    logo: 'ID project：工作室与团队',
     open: '查看项目',
     prev: '上一个项目',
     next: '下一个项目',

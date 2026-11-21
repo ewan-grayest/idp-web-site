@@ -8,7 +8,7 @@ Source: `../technical specifications.pptx` (five slides). The current user brief
 | --- | --- | --- |
 | 0.1.1–0.1.14 · fixed contextual header, phone, consented enquiry, site search | All content pages | `src/components/shell/Header.tsx`; the logo opens the supplemental site menu, whose first link is Home (Ewan, 2026-11-11) |
 | 0.2 / 0.3.1–0.3.8 · content / full footer navigation | All content pages | `SiteChrome.tsx`, `Footer.tsx`, `src/lib/site.ts`; Archive included; ID Lab inactive |
-| 1 / 1.1 / 1.2 / 1.3 / 1.2.1 / 1.3.1 | `/` | `HomeSliders.tsx`; opposing 50/50 project sliders, pause/expand on hover, logo +20%, swipe, progress, reduced-motion support |
+| 1 / 1.1 / 1.2 / 1.3 / 1.2.1 / 1.3.1 | `/` | `HomeSliders.tsx`; opposing 50/50 project sliders, pause/expand on hover, logo +20% opening Studio (Ewan, 2026-10-25), swipe, progress, reduced-motion support |
 | 2 / 2.1–2.3 | `/promo` | `PromoVideo.tsx`; fullscreen film, playback/sound, Escape/close/click to Home, team link; CMS upload, behavior options and background until it starts |
 | 3.1–3.8 | `/studio` | Mission/vision, horizontal expandable `TeamStrip`, newest-left `Timeline`, horizontal `Journal`, selectable map, enquiry, partner logos, capped feed |
 | 4.1.1–4.1.5 / 4.2 / 4.3 / 4.4 / 4.5 | `/team/[slug]` | Person photo, role, name, quote, interests, achievements, projects/tags, contextual enquiry, capped person feed |

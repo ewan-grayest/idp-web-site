@@ -5,15 +5,14 @@ test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: 'idp-intro-session', value: '1', url: baseURL! }])
 })
 
-test('Home has no header, two sliders and the logo to the Promo page', async ({ page }) => {
+test('Home has no header, two sliders and the logo to the Studio page', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('header[data-spec="0.1"]')).toHaveCount(0)
   await expect(page.locator('[data-spec="2"]')).toHaveCount(0)
   await expect(page.locator('[data-spec="1.2"]')).toBeVisible()
   await expect(page.locator('[data-spec="1.3"]')).toBeVisible()
   await page.locator('[data-spec="1.1"]').click()
-  await expect(page).toHaveURL(/\/promo$/)
-  await expect(page.locator('header[data-spec="0.1"]')).toHaveCount(0)
+  await expect(page).toHaveURL(/\/studio$/)
 })
 
 test('Home: the open half follows the cursor and the centre brings both back', async ({ page, isMobile }) => {

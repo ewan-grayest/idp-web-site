@@ -36,7 +36,9 @@ const SWIPE = 40
  * Phones stack the halves: a swipe or ‹ › changes the slide.
  * Names, «Смотреть проект», the arrows and the segments were added on 2026-10-25, when Ewan found Home vague.
  * Since 2026-11-03 each project can leave its name off the slide («Показывать название на слайде главной»).
- * 1.1: floating logo, grows 20% on hover and opens the fullscreen Promo page 2.
+ * 1.1: floating logo, grows 20% on hover and opens the Studio page 3 (Ewan, 2026-10-25; the spec has it open the
+ * promo video, which plays by itself over Home once per session and stays at /promo). A spec pass on 2026-11-02 had
+ * put the promo link back by mistake; restored 2026-11-21.
  */
 export function HomeSliders({ left, right }: { left: Slide[]; right: Slide[] }) {
   const { t } = useI18n()
@@ -108,7 +110,7 @@ export function HomeSliders({ left, right }: { left: Slide[]; right: Slide[] }) 
         <ChevronIcon dir="right" />
         {t.home.residential}
       </span>
-      <Link ref={logo} href="/promo" className={styles.logo} aria-label={t.home.logo} data-spec="1.1">
+      <Link ref={logo} href="/studio" className={styles.logo} aria-label={t.home.logo} data-spec="1.1">
         ID
       </Link>
       <LanguageLinks className={styles.langs} pill />
